@@ -64,7 +64,7 @@ class NeuralMotif(Module):
         if weights is not None:
             assert len(weights) == len(w_flags)
             for weight_value, weight_flag in zip(weights, w_flags):
-                assert weight_flag * weight_value > 0
+                assert weight_value * weight_flag >= 0
             self.w = ModuleList([NeuralMotif.RestrictedWeight(flag, value) for flag, value in zip(w_flags, weights)])
         else:
             self.w = ModuleList([NeuralMotif.RestrictedWeight(flag) for flag in w_flags])
@@ -132,42 +132,43 @@ class NeuralMotif(Module):
 
     # noinspection PyTypeChecker
     def __str__(self):
-        ws = [("+" if weight.get_info() >= 0 else "") + "%.1e" % weight.get_info() for weight in self.w]
-        bs = [("+" if bias.get_info() >= 0 else "") + "%.1e" % bias.get_info() for bias in self.b]
+        ws = [("+" if weight.get_info() >= 0 else "") + "%.2e" % weight.get_info() for weight in self.w]
+        bs = [("+" if bias.get_info() >= 0 else "") + "%.2e" % bias.get_info() for bias in self.b]
+        info = "<NeuralMotif" + "\n"
         if self.t == "collider":
-            info = "<NeuralMotif: " + self.t + " with type " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
-            info += "\t" + "activation  | (1),(2) >> " + self.a[0].rjust(8) + " >>     (3)" + "\n"
-            info += "\t" + "aggregation | (1),(2) >> " + self.g[0].rjust(8) + " >>     (3)" + "\n"
-            info += "\t" + "weight      |     (1) >> " + ws[0] + " >>     (3)" + "\n"
-            info += "\t" + "weight      |     (2) >> " + ws[1] + " >>     (3)" + "\n"
-            info += "\t" + "bias        | (1),(2) >> " + bs[0] + " >>     (3)" + ">"
+            info += "\t" + "motif type   |  " + self.t + " " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
+            info += "\t" + "activation   |  (1),(2) >> " + self.a[0].rjust(9) + " >> (3)" + "\n"
+            info += "\t" + "aggregation  |  (1),(2) >> " + self.g[0].rjust(9) + " >> (3)" + "\n"
+            info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (3)" + "\n"
+            info += "\t" + "weight       |      (2) >> " + ws[1] + " >> (3)" + "\n"
+            info += "\t" + "bias         |  (1),(2) >> " + bs[0] + " >> (3)" + ">"
         elif self.t == "fork":
-            info = "<NeuralMotif: " + self.t + " with type " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
-            info += "\t" + "activation  |     (1) >> " + self.a[0].rjust(8) + " >>     (2)" + "\n"
-            info += "\t" + "activation  |     (1) >> " + self.a[1].rjust(8) + " >>     (3)" + "\n"
-            info += "\t" + "weight      |     (1) >> " + ws[0] + " >>     (2)" + "\n"
-            info += "\t" + "weight      |     (1) >> " + ws[1] + " >>     (3)" + "\n"
-            info += "\t" + "bias        |     (1) >> " + bs[0] + " >>     (2)" + "\n"
-            info += "\t" + "bias        |     (1) >> " + bs[1] + " >>     (3)" + ">"
+            info += "\t" + "motif type   |  " + self.t + " " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
+            info += "\t" + "activation   |      (1) >> " + self.a[0].rjust(8) + " >> (2)" + "\n"
+            info += "\t" + "activation   |      (1) >> " + self.a[1].rjust(8) + " >> (3)" + "\n"
+            info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (2)" + "\n"
+            info += "\t" + "weight       |      (1) >> " + ws[1] + " >> (3)" + "\n"
+            info += "\t" + "bias         |      (1) >> " + bs[0] + " >> (2)" + "\n"
+            info += "\t" + "bias         |      (1) >> " + bs[1] + " >> (3)" + ">"
         elif self.t == "chain":
-            info = "<NeuralMotif: " + self.t + " with type " + str(self.i) + "\n"
-            info += "\t" + "activation  |     (1) >> " + self.a[0].rjust(8) + " >>     (2)" + "\n"
-            info += "\t" + "activation  |     (2) >> " + self.a[0].rjust(8) + " >>     (3)" + "\n"
-            info += "\t" + "weight      |     (1) >> " + ws[0] + " >>     (2)" + "\n"
-            info += "\t" + "weight      |     (2) >> " + ws[1] + " >>     (3)" + "\n"
-            info += "\t" + "bias        |     (1) >> " + bs[0] + " >>     (2)" + "\n"
-            info += "\t" + "bias        |     (2) >> " + bs[1] + " >>     (3)" + ">"
+            info += "\t" + "motif type   |  " + self.t + " " + str(self.i) + "\n"
+            info += "\t" + "activation   |      (1) >> " + self.a[0].rjust(9) + " >> (2)" + "\n"
+            info += "\t" + "activation   |      (2) >> " + self.a[0].rjust(9) + " >> (3)" + "\n"
+            info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (2)" + "\n"
+            info += "\t" + "weight       |      (2) >> " + ws[1] + " >> (3)" + "\n"
+            info += "\t" + "bias         |      (1) >> " + bs[0] + " >> (2)" + "\n"
+            info += "\t" + "bias         |      (2) >> " + bs[1] + " >> (3)" + ">"
         else:
-            info = "<NeuralMotif: " + self.t + " with type " + str(self.i) + "\n"
-            info += "\t" + "activation  |     (1) >> " + self.a[0].rjust(8) + " >>     (2)" + "\n"
-            info += "\t" + "activation  | (1),(2) >> " + self.a[0].rjust(8) + " >>     (3)" + "\n"
-            info += "\t" + "activation  |     (1) >> " + self.g[0].rjust(8) + " >>     (2)" + "\n"
-            info += "\t" + "activation  | (1),(2) >> " + self.g[0].rjust(8) + " >>     (3)" + "\n"
-            info += "\t" + "weight      |     (1) >> " + ws[0] + " >>     (2)" + "\n"
-            info += "\t" + "weight      |     (1) >> " + ws[1] + " >>     (3)" + "\n"
-            info += "\t" + "weight      |     (2) >> " + ws[2] + " >>     (3)" + "\n"
-            info += "\t" + "bias        |     (1) >> " + bs[0] + " >>     (2)" + "\n"
-            info += "\t" + "bias        | (1),(2) >> " + bs[1] + " >>     (3)" + ">"
+            info += "\t" + "motif type   |  " + self.t + " " + str(self.i) + "\n"
+            info += "\t" + "activation   |      (1) >> " + self.a[0].rjust(9) + " >> (2)" + "\n"
+            info += "\t" + "activation   |  (1),(2) >> " + self.a[0].rjust(9) + " >> (3)" + "\n"
+            info += "\t" + "aggregation  |      (1) >> " + self.g[0].rjust(9) + " >> (2)" + "\n"
+            info += "\t" + "aggregation  |  (1),(2) >> " + self.g[0].rjust(9) + " >> (3)" + "\n"
+            info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (2)" + "\n"
+            info += "\t" + "weight       |      (1) >> " + ws[1] + " >> (3)" + "\n"
+            info += "\t" + "weight       |      (2) >> " + ws[2] + " >> (3)" + "\n"
+            info += "\t" + "bias         |      (1) >> " + bs[0] + " >> (2)" + "\n"
+            info += "\t" + "bias         |  (1),(2) >> " + bs[1] + " >> (3)" + ">"
         return info
 
     class RestrictedWeight(Module):
