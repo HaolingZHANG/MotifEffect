@@ -13,9 +13,9 @@ if __name__ == "__main__":
         "chain":
             ("#FFDD94", [0.2, 0.5, 0.8], [0.20, 0.45, 0.70], [1], [3], [], r"$\mathcal{A}"),
         "coherent-loop":
-            ("#CCABD8", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2], r"$\mathcal{L}"),
+            ("#CCABD8", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2], r"$\mathcal{L}^\alpha"),
         "incoherent-loop":
-            ("#FA897B", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2], r"$\mathcal{L}^\prime")
+            ("#FA897B", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2], r"$\mathcal{L}^\beta")
     }
 
     pyplot.figure(figsize=(10, 8))
@@ -58,7 +58,7 @@ if __name__ == "__main__":
             pyplot.xticks([])
             pyplot.yticks([])
 
-    pyplot.subplot(grid[3, 0:2])
+    pyplot.subplot(grid[3, 0: 2])
     pyplot.scatter([0.2], [0.2], color="white", edgecolor="black", lw=1.5, s=120, zorder=2)
     pyplot.scatter([0.2], [0.4], marker=MarkerStyle("o", fillstyle="right"),
                    color="white", edgecolor="black", lw=1.5, s=120, zorder=2)
