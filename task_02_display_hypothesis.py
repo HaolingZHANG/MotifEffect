@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     draw_info = {"collider": ([0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1, 2], [3], []),
                  "incoherent-loop": ([0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2])}
-    pyplot.figure(figsize=(10, 4.5), tight_layout=True)
+    figure = pyplot.figure(figsize=(10, 4.5), tight_layout=True)
     grid = pyplot.GridSpec(2, 4)
 
     pyplot.subplot(grid[0, 0])
@@ -151,11 +151,15 @@ if __name__ == "__main__":
                              label="collider motif")]
     pyplot.legend(handles=legends, loc="upper right", fontsize=9)
     pyplot.xlabel("normalized gradient")
-    pyplot.xlim(0.3, 0.9)
-    pyplot.xticks([0.3, 0.6, 0.9], ["0.3", "0.6", "0.9"])
+    pyplot.xlim(0.4, 0.9)
+    pyplot.xticks([0.4, 0.5, 0.6, 0.7, 0.8, 0.9], ["0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"])
     pyplot.ylabel("frequency")
     pyplot.ylim(0, 0.5)
     pyplot.yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5], ["0%", "10%", "20%", "30%", "40%", "50%"])
+
+    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=10)
+    figure.text(0.27, 0.99, "B", va="center", ha="center", fontsize=10)
+    figure.text(0.51, 0.99, "C", va="center", ha="center", fontsize=10)
 
     pyplot.savefig("./results/figures/[02] hypothesis.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()

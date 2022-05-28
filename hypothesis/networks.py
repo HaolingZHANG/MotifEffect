@@ -1,27 +1,5 @@
-from networkx import DiGraph
 from torch import tensor, unsqueeze, sum, max, mean, relu, tanh, sigmoid, cat, rand
 from torch.nn import Module, ModuleList, Parameter
-
-acyclic_motifs = {
-    "collider": [DiGraph([(1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
-                 DiGraph([(1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
-                 DiGraph([(1, 3, {"weight": -1}), (2, 3, {"weight": -1})])],
-    "fork": [DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1})]),
-             DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1})]),
-             DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1})])],
-    "chain": [DiGraph([(1, 2, {"weight": +1}), (2, 3, {"weight": +1})]),
-              DiGraph([(1, 2, {"weight": +1}), (2, 3, {"weight": -1})]),
-              DiGraph([(1, 2, {"weight": -1}), (2, 3, {"weight": +1})]),
-              DiGraph([(1, 2, {"weight": -1}), (2, 3, {"weight": -1})])],
-    "coherent-loop": [DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
-                      DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
-                      DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
-                      DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1}), (2, 3, {"weight": -1})])],
-    "incoherent-loop": [DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
-                        DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
-                        DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
-                        DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1}), (2, 3, {"weight": -1})])]
-}
 
 
 class RestrictedWeight(Module):
@@ -37,7 +15,6 @@ class RestrictedWeight(Module):
 
     def forward(self, data):
         self.restrict()
-
         return self.weight * data
 
     def value(self):
@@ -64,7 +41,7 @@ class RestrictedWeight(Module):
             if self.is_positive and self.bound[0] <= value <= self.bound[1]:
                 value = tensor(value)
             elif not self.is_positive and -self.bound[1] <= value <= -self.bound[0]:
-                value = tensor(self.value)
+                value = tensor(value)
             else:
                 raise ValueError("the inputted value is wrong, it needs to meet the established constraints!")
 
@@ -138,6 +115,11 @@ class NeuralMotif(Module):
             raise ValueError("no such motif type, expect one in "
                              "[\"collider\", \"fork\", \"chain\", \"coherent-loop\", \"incoherent-loop\"].")
 
+        if weight_bound is None:
+            weight_bound = (5e-4, 2e0) if motif_type in ["collider", "fork", "chain"] else (1e-3, 1e0)
+        if bias_bound is None:
+            bias_bound = (-2e0, +2e0) if motif_type in ["collider", "fork", "chain"] else (-1e0, +1e0)
+
         if len(activations) != request_a:
             raise ValueError("wrong number of activation functions, "
                              "expect " + str(request_a) + ", got " + str(len(activations)))
@@ -198,7 +180,6 @@ class NeuralMotif(Module):
         else:
             return unsqueeze(mean(values, dim=1), dim=1)
 
-    # noinspection PyUnresolvedReferences
     def add_weight(self, values, weight_indices):
         if len(weight_indices) == 1 and values.size()[1] == 1:
             return self.w[weight_indices[0]](values)
@@ -209,7 +190,6 @@ class NeuralMotif(Module):
             return cat(tuple([self.w[weight_indices[index]](values)
                               for index in range(len(weight_indices))]), dim=1)
 
-    # noinspection PyUnresolvedReferences
     def add_bias(self, values, bias_index):
         return self.b[bias_index](values)
 
@@ -286,5 +266,69 @@ class NeuralMotif(Module):
 
 class NeuralNetwork(Module):
 
-    def __init__(self, connections, motif_set):
+    def __init__(self, skeleton, activations, aggregations, weights=None, biases=None,
+                 weight_bounds=None, bias_bounds=None):
         super(NeuralNetwork, self).__init__()
+
+        if weight_bounds is None:
+            self.weight_bounds = {"collider": (5e-4, 2e0), "fork": (5e-4, 2e0), "chain": (5e-4, 2e0),
+                                  "coherent-loop": (1e-3, 1e0), "incoherent-loop": (1e-3, 1e0)}
+        if bias_bounds is None:
+            self.bias_bounds = {"collider": (-2e0, +2e0), "fork": (-2e0, +2e0), "chain": (-2e0, +2e0),
+                                "coherent-loop": (-1e0, +1e0), "incoherent-loop": (-1e0, +1e0)}
+
+        for activation in activations:
+            if activation not in ["relu", "tanh", "sigmoid"]:
+                raise ValueError("no such activation type, expect one in "
+                                 "[\"relu\", \"tanh\", \"sigmoid\"].")
+        for aggregation in aggregations:
+            if aggregation not in ["sum", "avg", "max"]:
+                raise ValueError("no such aggregation type, expect one in "
+                                 "[\"sum\", \"avg\", \"max\"].")
+
+        self.motif_statistics, self.forward_orders, self.activations, self.aggregations = None, None, [], []
+        self.reset(skeleton, activations, aggregations, weights, biases)
+
+    def forward(self, values):
+        pass
+
+    def activate(self, values, activate_index):
+        if self.a[activate_index] == "relu":
+            return relu(values)
+        elif self.a[activate_index] == "tanh":
+            return tanh(values)
+        else:
+            return sigmoid(values)
+
+    def aggregate(self, values, aggregate_index):
+        if self.g[aggregate_index] == "sum":
+            return unsqueeze(sum(values, dim=1), dim=1)
+        elif self.g[aggregate_index] == "max":
+            return unsqueeze(max(values, dim=1)[0], dim=1)
+        else:
+            return unsqueeze(mean(values, dim=1), dim=1)
+
+    def add_weight(self, values, weight_indices):
+        if len(weight_indices) == 1 and values.size()[1] == 1:
+            return self.w[weight_indices[0]](values)
+        if len(weight_indices) == 2 and values.size()[1] == 2:
+            return cat(tuple([self.w[weight_indices[index]](unsqueeze(values[:, index], dim=1))
+                              for index in range(len(weight_indices))]), dim=1)
+        if len(weight_indices) == 2 and values.size()[1] == 1:
+            return cat(tuple([self.w[weight_indices[index]](values)
+                              for index in range(len(weight_indices))]), dim=1)
+
+    def add_bias(self, values, bias_index):
+        return self.b[bias_index](values)
+
+    def replace(self, location, source_motif, target_motif):
+        pass
+
+    def analyze_motifs(self):
+        pass
+
+    def reset(self, skeleton, activations, aggregations, weights, biases):
+        self.motif_statistics = {"collider": [], "fork": [], "chain": [], "coherent-loop": [], "incoherent-loop": []}
+
+    def __str__(self):
+        return ""
