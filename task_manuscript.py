@@ -1,8 +1,6 @@
-from itertools import product
-
 from scipy.stats import gaussian_kde
 from matplotlib import pyplot, markers
-from numpy import load, zeros, ones, arange, linspace, min, max, log10
+from numpy import load, zeros, ones, arange, linspace, max, log10
 
 from hypothesis import Monitor, NeuralMotif, prepare_data, calculate_gradients, intervene_entrances, acyclic_motifs
 
