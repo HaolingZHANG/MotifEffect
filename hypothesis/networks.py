@@ -193,6 +193,12 @@ class NeuralMotif(Module):
     def add_bias(self, values, bias_index):
         return self.b[bias_index](values)
 
+    def restrict(self):
+        for index in range(len(self.w)):
+            self.w[index].restrict()
+        for index in range(len(self.b)):
+            self.b[index].restrict()
+
     def reset(self, weights=None, biases=None):
         if self.t == "collider":
             weight_flags, bias_size = [self.i <= 2, self.i in [1, 3]], 1
@@ -227,15 +233,16 @@ class NeuralMotif(Module):
         ws = [("+" if weight.value() >= 0 else "") + "%.2e" % weight.value() for weight in self.w]
         bs = [("+" if bias.value() >= 0 else "") + "%.2e" % bias.value() for bias in self.b]
         info = "<NeuralMotif" + "\n"
+        name = self.t.replace("-", " ")
         if self.t == "collider":
-            info += "\t" + "motif type   |  " + self.t + " " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
+            info += "\t" + "motif type   |  " + name + " " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
             info += "\t" + "activation   |  (1),(2) >> " + self.a[0].rjust(9) + " >> (3)" + "\n"
             info += "\t" + "aggregation  |  (1),(2) >> " + self.g[0].rjust(9) + " >> (3)" + "\n"
             info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (3)" + "\n"
             info += "\t" + "weight       |      (2) >> " + ws[1] + " >> (3)" + "\n"
             info += "\t" + "bias         |  (1),(2) >> " + bs[0] + " >> (3)" + ">"
         elif self.t == "fork":
-            info += "\t" + "motif type   |  " + self.t + " " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
+            info += "\t" + "motif type   |  " + name + " " + str((self.i - 1) // 2 + (self.i - 1) % 2 + 1) + "\n"
             info += "\t" + "activation   |      (1) >> " + self.a[0].rjust(8) + " >> (2)" + "\n"
             info += "\t" + "activation   |      (1) >> " + self.a[1].rjust(8) + " >> (3)" + "\n"
             info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (2)" + "\n"
@@ -243,7 +250,7 @@ class NeuralMotif(Module):
             info += "\t" + "bias         |      (1) >> " + bs[0] + " >> (2)" + "\n"
             info += "\t" + "bias         |      (1) >> " + bs[1] + " >> (3)" + ">"
         elif self.t == "chain":
-            info += "\t" + "motif type   |  " + self.t + " " + str(self.i) + "\n"
+            info += "\t" + "motif type   |  " + name + " " + str(self.i) + "\n"
             info += "\t" + "activation   |      (1) >> " + self.a[0].rjust(9) + " >> (2)" + "\n"
             info += "\t" + "activation   |      (2) >> " + self.a[1].rjust(9) + " >> (3)" + "\n"
             info += "\t" + "weight       |      (1) >> " + ws[0] + " >> (2)" + "\n"
@@ -251,7 +258,7 @@ class NeuralMotif(Module):
             info += "\t" + "bias         |      (1) >> " + bs[0] + " >> (2)" + "\n"
             info += "\t" + "bias         |      (2) >> " + bs[1] + " >> (3)" + ">"
         else:
-            info += "\t" + "motif type   |  " + self.t + " " + str(self.i) + "\n"
+            info += "\t" + "motif type   |  " + name + " " + str(self.i) + "\n"
             info += "\t" + "activation   |      (1) >> " + self.a[0].rjust(9) + " >> (2)" + "\n"
             info += "\t" + "activation   |  (1),(2) >> " + self.a[1].rjust(9) + " >> (3)" + "\n"
             info += "\t" + "aggregation  |      (1) >> " + self.g[0].rjust(9) + " >> (2)" + "\n"
@@ -279,12 +286,10 @@ class NeuralNetwork(Module):
 
         for activation in activations:
             if activation not in ["relu", "tanh", "sigmoid"]:
-                raise ValueError("no such activation type, expect one in "
-                                 "[\"relu\", \"tanh\", \"sigmoid\"].")
+                raise ValueError("no such activation type, expect one in [\"relu\", \"tanh\", \"sigmoid\"].")
         for aggregation in aggregations:
             if aggregation not in ["sum", "avg", "max"]:
-                raise ValueError("no such aggregation type, expect one in "
-                                 "[\"sum\", \"avg\", \"max\"].")
+                raise ValueError("no such aggregation type, expect one in [\"sum\", \"avg\", \"max\"].")
 
         self.motif_statistics, self.forward_orders, self.activations, self.aggregations = None, None, [], []
         self.reset(skeleton, activations, aggregations, weights, biases)

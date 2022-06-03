@@ -3,7 +3,7 @@ from networkx import DiGraph, gnm_random_graph, find_cycle, exception
 from hypothesis.networks import RestrictedWeight, RestrictedBias, NeuralMotif, NeuralNetwork
 from hypothesis.operations import Monitor, prepare_data, prepare_motifs
 from hypothesis.similarity import calculate_similarity, maximum_minimum_search, minimum_search
-from hypothesis.robustness import intervene_equivalents, calculate_gradients
+from hypothesis.robustness import intervene_entrances, calculate_gradients
 
 
 acyclic_motifs = {

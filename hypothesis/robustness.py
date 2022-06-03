@@ -1,45 +1,34 @@
-# from numpy import std, inf
-from os import listdir, path
-from pickle import load
-
-from matplotlib import pyplot
-from numpy import sum, sqrt, zeros, arange
+from numpy import sum, zeros, abs, max, sqrt
 from torch import squeeze
 
 from hypothesis.operations import prepare_data
 from hypothesis import Monitor
 
 
-def intervene_equivalents(value_range, times, load_parent_path, save_parent_path):
-    considered_data_1 = prepare_data(value_range=value_range, points=times)
-    considered_data_2 = prepare_data(value_range=value_range, points=times)
-    for sub_path in listdir(load_parent_path):
-        if path.exists(save_parent_path + sub_path):
-            continue
+def intervene_entrances(value_range, times, scales, motif, verbose=False):
+    data, value_size = prepare_data(value_range=value_range, points=times), value_range[1] - value_range[0]
+    clean_output = motif(data).reshape(times, times).detach().numpy()
+    differences = zeros(shape=(len(scales), times, times))
+    for scale_index, scale in enumerate(scales):
+        expanded_range = (value_range[0] - scale * value_size, value_range[1] + scale * value_size)
+        scale_size = int((times - 1) * scale)
+        expanded_times = times + 2 * scale_size
+        expanded_data = prepare_data(value_range=expanded_range, points=expanded_times)
+        expanded_output = motif(expanded_data).reshape(expanded_times, expanded_times).detach().numpy()
+        intervened_output, count, monitor = zeros(shape=((2 * scale_size + 1) ** 2, times, times)), 0, Monitor()
+        for index_1 in range(2 * scale_size + 1):
+            for index_2 in range(2 * scale_size + 1):
+                values = abs(expanded_output[index_1: index_1 + times, index_2: index_2 + times] - clean_output)
+                intervened_output[count] = values
 
-        with open(load_parent_path + sub_path, "rb") as file:
-            motif_data = load(file)
+                if verbose:
+                    monitor.output(count + 1, (2 * scale_size + 1) ** 2)
 
-        print("calculate " + sub_path)
-        minimum_loss, motif_1, motif_2 = None, None, None
-        for source_motif, target_motif, loss in motif_data:
-            if minimum_loss is None or loss < minimum_loss:
-                minimum_loss = loss
-                motif_1, motif_2 = source_motif, target_motif
+                count += 1
 
-        print(minimum_loss)
-        considered_data_1.requires_grad, considered_data_2.requires_grad = True, True
-        sources = [considered_data_1, considered_data_2]
-        targets = motif_1(sources[0]), motif_2(sources[1])
-        pyplot.figure(figsize=(10, 5), tight_layout=True)
-        pyplot.subplot(1, 2, 1)
-        pyplot.pcolormesh(arange(times), arange(times), targets[0].reshape(times, times).detach().numpy(),
-                          cmap="rainbow")
-        pyplot.subplot(1, 2, 2)
-        pyplot.pcolormesh(arange(times), arange(times), targets[1].reshape(times, times).detach().numpy(),
-                          cmap="rainbow")
-        pyplot.show()
-        pyplot.close()
+        differences[scale_index] = max(intervened_output, axis=0)
+
+    return differences[0]
 
 
 def calculate_gradients(value_range, points, motif, verbose=False):
@@ -60,3 +49,7 @@ def calculate_gradients(value_range, points, motif, verbose=False):
             monitor.output(index + 1, points ** 2, extra={"source": gradients[index]})
 
     return gradients.reshape(points, points)
+
+
+def calculate_clever_score():
+    pass
