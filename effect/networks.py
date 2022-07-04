@@ -1,4 +1,4 @@
-from torch import tensor, unsqueeze, sum, max, mean, relu, tanh, sigmoid, cat, rand
+from torch import tensor, unsqueeze, sum, min, max, mean, relu, tanh, sigmoid, cat, rand
 from torch.nn import Module, ModuleList, Parameter
 
 
@@ -116,9 +116,9 @@ class NeuralMotif(Module):
                              "[\"collider\", \"fork\", \"chain\", \"coherent-loop\", \"incoherent-loop\"].")
 
         if weight_bound is None:
-            weight_bound = (5e-4, 2e0) if motif_type in ["collider", "fork", "chain"] else (1e-3, 1e0)
+            weight_bound = (1e-3, 1e0)
         if bias_bound is None:
-            bias_bound = (-2e0, +2e0) if motif_type in ["collider", "fork", "chain"] else (-1e0, +1e0)
+            bias_bound = (-1e0, +1e0)
 
         if len(activations) != request_a:
             raise ValueError("wrong number of activation functions, "
@@ -134,35 +134,53 @@ class NeuralMotif(Module):
         for aggregation in aggregations:
             if aggregation not in ["sum", "avg", "max"]:
                 raise ValueError("no such aggregation type, expect one in "
-                                 "[\"sum\", \"avg\", \"max\"].")
+                                 "[\"sum\", \"max\"].")
 
         self.t, self.i, self.a, self.g, self.w, self.b = motif_type, motif_index, activations, aggregations, [], []
         self.weight_bound, self.bias_bound = weight_bound, bias_bound
         self.reset(weights, biases)
 
-    def forward(self, values):
+    def forward(self, input_signals):
         if self.t in "collider":
-            assert values.size()[1] == 2
-            return self.activate(self.add_bias(self.aggregate(self.add_weight(values, [0, 1]), 0), 0), 0)
+            assert input_signals.size()[1] == 2
+            output_signals = self.activate(self.add_bias(self.aggregate(self.add_weight(input_signals, [0, 1]),
+                                                                        0), 0), 0)
         elif self.t == "fork":
-            assert values.size()[1] == 1
-            values = self.add_weight(values, [0, 1])
-            return cat(tensors=(self.activate(self.add_bias(unsqueeze(values[:, 0], dim=1), 0), 0),
-                                self.activate(self.add_bias(unsqueeze(values[:, 1], dim=1), 1), 1)),
-                       dim=1)
+            assert input_signals.size()[1] == 1
+            input_signals = self.add_weight(input_signals, [0, 1])
+            output_signals = cat(tensors=(self.activate(self.add_bias(unsqueeze(input_signals[:, 0], dim=1), 0), 0),
+                                          self.activate(self.add_bias(unsqueeze(input_signals[:, 1], dim=1), 1), 1)),
+                                 dim=1)
         elif self.t == "chain":
-            assert values.size()[1] == 1
-            values = self.activate(self.add_bias(self.add_weight(values, [0]), 0), 0)
-            return self.activate(self.add_bias(self.add_weight(values, [1]), 1), 1)
+            assert input_signals.size()[1] == 1
+            signals = self.activate(self.add_bias(self.add_weight(input_signals, [0]), 0), 0)
+            output_signals = self.activate(self.add_bias(self.add_weight(signals, [1]), 1), 1)
         else:  # self.t in ["coherent-loop", "incoherent-loop"]:
-            assert values.size()[1] == 2
-            values_for_2 = cat(tensors=(self.add_weight(unsqueeze(values[:, 0], dim=1), [0]),
-                                        unsqueeze(values[:, 1], dim=1)),
-                               dim=1)
-            values_for_3 = cat(tensors=(unsqueeze(values[:, 0], dim=1),
-                                        self.activate(self.add_bias(self.aggregate(values_for_2, 0), 0), 0)),
-                               dim=1)
-            return self.activate(self.add_bias(self.aggregate(self.add_weight(values_for_3, [1, 2]), 1), 1), 1)
+            assert input_signals.size()[1] == 2
+            v_for_2 = cat(tensors=(self.add_weight(unsqueeze(input_signals[:, 0], dim=1), [0]),
+                                   unsqueeze(input_signals[:, 1], dim=1)),
+                          dim=1)
+            v_for_3 = cat(tensors=(unsqueeze(input_signals[:, 0], dim=1),
+                                   self.activate(self.add_bias(self.aggregate(v_for_2, 0), 0), 0)),
+                          dim=1)
+            output_signals = self.activate(self.add_bias(self.aggregate(self.add_weight(v_for_3, [1, 2]), 1), 1), 1)
+
+        if self.t != "fork":
+            if max(output_signals) - min(output_signals) < 1e-12:
+                output_signals = output_signals - max(output_signals)
+            else:
+                output_signals = (output_signals - min(output_signals)) / (max(output_signals) - min(output_signals))
+                output_signals = (output_signals - 0.5) * 2.0
+        else:
+            for index in [0, 1]:
+                if max(output_signals[:, index]) - min(output_signals[:, index]) < 1e-10:
+                    output_signals[:, index] = output_signals[:, index] - mean(output_signals[:, index])
+                else:
+                    output_signals[:, index] -= min(output_signals[:, index])
+                    output_signals[:, index] /= max(output_signals[:, index]) - min(output_signals[:, index])
+                    output_signals[:, index] = (output_signals[:, index] - 0.5) * 2.0
+
+        return output_signals
 
     def activate(self, values, activate_index):
         if self.a[activate_index] == "relu":
@@ -269,71 +287,3 @@ class NeuralMotif(Module):
             info += "\t" + "bias         |      (1) >> " + bs[0] + " >> (2)" + "\n"
             info += "\t" + "bias         |  (1),(2) >> " + bs[1] + " >> (3)" + ">"
         return info
-
-
-class NeuralNetwork(Module):
-
-    def __init__(self, skeleton, activations, aggregations, weights=None, biases=None,
-                 weight_bounds=None, bias_bounds=None):
-        super(NeuralNetwork, self).__init__()
-
-        if weight_bounds is None:
-            self.weight_bounds = {"collider": (5e-4, 2e0), "fork": (5e-4, 2e0), "chain": (5e-4, 2e0),
-                                  "coherent-loop": (1e-3, 1e0), "incoherent-loop": (1e-3, 1e0)}
-        if bias_bounds is None:
-            self.bias_bounds = {"collider": (-2e0, +2e0), "fork": (-2e0, +2e0), "chain": (-2e0, +2e0),
-                                "coherent-loop": (-1e0, +1e0), "incoherent-loop": (-1e0, +1e0)}
-
-        for activation in activations:
-            if activation not in ["relu", "tanh", "sigmoid"]:
-                raise ValueError("no such activation type, expect one in [\"relu\", \"tanh\", \"sigmoid\"].")
-        for aggregation in aggregations:
-            if aggregation not in ["sum", "avg", "max"]:
-                raise ValueError("no such aggregation type, expect one in [\"sum\", \"avg\", \"max\"].")
-
-        self.motif_statistics, self.forward_orders, self.activations, self.aggregations = None, None, [], []
-        self.reset(skeleton, activations, aggregations, weights, biases)
-
-    def forward(self, values):
-        pass
-
-    def activate(self, values, activate_index):
-        if self.a[activate_index] == "relu":
-            return relu(values)
-        elif self.a[activate_index] == "tanh":
-            return tanh(values)
-        else:
-            return sigmoid(values)
-
-    def aggregate(self, values, aggregate_index):
-        if self.g[aggregate_index] == "sum":
-            return unsqueeze(sum(values, dim=1), dim=1)
-        elif self.g[aggregate_index] == "max":
-            return unsqueeze(max(values, dim=1)[0], dim=1)
-        else:
-            return unsqueeze(mean(values, dim=1), dim=1)
-
-    def add_weight(self, values, weight_indices):
-        if len(weight_indices) == 1 and values.size()[1] == 1:
-            return self.w[weight_indices[0]](values)
-        if len(weight_indices) == 2 and values.size()[1] == 2:
-            return cat(tuple([self.w[weight_indices[index]](unsqueeze(values[:, index], dim=1))
-                              for index in range(len(weight_indices))]), dim=1)
-        if len(weight_indices) == 2 and values.size()[1] == 1:
-            return cat(tuple([self.w[weight_indices[index]](values)
-                              for index in range(len(weight_indices))]), dim=1)
-
-    def add_bias(self, values, bias_index):
-        return self.b[bias_index](values)
-
-    def replace(self, location, source_motif, target_motif):
-        pass
-
-    def analyze_motifs(self):
-        pass
-
-    def reset(self, skeleton, activations, aggregations, weights, biases):
-        self.motif_statistics = {"collider": [], "fork": [], "chain": [], "coherent-loop": [], "incoherent-loop": []}
-
-    def __str__(self):
-        return ""

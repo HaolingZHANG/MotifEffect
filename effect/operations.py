@@ -1,8 +1,9 @@
 from datetime import datetime
 from itertools import product
-from torch import cat, linspace, meshgrid, unsqueeze
+from numpy import zeros, sqrt
+from torch import cat, linspace, meshgrid, unsqueeze, squeeze
 
-from hypothesis.networks import NeuralMotif
+from effect.networks import NeuralMotif
 
 
 class Monitor(object):
@@ -86,8 +87,33 @@ def prepare_motifs(motif_type, motif_index, activations, aggregations, sample, w
         else:
             motif = NeuralMotif(motif_type=motif_type, motif_index=motif_index,
                                 activations=activations, aggregations=aggregations,
-                                weights=weights, biases=biases)
+                                weights=None, biases=None)
 
         motifs.append(motif)
 
     return motifs
+
+
+def calculate_landscape(value_range, points, motif):
+    data = prepare_data(value_range=value_range, points=points)
+    return motif(data).reshape(points, points).detach().numpy()
+
+
+def calculate_gradients(value_range, points, motif, verbose=False):
+    sources = prepare_data(value_range=value_range, points=points)
+    sources.requires_grad = True
+    targets = motif(sources)
+    gradients, monitor = zeros(shape=(points ** 2,)), Monitor()
+
+    if verbose:
+        print("estimate the gradient in the current resolution of the landscape.")
+
+    for index in range(points ** 2):
+        # noinspection PyArgumentList
+        squeeze(targets[index]).backward(retain_graph=True)
+        values = sources.grad[index].detach().numpy()
+        gradients[index] = sqrt(sum(values ** 2))
+        if verbose:
+            monitor.output(index + 1, points ** 2, extra={"source": gradients[index]})
+
+    return gradients.reshape(points, points)
