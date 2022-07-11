@@ -1,5 +1,7 @@
+from copy import deepcopy
 from enum import Enum
-from numpy import array, arange, random, repeat, expand_dims, linalg, argmin, argmax, abs, min, max, sum, all, clip, inf
+from numpy import array, arange, zeros, random, repeat, expand_dims, linalg
+from numpy import argmin, argmax, abs, min, max, sum, all, clip, inf
 
 from grace.handle import Monitor
 
@@ -43,7 +45,10 @@ class NormNoiseGenerator(object):
         :return: noise samples, one or more.
         :rtype: numpy.ndarray
         """
-        assert sample.shape == 1
+        assert len(sample.shape) == 1
+
+        if self.noise_scale == 0.0 or self.noise_level == 0.0:
+            return sample
 
         if self.norm_type == "L-1":  # using Laplacian distribution.
             noises = random.laplace(size=(count, sample.shape[0]))
@@ -77,73 +82,133 @@ class NormNoiseGenerator(object):
         return noise_samples if count > 1 else noise_samples[0]
 
 
-def calculate_grace(task, agent, noise_generator, sample_number, saved_states, verbose):
+# noinspection PyTypeChecker
+def intervene(task, agent, noise_scales, reward_calculator, random_seed=None, verbose=False):
+    """
+    Intervene the gym environment in the test process.
+
+    :param task: available task.
+    :type task: grace.task.GymTask
+
+    :param agent: available agent.
+    :type agent: grace.agent.DefaultAgent
+
+    :param noise_scales: degrees of noise attenuation.
+    :type noise_scales: numpy.ndarray or list
+
+    :param reward_calculator: calculator of obtained rewards, like sum, mean, or others.
+    :type reward_calculator: function
+
+    :param random_seed: random seed for initializing the environment and creating the noise.
+    :type random_seed: int or None
+
+    :param verbose: need to show process log.
+    :type verbose: bool
+
+    :return: reward record.
+    :rtype: numpy.ndarray
+    """
+    test_records = zeros(shape=(len(noise_scales), task.iterations))
+
+    if random_seed is None:
+        random.seed(random_seed)
+
+    for index_1, noise_scale in enumerate(noise_scales):
+        task.noise_generator.noise_scale = noise_scale
+        reward_collector = task.run(agent=agent)["rewards"]
+        for index_2, rewards in enumerate(reward_collector):
+            test_records[index_1, index_2] = reward_calculator(rewards)
+
+    if random_seed is None:
+        random.seed(None)
+
+    return test_records
+
+
+# noinspection PyTypeChecker
+def calculate_grace(task, agent, noise_generator, noise_sampling=20, state_sampling=20, replay=False,
+                    random_seed=None, verbose=False):
     """
     Calculate Grace scores.
+
+    :param task: available task.
+    :type task: grace.task.GymTask
+
+    :param agent: available agent.
+    :type agent: grace.agent.DefaultAgent
 
     :param noise_generator: noise generator for calculating robustness score.
     :type noise_generator: grace.robust.NormNoiseGenerator
 
-    :param sample_number: number of noise sample.
-    :type sample_number: int
+    :param noise_sampling: number of noise sample.
+    :type noise_sampling: int
 
-    :param saved_states: a collection of observations saved during the agent processing environment.
-    :type saved_states: numpy.ndarray
+    :param state_sampling: number of state (per variable in the state) when "replay" is false.
+    :type state_sampling: int
+
+    :param replay: play in the environment through agents to create states.
+    :type replay: bool
+
+    :param random_seed: random seed for initializing the environment and creating the noise.
+    :type random_seed: int or None
 
     :param verbose: need to show process log.
     :type verbose: bool
+
+    :return: GRACE scores.
+    :rtype: numpy.ndarray
     """
-    numerators, denominators, total_steps, monitor = [], [], len(saved_states), Monitor()
+
+    if random_seed is None:
+        random.seed(random_seed)
+
+    if replay:
+        saved_states = task.run_1_iteration(agent=agent)["states"]
+    else:
+        saved_states = task.sampling_states(sampling=state_sampling)
+
+    scores, total, monitor = [], len(saved_states), Monitor()
+    norm_value = {"L-1": inf, "L-2": 2, "L-inf": 1}[noise_generator.norm_type]
     minimum_bounds, maximum_bounds = task.get_state_range()
-    for current_step, saved_state in enumerate(saved_states):
+    for current, saved_state in enumerate(saved_states):
         # obtain the action by the selected agent from the saved observation.
-        action = task.run_1_step(agent=agent, state=saved_state, step=current_step, total_steps=total_steps)["action"]
+        action_values = task.run_1_step(agent=agent, state=saved_state, reset=True)["action"]
 
-        # calculate the numerator.
-        numerators.append(max(action) - min(action))
-
-        gradient_collector = []
+        # calculate the numerator, f_max(state) - f_min(state)
+        numerator = max(action_values) - min(action_values)
 
         # generate noise samples in required norm based on the saved observation.
-        noise_samples = noise_generator.get_samples(sample=saved_state, count=sample_number,
+        noise_samples = noise_generator.get_samples(sample=saved_state, count=noise_sampling,
                                                     minimum_bounds=minimum_bounds, maximum_bounds=maximum_bounds)
 
-        def calculate_handle(next_actions, former_actions, latter_actions):
+        def calculate_handle(positive_h_values, negative_h_values):
             """
             Calculate gradient from a special strategy.
 
-            :param next_actions: original next actions.
-            :type next_actions: numpy.ndarray
+            :param positive_h_values: positive perturbed actions.
+            :type positive_h_values: numpy.ndarray
 
-            :param former_actions: positive perturbed actions (+h).
-            :type former_actions: numpy.ndarray
+            :param negative_h_values: negative perturbed actions.
+            :type negative_h_values: numpy.ndarray
 
-            :param latter_actions: negative perturbed actions (-h).
-            :type latter_actions: numpy.ndarray
-
-            :return: gradient of special funciton.
+            :return: gradient of special handle.
             :rtype: numpy.ndarray
             """
-            action_differences = former_actions - latter_actions
-            return action_differences[argmax(next_actions)] - action_differences[argmin(next_actions)]
+            positive_difference = positive_h_values[argmax(action_values)] - positive_h_values[argmin(action_values)]
+            negative_difference = negative_h_values[argmax(action_values)] - negative_h_values[argmin(action_values)]
+            return positive_difference - negative_difference
 
-        for noise_sample in noise_samples:
+        denominators = []
+        for state in noise_samples:
             # obtain a perturbed estimated gradient based on the noise sample for further calculation.
-            perturbed_gradient = task.estimate_gradient(agent=agent, state=noise_sample,
-                                                        current_step=current_step, total_steps=total_steps,
-                                                        calculate_handle=calculate_handle)
-            gradient_collector.append(perturbed_gradient.flatten().tolist())
+            denominators.append(task.estimate_gradient(agent=agent, state=state, calculate_handle=calculate_handle))
 
-        denominators.append(gradient_collector)
+        scores.append(numerator / max(linalg.norm(array(denominators), ord=norm_value, axis=1)))
 
         if verbose:
-            monitor.output(current_step + 1, total_steps)
+            monitor.output(current + 1, total, extra={"score": scores[-1], "state": saved_state})
 
-    scores, norm_value = [], {"L-1": inf, "L-2": 2, "L-inf": 1}[noise_generator.norm_type]
-    for step, (numerator, denominator) in enumerate(zip(numerators, denominators)):
-        if numerator > 0 and sum(denominator) > 0:
-            # calculate norm values.
-            estimated_location = max(linalg.norm(array(denominator), ord=norm_value, axis=1))
-            scores.append(numerator / estimated_location)
+    if random_seed is None:
+        random.seed(None)
 
-    return scores
+    return array(scores)

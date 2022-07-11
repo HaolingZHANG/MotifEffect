@@ -442,8 +442,6 @@ class NSReproduction(DefaultReproduction):
         return new_population
 
 
-
-
 class GlobalGenome(DefaultGenome):
 
     @classmethod

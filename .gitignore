@@ -129,5 +129,5 @@ dmypy.json
 .pyre/
 
 .idea/
-results/data/raw/
-results/figures/
+data/results/raw/
+data/figures/

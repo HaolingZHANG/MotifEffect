@@ -1,5 +1,6 @@
 from datetime import datetime
 from networkx import DiGraph
+from numpy import zeros
 from numpy import load as n_load
 from numpy import save as n_save
 from pickle import load as p_load
@@ -101,7 +102,14 @@ class Monitor(object):
 
 
 def get_reference_motifs():
-    pass
+    references = []
+    for key, motifs in acyclic_motifs.items():
+        for motif in motifs:
+            matrix = zeros(shape=(3, 3))
+            for former, latter in motif.edges:
+                matrix[former - 1, latter - 1] = motif.get_edge_data(former, latter)["weight"]
+            references.append(matrix)
+    return references
 
 
 def save_data(save_path, information):

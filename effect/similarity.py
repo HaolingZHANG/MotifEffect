@@ -1,23 +1,62 @@
-from numpy import zeros, array, linspace, argmin, ceil, ptp, min, max, log10
-
-from scipy.stats import gaussian_kde
-from sklearn.manifold import TSNE
+from copy import deepcopy
+from numpy import array, argmin, ptp, min
 from torch import optim, nn
 from warnings import filterwarnings
 
-from effect.operations import Monitor, prepare_data, calculate_gradients
-from effect.robustness import calculate_rugosity
+from effect.operations import Monitor, prepare_data
+from effect.robustness import calculate_rugosity, estimate_lipschitz
 
 filterwarnings(action="ignore", category=UserWarning)
 
 
 def maximum_minimum_loss_search(value_range, points, source_motif, target_motifs,
-                                learn_rate, loss_threshold, check_threshold, iteration_thresholds, verbose=True):
-    record, source_loss_record, iteration, monitor = [], [], 1, Monitor()
-    input_signals = prepare_data(value_range=value_range, points=points)
-    optimizer, criterion = optim.Adam(source_motif.parameters(), lr=learn_rate), nn.L1Loss()
+                                learn_rate, loss_threshold, check_threshold, iteration_thresholds,
+                                need_lipschitz=False, need_rugosity=False, verbose=False):
+    """
+    Find the maximum-minimum L1 loss (as the representation capacity bound) between source motif and target motifs.
 
-    for iteration in range(iteration_thresholds[0]):
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param source_motif: source motif (incoherent loop in this work).
+    :type source_motif: effect.networks.NeuralMotif
+
+    :param target_motifs: target motifs (collider in this work).
+    :type target_motifs: list
+
+    :param learn_rate: learning rate to train each target motif as the source motif.
+    :type learn_rate: float
+
+    :param loss_threshold: training termination condition, range (maximum - minimum) threshold of last n losses.
+    :type loss_threshold: float
+
+    :param check_threshold: check loss number, combining with the parameter "loss_threshold".
+    :type check_threshold: int
+
+    :param iteration_thresholds: maximum iteration of training source motif and target motif.
+    :type iteration_thresholds: tuple
+
+    :param need_lipschitz: need to estimate the Lipschitz constant during the training process.
+    :type need_lipschitz: bool
+
+    :param need_rugosity: need to calculate the rugosity index during the training process.
+    :type need_rugosity: bool
+
+    :param verbose: need to show process log.
+    :type verbose: bool
+
+    :return: training records (motif sets, losses during training, Lipschitz constants, rugosity indices).
+    :rtype: list, list, list, list
+    """
+    record = {"motifs": [], "losses": [], "constants": [], "rugosities": []}
+    input_signals = prepare_data(value_range=value_range, points=points)
+    optimizer, criterion, monitor = optim.Adam(source_motif.parameters(), lr=learn_rate), nn.L1Loss(), Monitor()
+    source_iterations, target_iterations = iteration_thresholds
+
+    for iteration in range(source_iterations):
         if verbose:
             print("*" * 80)
             print("ITERATION " + str(iteration + 1))
@@ -29,10 +68,11 @@ def maximum_minimum_loss_search(value_range, points, source_motif, target_motifs
             result = minimum_loss_search(value_range=value_range, points=points, learn_rate=learn_rate,
                                          source_motif=source_motif, target_motif=target_motifs[target_index],
                                          loss_threshold=loss_threshold, check_threshold=check_threshold,
-                                         iteration_threshold=iteration_thresholds[1], verbose=False)
-            target_motif, target_loss = result
-            target_motifs[target_index] = target_motif
-            target_loss_record.append(target_loss)
+                                         iteration_threshold=target_iterations, verbose=False,
+                                         need_lipschitz=need_lipschitz, need_rugosity=need_rugosity)
+            target_motifs, target_losses, target_constants, target_rugosities = result
+            target_motifs[target_index] = target_motifs[-1]
+            target_loss_record.append(target_losses[-1])
 
             if verbose:
                 monitor.output(target_index + 1, len(target_motifs))
@@ -51,34 +91,80 @@ def maximum_minimum_loss_search(value_range, points, source_motif, target_motifs
         source_output_signals, target_output_signals = source_motif(input_signals), target_motif(input_signals)
         source_loss = criterion(source_output_signals, target_output_signals)
         optimizer.zero_grad()
-        (-source_loss).backward(retain_graph=True)
+        (-source_loss).backward(retain_graph=True)  # gradient ascent.
         optimizer.step()
         source_motif.restrict()
 
-        maximum_minimum_loss = float(criterion(source_motif(input_signals), target_motif(input_signals)))
-        source_loss_record.append(maximum_minimum_loss)
+        record["motifs"].append((deepcopy(source_motif), deepcopy(target_motif)))
+        record["losses"].append(float(criterion(source_motif(input_signals), target_motif(input_signals))))
 
-        source_rugosity = calculate_rugosity(value_range=value_range, points=points, motif=source_motif)
-        target_rugosity = calculate_rugosity(value_range=value_range, points=points, motif=target_motif)
+        if need_lipschitz:
+            source_constant = estimate_lipschitz(value_range=value_range, points=points, motif=source_motif)
+            target_constant = estimate_lipschitz(value_range=value_range, points=points, motif=target_motif)
+            record["constants"].append((source_constant, target_constant))
+
+        if need_rugosity:
+            source_rugosity = calculate_rugosity(value_range=value_range, points=points, motif=source_motif)
+            target_rugosity = calculate_rugosity(value_range=value_range, points=points, motif=target_motif)
+            record["rugosities"].append((source_rugosity, target_rugosity))
 
         if verbose:
             print("Reversely, we train the source motif (to away from the targets motifs) using the gradient ascent.")
             print(source_motif)
-            print("\nNow, the maximum-minimum loss is %.6f, and the rugosity indices of the two final motifs "
-                  "are %.6f and %.6f respectively.\n" % (maximum_minimum_loss, source_rugosity, target_rugosity))
+            print("\nNow, the maximum-minimum loss is %.6f.\n" % record["losses"][-1])
 
-        record.append((source_motif, target_motif, source_rugosity, target_rugosity, maximum_minimum_loss))
-
-        if iteration > check_threshold and ptp(source_loss_record[-check_threshold:]) < loss_threshold:
+        if iteration > check_threshold and ptp(record["losses"][-check_threshold:]) < loss_threshold:
             break
 
-    return record
+    return record["motifs"], record["losses"], record["constants"], record["rugosities"]
 
 
 def minimum_loss_search(value_range, points, source_motif, target_motif,
-                        learn_rate, loss_threshold, check_threshold, iteration_threshold, verbose=True):
-    optimizer, criterion, record = optim.Adam(target_motif.parameters(), lr=learn_rate), nn.L1Loss(), []
-    input_signals, monitor = prepare_data(value_range=value_range, points=points), Monitor()
+                        learn_rate, loss_threshold, check_threshold, iteration_threshold,
+                        need_lipschitz=False, need_rugosity=False, verbose=True):
+    """
+    Train the target motif to achieve the source motif and find the minimum L1 loss between the two motifs.
+
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param source_motif: source motif as the reference (incoherent loop in this work).
+    :type source_motif: effect.networks.NeuralMotif
+
+    :param target_motif: target motif should be trained (collider in this work).
+    :type target_motif: effect.networks.NeuralMotif
+
+    :param learn_rate: learning rate to train each target motif as the source motif.
+    :type learn_rate: float
+
+    :param loss_threshold: training termination condition, range (maximum - minimum) threshold of last n losses.
+    :type loss_threshold: float
+
+    :param check_threshold: check loss number, combining with the parameter "loss_threshold".
+    :type check_threshold: int
+
+    :param iteration_threshold: maximum iteration of training the target motif.
+    :type iteration_threshold: int
+
+    :param need_lipschitz: need to estimate the Lipschitz constant during the training process.
+    :type need_lipschitz: bool
+
+    :param need_rugosity: need to calculate the rugosity index during the training process.
+    :type need_rugosity: bool
+
+    :param verbose: need to show process log.
+    :type verbose: bool
+
+    :return: training records (trained target motifs, losses during training, Lipschitz constants, rugosity indices).
+    :rtype: list, list, list, list
+    """
+    record, monitor = {"motifs": [], "losses": [], "constants": [], "rugosities": []}, Monitor()
+    optimizer, criterion = optim.Adam(target_motif.parameters(), lr=learn_rate), nn.L1Loss()
+
+    input_signals = prepare_data(value_range=value_range, points=points)
     source_output_signals = source_motif(input_signals)
 
     for iteration in range(iteration_threshold):
@@ -88,62 +174,22 @@ def minimum_loss_search(value_range, points, source_motif, target_motif,
         loss.backward(retain_graph=True)
         optimizer.step()
         target_motif.restrict()
-        record.append(float(loss))
+
+        record["motifs"].append(deepcopy(target_motif))
+        record["losses"].append(float(loss))
+
+        if need_lipschitz:
+            record["constants"].append(estimate_lipschitz(value_range=value_range, points=points, motif=target_motif))
+
+        if need_rugosity:
+            record["rugosities"].append(calculate_rugosity(value_range=value_range, points=points, motif=target_motif))
 
         if verbose:
-            monitor.output(iteration + 1, iteration_threshold, extra={"loss": record[-1]})
+            monitor.output(iteration + 1, iteration_threshold, extra={"loss": record["losses"][-1]})
 
-        if len(record) > check_threshold and ptp(record[-check_threshold:]) < loss_threshold:
+        if iteration > check_threshold and ptp(record["losses"][-check_threshold:]) < loss_threshold:
             if verbose:
-                monitor.output(iteration_threshold, iteration_threshold, extra={"loss": record[-1]})
+                monitor.output(iteration_threshold, iteration_threshold, extra={"loss": record["losses"][-1]})
             break
 
-    return target_motif, record[-1]
-
-
-# noinspection PyTypeChecker
-def assemble_example(examples, value_range, points, verbose=False):
-    monitor, evolution_paths, parameter_samples, counts, maximum_index, maximum_loss = Monitor(), {}, [], [], 0, 0
-    if verbose:
-        print("Load the example data in a sample of maximum-minimum loss search.")
-    for example_index, example in enumerate(examples):
-        if example[-1][-1] > maximum_loss:
-            maximum_index, maximum_loss = example_index, example[-1][-1]
-        counts.append(len(example))
-        evolution_paths[example_index] = {"parameters": [], "locations": None}
-        for motif, _, _, _ in example:
-            parameters = [weight.value() for weight in motif.w] + [bias.value() for bias in motif.b]
-            evolution_paths[example_index]["parameters"].append(parameters)
-            parameter_samples.append(parameters)
-        evolution_paths[example_index]["parameters"] = array(evolution_paths[example_index]["parameters"])
-        if verbose:
-            monitor.output(example_index + 1, len(examples))
-
-    method = TSNE(n_components=2, random_state=2022, method="barnes_hut")
-    locations, count = method.fit_transform(array(parameter_samples)), 0
-    for count_index in range(len(counts)):
-        evolution_paths[count_index]["locations"] = locations[count: count + counts[count_index]]
-        count += counts[count_index]
-
-    example, gradient_set, gradient_matrix, maximum_gradient = examples[maximum_index], [], zeros(shape=(101, 101)), 0.0
-    record_change, rugosity_change, loss_change = zeros(shape=(101, 101)), [], []
-    motif_set = {"first": (example[0][0], example[0][1]), "last": (example[-1][0], example[-1][1])}
-    if verbose:
-        print("Calculate the gradient adjustment during the evolution process.")
-    for iteration, (source_motif, target_motif, records, target_loss) in enumerate(example):
-        record_change[iteration, :len(records)] = log10(records)
-        gradients = calculate_gradients(value_range=value_range, points=points, motif=source_motif).reshape(-1)
-        maximum_gradient = max([max(gradients), maximum_gradient])
-        gradient_set.append(gradients)
-        rugosity_change.append(calculate_rugosity(value_range=value_range, points=points, motif=source_motif))
-        loss_change.append(target_loss)
-        if verbose:
-            monitor.output(iteration + 1, len(example), extra={"maximum gradient": maximum_gradient})
-
-    for iteration, gradients in enumerate(gradient_set):
-        gradient_distribution = gaussian_kde(dataset=gradients).evaluate(linspace(0, ceil(maximum_gradient), 101))
-        gradient_matrix[iteration + 1] = gradient_distribution / max(gradient_distribution)
-
-    loss_change, rugosity_change = array(loss_change), array(rugosity_change)
-
-    return evolution_paths, motif_set, record_change, gradient_matrix, loss_change, rugosity_change
+    return record["motifs"], record["losses"], record["constants"], record["rugosities"]

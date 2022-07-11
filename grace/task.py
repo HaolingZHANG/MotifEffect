@@ -1,11 +1,12 @@
 from gym import make
+from itertools import product
 from matplotlib import pyplot
 from matplotlib.animation import FuncAnimation
-from numpy import ndenumerate, array, copy, zeros, linspace, argmax, abs, min, max, sum, mean, int64
+from numpy import ndenumerate, array, copy, zeros, linspace, argmax, abs, min, max, sum, mean
 from warnings import simplefilter
 
 from grace.agent import NEATAgent
-from grace.handle import Monitor, calculate_matrix_from_agent
+from grace.handle import Monitor
 
 # ignore some warns in the step function of OpenAI gym environment.
 simplefilter("ignore", UserWarning)
@@ -14,7 +15,8 @@ simplefilter("ignore", DeprecationWarning)
 
 class GymTask(object):
 
-    def __init__(self, environment, description, noise_generator=None, need_frames=False, verbose=True):
+    def __init__(self, environment, description, maximum_generation, iterations, total_steps,
+                 noise_generator=None, need_frames=False, verbose=True):
         """
         Initialize the OpenAI gym task.
 
@@ -24,6 +26,15 @@ class GymTask(object):
         :param description: description of the task.
         :type description: str
 
+        :param maximum_generation: maximum generation for fitness.
+        :type maximum_generation: int
+
+        :param iterations: running iterations (for fitness).
+        :type iterations: int
+
+        :param total_steps: running total steps (for fitness) per iteration.
+        :type total_steps: int
+
         :param noise_generator: generator of noise.
         :type noise_generator: grace.robust.NormNoiseGenerator
 
@@ -31,21 +42,16 @@ class GymTask(object):
         :type verbose: bool
         """
         self.environment, self.description, self.noise_generator = environment, description, noise_generator
+        self.iterations, self.total_steps, self.maximum_generation = iterations, total_steps, maximum_generation
         self.need_frames, self.verbose, self.monitor = need_frames, verbose, Monitor()
         self.experiences, self.record_handle = [], None
 
-    def run(self, agent, iterations, total_steps, random_seeds=None):
+    def run(self, agent, random_seeds=None):
         """
         Run the task.
 
         :param agent: available agent.
         :type agent: grace.agent.DefaultAgent
-
-        :param iterations: running iterations.
-        :type iterations: int
-
-        :param total_steps: running total steps per iteration.
-        :type total_steps: int
 
         :param random_seeds: random seeds for initialize the environment.
         :type random_seeds: numpy.ndarray, list, or None
@@ -56,16 +62,16 @@ class GymTask(object):
         state_collector, action_collector, reward_collector, frame_collector, noise_collector = [], [], [], [], []
 
         if random_seeds is not None:
-            assert iterations == len(random_seeds)
+            assert self.iterations == len(random_seeds)
 
-        for one_iteration in range(iterations):
+        for one_iteration in range(self.iterations):
             if self.verbose:
                 print("run iteration " + str(one_iteration + 1) + ":")
 
             if random_seeds is not None:
-                record = self.run_1_iteration(agent, total_steps, random_seeds[one_iteration])
+                record = self.run_1_iteration(agent, random_seeds[one_iteration])
             else:
-                record = self.run_1_iteration(agent, total_steps)
+                record = self.run_1_iteration(agent)
 
             state_collector.append(record["states"])
             action_collector.append(record["actions"])
@@ -76,19 +82,16 @@ class GymTask(object):
 
         return {"states": array(state_collector, dtype=object), "actions": array(action_collector, dtype=object),
                 "rewards": array(reward_collector, dtype=object), "noises": array(noise_collector, dtype=object),
-                "frames": array(frame_collector, dtype=object), "step": total_steps, "iteration": iterations}
+                "frames": array(frame_collector, dtype=object)}
 
-    def run_1_iteration(self, agent, total_steps, random_seed=None):
+    def run_1_iteration(self, agent, random_seed=None):
         """
         Run the task for one iteration.
 
         :param agent: available agent.
         :type agent: grace.agent.DefaultAgent
 
-        :param total_steps: running total steps per iteration.
-        :type total_steps: int
-
-        :param random_seed: random seed for initialize the environment.
+        :param random_seed: random seed for initializing the environment.
         :type random_seed: int or None
 
         :return: result set.
@@ -99,7 +102,7 @@ class GymTask(object):
         states, actions, rewards, noises, frames = [], [], [], [], []
         state = self.environment.reset()
 
-        for one_step in range(total_steps):
+        for one_step in range(self.total_steps):
             states.append(state)
 
             if self.need_frames:
@@ -119,13 +122,13 @@ class GymTask(object):
                 state = record["state"]
 
             if self.verbose:
-                self.monitor.output(one_step + 1, total_steps)
+                self.monitor.output(one_step + 1, self.total_steps)
 
         self.environment.close()
         self.environment.seed(None)
 
-        return {"states": array(states), "actions": array(actions), "rewards": array(rewards), "noises": array(noises),
-                "step": total_steps, "frames": frames}
+        return {"states": array(states), "actions": array(actions), "rewards": array(rewards),
+                "noises": array(noises), "frames": array(frames)}
 
     def run_1_step(self, agent, state, reset=False):
         """
@@ -153,14 +156,14 @@ class GymTask(object):
         else:
             actual_state = copy(state)
 
-        action = agent.work(actual_state)
+        action, action_values = agent.work(actual_state)
 
         current_state, reward, done, _ = self.environment.step(action)
 
-        return {"state": array(current_state), "action": array(action), "reward": reward,
+        return {"state": array(current_state), "action": array(action_values), "reward": reward,
                 "noise": array(actual_state - state), "done": done}
 
-    def estimate_gradient(self, agent, state, difference=1e-8, threshold=1e-8, calculate_handle=None):
+    def estimate_gradient(self, agent, state, difference=1e-6, threshold=1e-6, calculate_handle=None):
         """
         Estimate gradient of the agent in the task.
 
@@ -188,7 +191,7 @@ class GymTask(object):
             perturbed_bounds.append(min([upper_bound - state_value, state_value - lower_bound]))
 
         for position, perturbed_value in ndenumerate(perturbed_bounds):
-            if perturbed_value == 0:
+            if perturbed_value == 0.0:
                 continue
 
             gradient_record = []
@@ -202,9 +205,9 @@ class GymTask(object):
 
                 if argmax(d_actions) == argmax(p_actions) and argmax(d_actions) == argmax(n_actions):
                     if calculate_handle is None:
-                        saved_gradient = (max(p_actions) - max(n_actions)) / (2.0 * perturbed_value)
+                        saved_gradient = (p_actions[position] - n_actions[position]) / (2.0 * perturbed_value)
                     else:
-                        saved_gradient = calculate_handle(d_actions, p_actions, n_actions) / (2.0 * perturbed_value)
+                        saved_gradient = calculate_handle(p_actions, n_actions) / (2.0 * perturbed_value)
 
                     gradient_record.append(saved_gradient)
 
@@ -225,6 +228,12 @@ class GymTask(object):
 
     def reset_experience(self, record_handle):
         self.experiences, self.record_handle = [], record_handle
+
+    def sampling_states(self, sampling):
+        lower_bounds, upper_bounds = self.get_state_range()
+        variable_set = [linspace(lower_bound, upper_bound, sampling + 2)[1: -1] for lower_bound, upper_bound
+                        in zip(lower_bounds, upper_bounds)]
+        return array(list(product(*variable_set)))
 
     @staticmethod
     def get_state_range():
@@ -271,8 +280,11 @@ class NEATCartPoleTask(GymTask):
         """
         Initialize the CartPole task for NEAT algorithm.
 
-        :param maximum_generation: maximum generation for NEAT algorithm.
+        :param maximum_generation: maximum generation for fitness.
         :type maximum_generation: int
+
+        :param noise_generator: generator of noise.
+        :type noise_generator: grace.robust.NormNoiseGenerator or None
 
         :param need_frames: need to draw the frame in the environment.
         :type need_frames: bool
@@ -280,20 +292,21 @@ class NEATCartPoleTask(GymTask):
         :param verbose: need to show process log.
         :type verbose: bool
         """
-        super().__init__(make("CartPole-v0").unwrapped, "CartPole", noise_generator, need_frames, verbose)
-        self.fit_iterations, self.fit_total_steps, self.maximum_generation = 100, 200, maximum_generation
+        super().__init__(make("CartPole-v0").unwrapped, "CartPole", maximum_generation, 100, 200,
+                         noise_generator, need_frames, verbose)
 
     def genomes_fitness(self, genomes, neat_config):
         """
         Calculate the fitness of the investigated genomes.
 
         :param genomes: NEAT genomes.
-        :param neat_config:
+
+        :param neat_config: configure of NEAT algorithm.
         """
-        best_genome, matrix = None, None
+        best_genome, experience = None, None
         for genome_id, model_genome in genomes:
             agent = NEATAgent(model_genome, neat_config, "temp", action_handle=argmax)
-            collector = super().run(agent, self.fit_iterations, self.fit_total_steps)
+            collector = super().run(agent)
             reward_collector = collector["rewards"]
 
             accumulative_rewards = []
@@ -304,11 +317,11 @@ class NEATCartPoleTask(GymTask):
 
             if best_genome is None or model_genome.fitness > best_genome.fitness:
                 best_genome = model_genome
-                matrix = calculate_matrix_from_agent(agent)
+                experience = self.record_handle(agent)
 
             del agent, collector, reward_collector
 
-        self.experiences.append((matrix, best_genome.fitness))
+        self.experiences.append(experience)
 
     @staticmethod
     def get_state_range():

@@ -69,6 +69,18 @@ def prepare_data(value_range, points=101):
 
 
 def prepare_motifs(motif_type, motif_index, activations, aggregations, sample, weights=None, biases=None):
+    """
+    Prepare motif based on the selected parameters.
+
+    :param motif_type:
+    :param motif_index:
+    :param activations:
+    :param aggregations:
+    :param sample:
+    :param weights:
+    :param biases:
+    :return:
+    """
     motifs = []
 
     for sample_index in range(sample):
@@ -95,11 +107,43 @@ def prepare_motifs(motif_type, motif_index, activations, aggregations, sample, w
 
 
 def calculate_landscape(value_range, points, motif):
-    data = prepare_data(value_range=value_range, points=points)
-    return motif(data).reshape(points, points).detach().numpy()
+    """
+    Calculate the output landscape of the selected motif.
+
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param motif: 3-node network motif in the artificial neural network.
+    :type motif: effect.networks.NeuralMotif
+
+    :return: output landscape.
+    :rtype: numpy.ndarray
+    """
+    return motif(prepare_data(value_range=value_range, points=points)).reshape(points, points).detach().numpy()
 
 
 def calculate_gradients(value_range, points, motif, verbose=False):
+    """
+    Calculate the gradient matrix of the selected motif.
+
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param motif: 3-node network motif in the artificial neural network.
+    :type motif: effect.networks.NeuralMotif
+
+    :param verbose: need to show process log.
+    :type verbose: bool
+
+    :return: gradient matrix.
+    :rtype: numpy.ndarray
+    """
     sources = prepare_data(value_range=value_range, points=points)
     sources.requires_grad = True
     targets = motif(sources)

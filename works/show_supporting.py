@@ -1,5 +1,5 @@
 from matplotlib import pyplot, markers, rcParams
-from numpy import arange, abs, mean
+from numpy import arange, linspace, log10, argsort, min, max, where
 
 from works import acyclic_motifs, draw_info, load_data, adjust_format
 
@@ -86,39 +86,83 @@ def supporting01():
 
 
 def supporting02():
-    pass
+    figure = pyplot.figure(figsize=(10, 6))
+
+    lipschitz_constants = load_data("../data/results/task01/lipschitz loop.npy")
+    usages = where(lipschitz_constants > 0)
+    locations = load_data("../data/results/task01/location loop.npy")[usages]
+    lipschitz_constants = lipschitz_constants[usages]
+    order = argsort(lipschitz_constants)
+
+    ax1 = pyplot.subplot(1, 2, 1)
+    pyplot.scatter(locations[order, 0], locations[order, 1], c=log10(lipschitz_constants[order]),
+                   cmap="RdYlGn_r", vmin=-1, vmax=2)
+    pyplot.text(110, 110, "loop", fontsize=10, va="top", ha="right")
+    pyplot.vlines(0, -120, 120, color="black", linewidth=0.75, linestyle="--", zorder=2)
+    pyplot.hlines(0, -120, 120, color="black", linewidth=0.75, linestyle="--", zorder=2)
+    pyplot.xlabel("t-SNE of output landscape difference", fontsize=10)
+    pyplot.ylabel("t-SNE of output landscape difference", fontsize=10)
+    pyplot.xlim(-120, 120)
+    pyplot.ylim(-120, 120)
+    pyplot.xticks([-120, 0, 120], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
+    pyplot.yticks([-120, 0, 120], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
+
+    lipschitz_constants = load_data("../data/results/task01/lipschitz collider.npy")
+    usages = where(lipschitz_constants > 0)
+    locations = load_data("../data/results/task01/location collider.npy")[usages]
+    lipschitz_constants = lipschitz_constants[usages]
+
+    ax2 = pyplot.subplot(1, 2, 2)
+    order = argsort(lipschitz_constants)
+    mesh = pyplot.scatter(locations[order, 0], locations[order, 1], c=log10(lipschitz_constants[order]),
+                          cmap="RdYlGn_r", vmin=-1, vmax=2)
+    pyplot.text(110, 110, "collider", fontsize=10, va="top", ha="right")
+    pyplot.vlines(0, -120, 120, color="black", linewidth=0.75, linestyle="--", zorder=2)
+    pyplot.hlines(0, -120, 120, color="black", linewidth=0.75, linestyle="--", zorder=2)
+    pyplot.xlabel("t-SNE of output landscape difference", fontsize=10)
+    pyplot.ylabel("t-SNE of output landscape difference", fontsize=10)
+    pyplot.xlim(-120, 120)
+    pyplot.ylim(-120, 120)
+    pyplot.xticks([-120, 0, 120], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
+    pyplot.yticks([-120, 0, 120], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
+
+    bar = figure.colorbar(mesh, ax=[ax1, ax2], shrink=0.6, ticks=[-1, 0, 1, 2], location="bottom")
+    bar.set_label("Lipschitz constant", fontsize=10)
+    bar.ax.set_yticklabels(["1E\N{MINUS SIGN}1", "1E+0", "1E+1", "1E+2"])
+    bar.ax.tick_params(labelsize=10)
+    pyplot.savefig("../data/figures/supporting02.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
 
 
 def supporting03():
-    figure = pyplot.figure(figsize=(10, 7), tight_layout=True)
-    rcParams["font.family"] = "Times New Roman"
-    grid = pyplot.GridSpec(4, 4)
+    landscapes = load_data("../data/results/task02/intuition landscapes.npy")
 
-    locations = load_data("../data/results/task02/locations.npy")
+    pyplot.figure(figsize=(10, 12), tight_layout=True)
+    for index, landscape in enumerate(landscapes):
+        pyplot.subplot(12, 12, index + 1)
+        pyplot.title(str(index + 1), fontsize=10)
+        pyplot.pcolormesh(arange(41), arange(41), landscape, vmin=-1, vmax=+1, cmap="rainbow")
+        pyplot.xlabel("x", fontsize=10)
+        pyplot.ylabel("y", fontsize=10)
+        pyplot.xlim(0, 40)
+        pyplot.ylim(0, 40)
+        pyplot.xticks([])
+        pyplot.yticks([])
+
+    pyplot.savefig("../data/figures/supporting03.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supporting04():
+    figure = pyplot.figure(figsize=(10, 3.5), tight_layout=True)
+    rcParams["font.family"] = "Times New Roman"
+    grid = pyplot.GridSpec(2, 4)
+
     cases = load_data("../data/results/task02/terminal cases.pkl")
 
-    pyplot.subplot(grid[:2, :])
-    pyplot.scatter(locations[arange(0, 288, 2), 0], locations[arange(0, 288, 2), 1],
-                   s=20, color="#86E3CE", label="loop")
-    pyplot.scatter(locations[arange(1, 288, 2), 0], locations[arange(1, 288, 2), 1],
-                   s=20, color="#FA897B", label="collider")
-    difference = mean(abs(cases["min"][1][2] - cases["min"][1][3]))
-    pyplot.text(x=locations[cases["min"][0] * 2, 0], y=locations[cases["min"][0] * 2, 1] + 0.8,
-                s="b [" + adjust_format("%.1E" % difference) + "]", fontsize=10, va="bottom", ha="center")
-    difference = mean(abs(cases["max"][1][2] - cases["max"][1][3]))
-    pyplot.text(x=locations[cases["max"][0] * 2, 0], y=locations[cases["max"][0] * 2, 1] + 0.8,
-                s="c [" + adjust_format("%.1E" % difference) + "]", fontsize=10, va="bottom", ha="center")
-    pyplot.legend(loc="upper right", fontsize=10)
-    pyplot.xlabel("tSNE of output landscape difference", fontsize=10)
-    pyplot.ylabel("tSNE of output landscape difference", fontsize=10, labelpad=20)
-    pyplot.xlim(-22, 22)
-    pyplot.ylim(-22, 20)
-    pyplot.xticks([])
-    pyplot.yticks([])
-
-    for plot_index, case_pair in zip([0, 2], [cases["min"][1], cases["max"][1]]):
-        motif, _, landscape, _ = case_pair
-        pyplot.subplot(grid[2, plot_index])
+    for plot_index, case_info in zip([0, 2], [cases["min"][1], cases["max"][1]]):
+        motif, landscape = case_info
+        pyplot.subplot(grid[0, plot_index])
         info = draw_info[motif.t]
         for index, (px, py) in enumerate(zip(info[1], info[2])):
             if index + 1 in info[3]:
@@ -158,8 +202,8 @@ def supporting03():
         pyplot.xlim(0.0, 1.0)
         pyplot.ylim(0.1, 0.9)
         pyplot.axis("off")
-        
-        pyplot.subplot(grid[3, plot_index])
+
+        pyplot.subplot(grid[1, plot_index])
         mesh = pyplot.pcolormesh(arange(41), arange(41), landscape, vmin=-1, vmax=+1, cmap="rainbow")
         bar = pyplot.colorbar(mesh, ticks=[-1, 0, +1])
         bar.set_label("output z", fontsize=10)
@@ -172,9 +216,9 @@ def supporting03():
         pyplot.xticks([0, 20, 40], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
         pyplot.yticks([0, 20, 40], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
 
-    for plot_index, case_pair in zip([1, 3], [cases["min"][1], cases["max"][1]]):
-        _, motif, _, landscape = case_pair
-        pyplot.subplot(grid[2, plot_index])
+    for plot_index, case_info in zip([1, 3], [cases["min"][2], cases["max"][2]]):
+        motif, landscape = case_info
+        pyplot.subplot(grid[0, plot_index])
         info = draw_info[motif.t]
         for index, (px, py) in enumerate(zip(info[1], info[2])):
             if index + 1 in info[3]:
@@ -210,7 +254,7 @@ def supporting03():
         pyplot.ylim(0.1, 0.9)
         pyplot.axis("off")
 
-        pyplot.subplot(grid[3, plot_index])
+        pyplot.subplot(grid[1, plot_index])
         mesh = pyplot.pcolormesh(arange(41), arange(41), landscape, vmin=-1, vmax=+1, cmap="rainbow")
         bar = pyplot.colorbar(mesh, ticks=[-1, 0, +1])
         bar.set_label("output z", fontsize=10)
@@ -224,14 +268,75 @@ def supporting03():
         pyplot.yticks([0, 20, 40], ["\N{MINUS SIGN}1", "0", "+1"], fontsize=10)
 
     figure.text(0.025, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.025, 0.50, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.515, 0.50, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.515, 0.99, "b", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig("../data/figures/supporting03.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig("../data/figures/supporting04.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supporting05():
+    landscapes = load_data("../data/results/task03/landscapes.npy")
+
+    pyplot.figure(figsize=(10, 12), tight_layout=True)
+    for index, landscape in enumerate(landscapes):
+        pyplot.subplot(12, 12, index + 1)
+        pyplot.title(str(index + 1), fontsize=10)
+        pyplot.pcolormesh(arange(41), arange(41), landscape, vmin=-1, vmax=+1, cmap="rainbow")
+        pyplot.xlabel("x", fontsize=10)
+        pyplot.ylabel("y", fontsize=10)
+        pyplot.xlim(0, 40)
+        pyplot.ylim(0, 40)
+        pyplot.xticks([])
+        pyplot.yticks([])
+
+    pyplot.savefig("../data/figures/supporting05.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supporting06():
+    pass
+    # losses = load_data(load_path="../data/results/task03/max-min losses.npy")
+    # constants = load_data(load_path="../data/results/task03/lipschitz constants.npy")
+    # changes = constants[:, 1] - constants[:, 0]
+    # right_indices, wrong_indices = where(changes > 0)[0], where(changes <= 0)[0]
+    #
+    # pyplot.figure(figsize=(10, 8))
+    # rcParams["font.family"] = "Times New Roman"
+    #
+    # pyplot.subplot(2, 1, 1)
+    # pyplot.scatter(changes[right_indices], losses[right_indices], color="silver", edgecolor="black", label="positive")
+    # pyplot.scatter(changes[wrong_indices], losses[wrong_indices], color="black", label="negative")
+    # pyplot.legend(loc="upper right", fontsize=8)
+    #
+    # pyplot.subplot(2, 1, 2)
+    # pyplot.show()
+
+
+def supporting07():
+    lipschitz_paths = load_data(load_path="../data/results/task03/lipschitz paths.pkl")
+    rugosity_paths = load_data(load_path="../data/results/task03/rugosity paths.pkl")
+
+    pyplot.figure(figsize=(10, 12), tight_layout=True)
+    for index, (lipschitz_path, rugosity_path) in enumerate(zip(lipschitz_paths, rugosity_paths)):
+        pyplot.subplot(12, 12, index + 1)
+        lipschitz_path -= min(lipschitz_path)
+        lipschitz_path /= max(lipschitz_path)
+        rugosity_path -= min(rugosity_path)
+        rugosity_path /= max(rugosity_path)
+        pyplot.title(str(index + 1), fontsize=10)
+        pyplot.plot(linspace(0, 1, len(lipschitz_path)), lipschitz_path, color="blue")
+        pyplot.plot(linspace(0, 1, len(rugosity_path)), rugosity_path, color="orange")
+        pyplot.xticks([])
+        pyplot.yticks([])
+
+    pyplot.savefig("../data/figures/supporting07.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
 if __name__ == "__main__":
-    supporting01()
+    # supporting01()
     # supporting02()
-    supporting03()
+    # supporting03()
+    # supporting04()
+    # supporting05()
+    supporting07()
