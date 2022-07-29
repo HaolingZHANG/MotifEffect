@@ -5,8 +5,8 @@ from matplotlib.animation import FuncAnimation
 from numpy import ndenumerate, array, copy, zeros, linspace, argmax, abs, min, max, sum, mean
 from warnings import simplefilter
 
-from grace.agent import NEATAgent
-from grace.handle import Monitor
+from practice.agent import NEATAgent
+from practice.handle import Monitor
 
 # ignore some warns in the step function of OpenAI gym environment.
 simplefilter("ignore", UserWarning)

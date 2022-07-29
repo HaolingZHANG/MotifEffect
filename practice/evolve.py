@@ -526,7 +526,7 @@ class GlobalGenome(DefaultGenome):
         :type feature_matrix: list
 
         :param config: genome config.
-        :type config: grace.agent.GlobalGenomeConfig
+        :type config: practice.agent.GlobalGenomeConfig
         """
         self.feature_matrix = feature_matrix
 
@@ -587,10 +587,10 @@ class GlobalGenome(DefaultGenome):
         Obtain distance by two feature matrix.
 
         :param other: another genome.
-        :type other: grace.agent.GlobalGenome
+        :type other: practice.agent.GlobalGenome
 
         :param config: genome config.
-        :type config: grace.agent.GlobalGenomeConfig
+        :type config: practice.agent.GlobalGenomeConfig
 
         :return: distance of two genomes.
         """
@@ -605,7 +605,7 @@ class GlobalGenome(DefaultGenome):
         Mutate add node when current hidden node (when node number less than the node range).
 
         :param config:genome config.
-        :type config: grace.agent.GlobalGenomeConfig
+        :type config: practice.agent.GlobalGenomeConfig
         """
         if config.max_node_num - config.num_inputs - config.num_outputs > len(self.nodes):
             super().mutate_add_node(config)

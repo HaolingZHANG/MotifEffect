@@ -4,8 +4,8 @@ from neat import genome, stagnation, reproduction, species, config
 from neat.six_util import iteritems, itervalues
 from numpy import zeros
 
-from grace.evolve import GSReproduction, NSReproduction, GlobalGenome, UpdatedSpeciesSet
-from grace.motif import count_motifs_from_matrices, GraphType
+from practice.evolve import GSReproduction, NSReproduction, GlobalGenome, UpdatedSpeciesSet
+from practice.motif import count_motifs_from_matrices, GraphType
 
 
 class Monitor(object):
@@ -133,7 +133,7 @@ def calculate_matrix_from_agent(agent, need_mapping=False):
     Calculate the adjacency matrix of NEAT agent.
 
     :param agent: NEAT agent.
-    :type agent: grace.evolve.NEATAgent
+    :type agent: practice.evolve.NEATAgent
 
     :param need_mapping: need return the mapping between row index and node key.
     :type need_mapping: bool

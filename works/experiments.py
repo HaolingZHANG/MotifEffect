@@ -1,6 +1,6 @@
 from copy import deepcopy
 from itertools import product
-from numpy import linspace, array, zeros, mean, sum, max, abs, argmax
+from numpy import linspace, array, zeros, mean, sum, max, abs, argmax, cumsum
 from sklearn.manifold import TSNE
 from os.path import exists
 
@@ -9,8 +9,8 @@ from effect import calculate_landscape, calculate_gradients
 from effect import calculate_rugosity, evaluate_propagation, estimate_lipschitz
 from effect import maximum_minimum_loss_search, minimum_loss_search
 
-from grace import NEATCartPoleTask, NEATAgent, NormNoiseGenerator, count_motifs_from_matrices, calculate_grace
-from grace import create_agent_config, obtain_best, calculate_matrix_from_agent, GraphType
+from practice import NEATCartPoleTask, NEATAgent, NormNoiseGenerator, count_motifs_from_matrices
+from practice import create_agent_config, obtain_best, calculate_matrix_from_agent, GraphType
 
 from works import Monitor, get_reference_motifs, save_data, load_data
 
@@ -406,14 +406,27 @@ def experiment3(raw_path, task_path):
             monitor.output(source_index + 1, len(source_motifs))
         save_data(save_path=raw_path + "max-min.search.pkl", information=records)
 
+    if not exists(path=raw_path + "max-min.propagation.pkl"):
+        print("Calculate the error propagation of each final source motif.")
+        propagation_data, records = [], load_data(load_path=raw_path + "max-min.search.pkl")
+        for index, (motif_pairs, _, _, _) in enumerate(records):
+            source_motif, target_motif = motif_pairs[-1]
+            source_error = evaluate_propagation(value_range=value_range, points=points,
+                                                motif=source_motif, compute_type="mean")
+            target_error = evaluate_propagation(value_range=value_range, points=points,
+                                                motif=target_motif, compute_type="mean")
+            propagation_data.append(source_error + target_error)
+            monitor.output(index + 1, len(records))
+        save_data(save_path=raw_path + "max-min.propagation.pkl", information=propagation_data)
+
     if not exists(path=raw_path + "max-min.lipschitz.pkl"):
         print("Calculate the Lipschitz content of each final source motif.")
         lipschitz_data, records = [], load_data(load_path=raw_path + "max-min.search.pkl")
         for index, (motif_pairs, _, _, _) in enumerate(records):
-            rugosity_indices = []
+            lipschitz_values = []
             for motif, _ in motif_pairs:
-                rugosity_indices.append(estimate_lipschitz(value_range=value_range, points=points, motif=motif))
-            lipschitz_data.append(array(rugosity_indices))
+                lipschitz_values.append(estimate_lipschitz(value_range=value_range, points=points, motif=motif))
+            lipschitz_data.append(array(lipschitz_values))
             monitor.output(index + 1, len(records))
         save_data(save_path=raw_path + "max-min.lipschitz.pkl", information=lipschitz_data)
 
@@ -457,6 +470,17 @@ def experiment3(raw_path, task_path):
             motif = motif_pairs[-1][0]
             param_data[motif.i - 1].append([weight.value() for weight in motif.w])
         save_data(save_path=task_path + "max-min params.npy", information=array(param_data))
+
+    if not exists(path=task_path + "replaceable.npy"):
+        propagations = load_data("../data/results/raw/max-min.propagation.pkl")
+        chuck_losses = load_data("../data/results/task03/max-min losses.npy")
+        counts = zeros(shape=(41,), dtype=int)
+        for index, (propagation, chuck_loss) in enumerate(zip(propagations, chuck_losses)):
+            for i in range(1, len(propagation)):
+                if max(propagation[:i, :i]) > chuck_loss:
+                    counts[i] += 1
+                    break
+        save_data(save_path=task_path + "replaceable.npy", information=cumsum(array(counts)))
 
     if not exists(path=task_path + "lipschitz constants.npy"):
         lipschitz_data, records = [], load_data(load_path=raw_path + "max-min.lipschitz.pkl")
@@ -511,7 +535,7 @@ def experiment4(raw_path, task_path, config_path):
         return calculate_matrix_from_agent(a, need_mapping=True)
 
     agent_names, agent_count, monitor = ["baseline", "geometry", "novelty"], 100, Monitor()
-    agent_configs = [create_agent_config(path=config_path + "cartpole-v0." + name) for name in agent_names]
+    agent_configs = [create_agent_config(path=config_path + "cartpole-v0.default." + name) for name in agent_names]
     radios = [0.0, 0.1, 0.2, 0.3]
 
     noise_generator, noise_sampling = NormNoiseGenerator(norm_type="L-2", noise_scale=0.0), 100
@@ -519,12 +543,11 @@ def experiment4(raw_path, task_path, config_path):
 
     if not exists(raw_path + "practice.train.pkl"):
         print("Train agents in the CartPole environment.")
-        agent_records = {}
+        train_records = {}
         for agent_name, agent_config in zip(agent_names, agent_configs):
             for radio in radios:
-                agent_records[(agent_name[0], int(radio * 10))] = []
+                train_records[(agent_name[0], int(radio * 10))] = []
                 task.noise_generator.noise_scale = radio
-
                 count = 1
                 while count < agent_count:
                     print("Train " + agent_name + " in the CartPole: " + str(count) + " / " + str(agent_count))
@@ -535,15 +558,16 @@ def experiment4(raw_path, task_path, config_path):
                                           action_handle=argmax)
                         experience = task.get_experience()
                         record = {"agent": agent, "experience": experience}
-                        agent_records[(agent_name[0], int(radio * 10))].append(record)
+                        train_records[(agent_name[0], int(radio * 10))].append(record)
                         count += 1
                     print()
-        save_data(save_path=raw_path + "practice.train.pkl", information=agent_records)
+        save_data(save_path=raw_path + "practice.train.pkl", information=train_records)
 
     if not exists(path=raw_path + "practice.motif.pkl"):
+        print("Calculate motifs in agents.")
         reference_motifs, current = get_reference_motifs(), 1
-        motif_records, agent_records = {"final": {}, "evolve": {}}, load_data(load_path=raw_path + "practice.train.pkl")
-        for (name_index, noise_index), train_info in agent_records.items():
+        motif_records, train_records = {"final": {}, "evolve": {}}, load_data(load_path=raw_path + "practice.train.pkl")
+        for (name_index, noise_index), train_info in train_records.items():
             motif_records["final"][(name_index, noise_index)] = zeros(shape=(len(reference_motifs),))
             motif_records["evolve"][(name_index, noise_index)] = zeros(shape=(len(reference_motifs), 20))
             temp_counts = zeros(shape=(len(reference_motifs), 20))
@@ -559,6 +583,9 @@ def experiment4(raw_path, task_path, config_path):
                 evolved_counts = zeros(shape=(len(reference_motifs), 20))
                 for index, values in enumerate(motif_counts):
                     evolved_counts[index] = values
+                if len(motif_counts) < 20:
+                    for index in range(len(motif_counts), 20):
+                        evolved_counts[index] = evolved_counts[len(motif_counts) - 1]
 
                 motif_records["evolve"][(name_index, noise_index)] += evolved_counts
                 motif_records["final"][(name_index, noise_index)] += final_counts
@@ -572,10 +599,10 @@ def experiment4(raw_path, task_path, config_path):
 
         save_data(save_path=raw_path + "practice.motif.pkl", information=motif_records)
 
-    if not exists(raw_path + "practice.noise.pkl"):
+    if not exists(path=raw_path + "practice.noise.pkl"):
         print("Evaluate the agents under different noise scales.")
-        noise_records, agent_records = {}, load_data(load_path=raw_path + "practice.train.pkl")
-        for (name_index, noise_index), train_info in agent_records.items():
+        noise_records, train_records = {}, load_data(load_path=raw_path + "practice.train.pkl")
+        for (name_index, noise_index), train_info in train_records.items():
             noise_record = []
             print("Evaluate " + {"b": "baseline", "g": "geometry", "n": "novelty"}[name_index] + ".")
             for agent_index, agent_info in enumerate(train_info):
@@ -591,40 +618,166 @@ def experiment4(raw_path, task_path, config_path):
             noise_records[(name_index, noise_index)] = array(noise_record)
         save_data(save_path=raw_path + "practice.noise.pkl", information=noise_records)
 
-    if not exists(raw_path + "practice.score.pkl"):
-        print("Evaluate the GRACE robustness score of agents.")
-        score_records, agent_records = {}, load_data(load_path=raw_path + "practice.train.pkl")
-        for (name_index, noise_index), train_info in agent_records.items():
-            score_records[(name_index, noise_index)] = []
+    if not exists(path=raw_path + "practice.additions.pkl"):
+        print("Train agents in the CartPole environment (from 20 generations to 100 generations).")
+        train_1_records = {}
+        for agent_name, agent_config in zip(agent_names, agent_configs):
+            for radio in radios:
+                train_1_records[(agent_name[0], int(radio * 10))] = []
+                task.noise_generator.noise_scale = radio
+                count = 1
+                while count < agent_count:
+                    print("Train " + agent_name + " in the CartPole: " + str(count) + " / " + str(agent_count))
+                    task.reset_experience(record_handle=record_handle)
+                    best_genome = obtain_best(task, agent_config, need_stdout=True)
+                    if best_genome is not None:
+                        agent = NEATAgent(model_genome=best_genome, neat_config=agent_config, description=agent_name,
+                                          action_handle=argmax)
+                        experience = task.get_experience()
+                        record = {"agent": agent, "experience": experience}
+                        train_1_records[(agent_name[0], int(radio * 10))].append(record)
+                        count += 1
+                    print()
+
+        print("Train agents in the CartPole environment (allow "
+              "\"relu\", \"tanh\", and \"sigmoid\" for activations and \"sum\" and \"max\" for aggregations).")
+        train_2_records = {}
+        agent_configs = [create_agent_config(path=config_path + "cartpole-v0.combine." + name) for name in agent_names]
+        for agent_name, agent_config in zip(agent_names, agent_configs):
+            for radio in radios:
+                train_2_records[(agent_name[0], int(radio * 10))] = []
+                task.noise_generator.noise_scale = radio
+                count = 1
+                while count < agent_count:
+                    print("Train " + agent_name + " in the CartPole: " + str(count) + " / " + str(agent_count))
+                    task.reset_experience(record_handle=record_handle)
+                    best_genome = obtain_best(task, agent_config, need_stdout=True)
+                    if best_genome is not None:
+                        agent = NEATAgent(model_genome=best_genome, neat_config=agent_config, description=agent_name,
+                                          action_handle=argmax)
+                        experience = task.get_experience()
+                        record = {"agent": agent, "experience": experience}
+                        train_2_records[(agent_name[0], int(radio * 10))].append(record)
+                        count += 1
+                    print()
+
+        print("Evaluate the agents under different noise scales.")
+        test_1_records = {}
+        for (name_index, noise_index), train_info in train_1_records.items():
+            noise_record = []
+            print("Evaluate " + {"b": "baseline", "g": "geometry", "n": "novelty"}[name_index] + ".")
+            for agent_index, agent_info in enumerate(train_info):
+                agent, record, current = agent_info["agent"], zeros(shape=(len(radios), agent_count)), 1
+                for index_1, noise_scale in enumerate(radios):
+                    task.noise_generator.noise_scale = noise_scale
+                    reward_collector = task.run(agent=agent)["rewards"]
+                    for index_2, rewards in enumerate(reward_collector):
+                        record[index_1, index_2] = sum(rewards)
+                        monitor.output(current, len(radios) * agent_count)
+                        current += 1
+                noise_record.append(record)
+            test_1_records[(name_index, noise_index)] = array(noise_record)
+
+        test_2_records = {}
+        for (name_index, noise_index), train_info in train_2_records.items():
+            noise_record = []
+            print("Evaluate " + {"b": "baseline", "g": "geometry", "n": "novelty"}[name_index] + ".")
+            for agent_index, agent_info in enumerate(train_info):
+                agent, record, current = agent_info["agent"], zeros(shape=(len(radios), agent_count)), 1
+                for index_1, noise_scale in enumerate(radios):
+                    task.noise_generator.noise_scale = noise_scale
+                    reward_collector = task.run(agent=agent)["rewards"]
+                    for index_2, rewards in enumerate(reward_collector):
+                        record[index_1, index_2] = sum(rewards)
+                        monitor.output(current, len(radios) * agent_count)
+                        current += 1
+                noise_record.append(record)
+            test_2_records[(name_index, noise_index)] = array(noise_record)
+
+        save_data(save_path="practice.additions.pkl", information={"20 to 100": (train_1_records, test_1_records),
+                                                                   "combine": (train_2_records, test_2_records)})
+
+    if not exists(path=task_path + "train results.npy"):
+        train_records = load_data(load_path=raw_path + "practice.train.pkl")
+        results = zeros(shape=(3, 4, 100))
+        for (name_index, noise_index), train_info in train_records.items():
             for agent_index, agent_info in enumerate(train_info):
                 agent = agent_info["agent"]
-                scores = calculate_grace(task=task, agent=agent, noise_generator=noise_generator,
-                                         noise_sampling=noise_sampling, replay=True, verbose=False)
-                score_records[(name_index, noise_index)].append(scores)
-        save_data(save_path=raw_path + "practice.score.pkl", information=score_records)
+                results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index, agent_index] = agent.get_fitness()
+        save_data(save_path=task_path + "train results.npy", information=results)
+
+    if not exists(path=task_path + "generations.npy"):
+        train_records = load_data(load_path=raw_path + "practice.train.pkl")
+        results = zeros(shape=(3, 4, 20))
+        for (name_index, noise_index), train_info in train_records.items():
+            for agent_index, agent_info in enumerate(train_info):
+                experience = agent_info["experience"]
+                results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index, len(experience) - 1] += 1
+        save_data(save_path=task_path + "generations.npy", information=results)
 
     if not exists(path=task_path + "performances.npy"):
         noise_records = load_data(load_path=raw_path + "practice.noise.pkl")
         results = zeros(shape=(3, 4, 4))
         for (name_index, noise_index), record in noise_records.items():
-            results[{"b": 0, "g": 1, "n": 2}[name_index], noise_index] = mean(mean(record, axis=0), axis=1)
+            results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index] = mean(mean(record, axis=0), axis=1)
         save_data(save_path=task_path + "performances.npy", information=results)
 
     if not exists(path=task_path + "final motifs.npy"):
         motif_records = load_data(load_path=raw_path + "practice.motif.pkl")["final"]
         results = zeros(shape=(3, 4, 2))
         for (name_index, noise_index), record in motif_records.items():
-            results[{"b": 0, "g": 1, "n": 2}[name_index], noise_index] = [sum(record[-4:]), sum(record[:4])]
+            results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index] = [sum(record[-4:]), sum(record[:4])]
         save_data(save_path=task_path + "final motifs.npy", information=results)
 
-    if not exists(path=task_path + "grace scores.npy"):
-        score_records = load_data(load_path=raw_path + "practice.score.pkl")
-        results = zeros(shape=(3, 4))
-        for (name_index, noise_index), record in score_records.items():
-            for scores in record:
-                results[{"b": 0, "g": 1, "n": 2}[name_index], noise_index] += sum(scores)
-            results[{"b": 0, "g": 1, "n": 2}[name_index], noise_index] /= 200 * 100
-        save_data(save_path=task_path + "grace scores.npy", information=results)
+    if not exists(path=task_path + "evolved motifs.npy"):
+        motif_records = load_data(load_path=raw_path + "practice.motif.pkl")["evolve"]
+        results = zeros(shape=(3, 4, 2, 20))
+        for (name_index, noise_index), record in motif_records.items():
+            evolved_counts = array([sum(record[:, -4:], axis=1), sum(record[:, :4], axis=1)])
+            results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index] = evolved_counts
+        save_data(save_path=task_path + "evolved motifs.npy", information=results)
+
+    if not exists(path=task_path + "changed performances.pkl"):
+        records = load_data(load_path=raw_path + "practice.additions.pkl")
+        train_1_results, train_2_results = zeros(shape=(3, 4, 100)), zeros(shape=(3, 4, 100))
+        for (name_index, noise_index), train_info in records["20 to 100"][0].items():
+            for agent_index, agent_info in enumerate(train_info):
+                fitness = agent_info["agent"].get_fitness()
+                train_1_results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index, agent_index] = fitness
+        for (name_index, noise_index), train_info in records["combine"][0].items():
+            for agent_index, agent_info in enumerate(train_info):
+                fitness = agent_info["agent"].get_fitness()
+                train_2_results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index, agent_index] = fitness
+        test_1_results, test_2_results = zeros(shape=(3, 4, 4)), zeros(shape=(3, 4, 4))
+        for (name_index, noise_index), test_info in records["20 to 100"][1].items():
+            test_1_results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index] = mean(mean(test_info, axis=0), axis=1)
+        for (name_index, noise_index), test_info in records["combine"][1].items():
+            test_2_results[{"g": 0, "b": 1, "n": 2}[name_index], noise_index] = mean(mean(test_info, axis=0), axis=1)
+
+        results = {"20 to 100": (train_1_results, test_1_results), "combine": (train_2_results, test_2_results)}
+        save_data(save_path=task_path + "changed performances.pkl", information=results)
+
+    if not exists(path=task_path + "changed motifs.pkl"):
+        records = load_data(load_path=raw_path + "practice.additions.pkl")
+        motif_records, reference_motifs = {"20 to 100": {}, "combine": {}}, get_reference_motifs()
+        for (name_index, noise_index), train_info in records["20 to 100"][0].items():
+            matrices = []
+            for agent_index, agent_info in enumerate(train_info):
+                matrices.append(agent_info["experience"][-1][0])
+            motif_counts = count_motifs_from_matrices(matrices=matrices, search_size=3,
+                                                      graph_type=GraphType.pn, pruning=False,
+                                                      reference_motifs=reference_motifs)
+            motif_records["20 to 100"][(name_index, noise_index)] = mean(motif_counts, axis=0)
+        for (name_index, noise_index), train_info in records["combine"][0].items():
+            matrices = []
+            for agent_index, agent_info in enumerate(train_info):
+                matrices.append(agent_info["experience"][-1][0])
+            motif_counts = count_motifs_from_matrices(matrices=matrices, search_size=3,
+                                                      graph_type=GraphType.pn, pruning=False,
+                                                      reference_motifs=reference_motifs)
+            motif_records["combine"][(name_index, noise_index)] = mean(motif_counts, axis=0)
+
+        save_data(save_path=task_path + "changed motifs.pkl", information=motif_records)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,4 @@
-from copy import deepcopy
-from enum import Enum
-from numpy import array, arange, zeros, random, repeat, expand_dims, linalg
-from numpy import argmin, argmax, abs, min, max, sum, all, clip, inf
-
-from grace.handle import Monitor
+from numpy import arange, zeros, random, repeat, expand_dims, min, max, clip
 
 
 class NormNoiseGenerator(object):
@@ -83,7 +78,7 @@ class NormNoiseGenerator(object):
 
 
 # noinspection PyTypeChecker
-def intervene(task, agent, noise_scales, reward_calculator, random_seed=None, verbose=False):
+def intervene(task, agent, noise_scales, reward_calculator, random_seed=None):
     """
     Intervene the gym environment in the test process.
 
@@ -101,9 +96,6 @@ def intervene(task, agent, noise_scales, reward_calculator, random_seed=None, ve
 
     :param random_seed: random seed for initializing the environment and creating the noise.
     :type random_seed: int or None
-
-    :param verbose: need to show process log.
-    :type verbose: bool
 
     :return: reward record.
     :rtype: numpy.ndarray
@@ -123,92 +115,3 @@ def intervene(task, agent, noise_scales, reward_calculator, random_seed=None, ve
         random.seed(None)
 
     return test_records
-
-
-# noinspection PyTypeChecker
-def calculate_grace(task, agent, noise_generator, noise_sampling=20, state_sampling=20, replay=False,
-                    random_seed=None, verbose=False):
-    """
-    Calculate Grace scores.
-
-    :param task: available task.
-    :type task: grace.task.GymTask
-
-    :param agent: available agent.
-    :type agent: grace.agent.DefaultAgent
-
-    :param noise_generator: noise generator for calculating robustness score.
-    :type noise_generator: grace.robust.NormNoiseGenerator
-
-    :param noise_sampling: number of noise sample.
-    :type noise_sampling: int
-
-    :param state_sampling: number of state (per variable in the state) when "replay" is false.
-    :type state_sampling: int
-
-    :param replay: play in the environment through agents to create states.
-    :type replay: bool
-
-    :param random_seed: random seed for initializing the environment and creating the noise.
-    :type random_seed: int or None
-
-    :param verbose: need to show process log.
-    :type verbose: bool
-
-    :return: GRACE scores.
-    :rtype: numpy.ndarray
-    """
-
-    if random_seed is None:
-        random.seed(random_seed)
-
-    if replay:
-        saved_states = task.run_1_iteration(agent=agent)["states"]
-    else:
-        saved_states = task.sampling_states(sampling=state_sampling)
-
-    scores, total, monitor = [], len(saved_states), Monitor()
-    norm_value = {"L-1": inf, "L-2": 2, "L-inf": 1}[noise_generator.norm_type]
-    minimum_bounds, maximum_bounds = task.get_state_range()
-    for current, saved_state in enumerate(saved_states):
-        # obtain the action by the selected agent from the saved observation.
-        action_values = task.run_1_step(agent=agent, state=saved_state, reset=True)["action"]
-
-        # calculate the numerator, f_max(state) - f_min(state)
-        numerator = max(action_values) - min(action_values)
-
-        # generate noise samples in required norm based on the saved observation.
-        noise_samples = noise_generator.get_samples(sample=saved_state, count=noise_sampling,
-                                                    minimum_bounds=minimum_bounds, maximum_bounds=maximum_bounds)
-
-        def calculate_handle(positive_h_values, negative_h_values):
-            """
-            Calculate gradient from a special strategy.
-
-            :param positive_h_values: positive perturbed actions.
-            :type positive_h_values: numpy.ndarray
-
-            :param negative_h_values: negative perturbed actions.
-            :type negative_h_values: numpy.ndarray
-
-            :return: gradient of special handle.
-            :rtype: numpy.ndarray
-            """
-            positive_difference = positive_h_values[argmax(action_values)] - positive_h_values[argmin(action_values)]
-            negative_difference = negative_h_values[argmax(action_values)] - negative_h_values[argmin(action_values)]
-            return positive_difference - negative_difference
-
-        denominators = []
-        for state in noise_samples:
-            # obtain a perturbed estimated gradient based on the noise sample for further calculation.
-            denominators.append(task.estimate_gradient(agent=agent, state=state, calculate_handle=calculate_handle))
-
-        scores.append(numerator / max(linalg.norm(array(denominators), ord=norm_value, axis=1)))
-
-        if verbose:
-            monitor.output(current + 1, total, extra={"score": scores[-1], "state": saved_state})
-
-    if random_seed is None:
-        random.seed(None)
-
-    return array(scores)
