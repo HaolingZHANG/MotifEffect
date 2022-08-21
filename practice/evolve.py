@@ -1,18 +1,32 @@
+# neat and sklearn have inserted in requirements.txt
 from copy import deepcopy
 from math import sqrt
+from itertools import combinations
+# noinspection PyPackageRequirements
 from neat import DefaultGenome, DefaultSpeciesSet, DefaultReproduction
+# noinspection PyPackageRequirements
 from neat.config import DefaultClassConfig, ConfigParameter
+# noinspection PyPackageRequirements
 from neat.activations import ActivationFunctionSet
+# noinspection PyPackageRequirements
 from neat.aggregations import AggregationFunctionSet
+# noinspection PyPackageRequirements
 from neat.genes import DefaultNodeGene, DefaultConnectionGene
+# noinspection PyPackageRequirements
 from neat.genome import DefaultGenomeConfig
+# noinspection PyPackageRequirements
 from neat.math_util import mean, stdev
+# noinspection PyPackageRequirements
 from neat.six_util import iteritems, itervalues, iterkeys
+# noinspection PyPackageRequirements
 from neat.species import Species, GenomeDistanceCache
-from numpy import array, min, max, argsort, ceil, isnan
+from numpy import array, zeros, min, max, argsort, ceil, isnan
 from pandas import Series
 from random import choice, sample, randint
+# noinspection PyPackageRequirements
 from sklearn.cluster import KMeans, SpectralClustering, Birch
+
+from practice.motif import obtain_motif, is_same_motif
 
 
 class BiReproduction(DefaultReproduction):
@@ -442,6 +456,145 @@ class NSReproduction(DefaultReproduction):
         return new_population
 
 
+class AdjustedReproduction(DefaultReproduction):
+
+    def create_new(self, genome_type, genome_config, num_genomes):
+        new_genomes = {}
+        for i in range(num_genomes):
+            key = next(self.genome_indexer)
+            while True:  # add a forgoing check.
+                genome = genome_type(key)
+                genome.configure_new(genome_config)
+                if self.adjust(genome, genome_config):
+                    break
+            new_genomes[key] = genome
+            self.ancestors[key] = tuple()
+
+        return new_genomes
+
+    def reproduce(self, config, species, pop_size, generation):
+        # Filter out stagnated species, collect the set of non-stagnated species members,
+        # and compute their average adjusted fitness.
+        all_fitnesses, remaining_species = [], []
+        for stag_sid, stag_s, stagnant in self.stagnation.update(species, generation):
+            if stagnant:
+                self.reporters.species_stagnant(stag_sid, stag_s)
+            else:
+                all_fitnesses.extend(m.fitness for m in itervalues(stag_s.members))
+                remaining_species.append(stag_s)
+        # The above comment was not quite what was happening - now getting fitnesses
+        # only from members of non-stagnated species.
+
+        # No species left.
+        if not remaining_species:
+            species.species = {}
+            return {}
+
+        # Find minimum/maximum fitness across the entire population, for use in species adjusted fitness computation.
+        min_fitness, max_fitness = min(all_fitnesses), max(all_fitnesses)
+        fitness_range = max([1.0, max_fitness - min_fitness])
+        for afs in remaining_species:
+            # Compute adjusted fitness.
+            msf = mean([m.fitness for m in itervalues(afs.members)])
+            af = (msf - min_fitness) / fitness_range
+            afs.adjusted_fitness = af
+
+        adjusted_fitnesses = [s.adjusted_fitness for s in remaining_species]
+        avg_adjusted_fitness = mean(adjusted_fitnesses)
+        self.reporters.info("Average adjusted fitness: {:.3f}".format(avg_adjusted_fitness))
+
+        # Compute the number of new members for each species in the new generation.
+        previous_sizes = [len(s.members) for s in remaining_species]
+        min_species_size = self.reproduction_config.min_species_size
+        min_species_size = max([min_species_size, self.reproduction_config.elitism])
+        spawn_amounts = self.compute_spawn(adjusted_fitnesses, previous_sizes, pop_size, min_species_size)
+
+        new_population = {}
+        species.species = {}
+        for spawn, s in zip(spawn_amounts, remaining_species):
+            # If elitism is enabled, each species always at least gets to retain its elites.
+            spawn = max([spawn, self.reproduction_config.elitism])
+
+            assert spawn > 0
+
+            # The species has at least one member for the next generation, so retain it.
+            old_members = list(iteritems(s.members))
+            s.members = {}
+            species.species[s.key] = s
+
+            # Sort members in order of descending fitness.
+            old_members.sort(reverse=True, key=lambda x: x[1].fitness)
+
+            # Transfer elites to new generation.
+            if self.reproduction_config.elitism > 0:
+                for i, m in old_members[:self.reproduction_config.elitism]:
+                    new_population[i] = m
+                    spawn -= 1
+
+            if spawn <= 0:
+                continue
+
+            # Only use the survival threshold fraction to use as parents for the next generation.
+            repro_cutoff = int(ceil(self.reproduction_config.survival_threshold * len(old_members)))
+            # Use at least two parents no matter what the threshold fraction result is.
+            repro_cutoff = max([repro_cutoff, 2])
+            old_members = old_members[:repro_cutoff]
+
+            # Randomly choose parents and produce the number of offspring allotted to the species.
+            while spawn > 0:
+                spawn -= 1
+
+                # Note that if the parents are not distinct, crossover will produce a
+                # genetically identical clone of the parent (but with a different ID).
+                gid = next(self.genome_indexer)
+                while True:  # add a forgoing check.
+                    parent1_id, parent1 = choice(old_members)
+                    parent2_id, parent2 = choice(old_members)
+                    child = config.genome_type(gid)
+                    child.configure_crossover(parent1, parent2, config.genome_config)
+                    child.mutate(config.genome_config)
+                    if self.adjust(child, config.genome_config):
+                        break
+
+                new_population[gid] = child
+                self.ancestors[gid] = (parent1_id, parent2_id)
+
+        return new_population
+
+    @staticmethod
+    def adjust(model_genome, genome_config):
+        scale = genome_config.num_inputs + genome_config.num_outputs + len(model_genome.nodes)
+
+        mapping, matrix = {}, zeros(shape=(scale, scale), dtype=int)
+        for index in range(genome_config.num_inputs):
+            mapping[index - genome_config.num_inputs] = index
+
+        index = genome_config.num_inputs
+        for node_key, node_gene in iteritems(model_genome.nodes):
+            mapping[node_key] = index
+            index += 1
+
+        for connect_gene in itervalues(model_genome.connections):
+            if mapping.get(connect_gene.key[0]) is not None and mapping.get(connect_gene.key[1]) is not None:
+                row = mapping.get(connect_gene.key[0])
+                col = mapping.get(connect_gene.key[1])
+                if connect_gene.weight > 0:
+                    matrix[row, col] = 1
+                elif connect_gene.weight < 0:
+                    matrix[row, col] = -1
+
+        incoherent_loops = array([[[0, -1, 1], [0, 0, 1], [0, 0, 0]], [[0, 1, 1], [0, 0, -1], [0, 0, 0]],
+                                  [[0, 1, -1], [0, 0, 1], [0, 0, 0]], [[0, -1, -1], [0, 0, -1], [0, 0, 0]]])
+
+        for combination in combinations([node_id for node_id in range(len(matrix))], 3):
+            motif = obtain_motif(adjacency_matrix=matrix, combination=combination, search_size=3)
+            for loop in incoherent_loops:
+                if is_same_motif(motif, loop):
+                    return False
+
+        return True
+
+
 class GlobalGenome(DefaultGenome):
 
     @classmethod
@@ -619,9 +772,9 @@ class GlobalGenome(DefaultGenome):
         return s
 
 
-# noinspection PyMissingConstructor
 class GlobalGenomeConfig(DefaultGenomeConfig):
 
+    # noinspection PyMissingConstructor
     def __init__(self, params):
         """
         Initialize config by params, add ConfigParameter("max_node_num", int)

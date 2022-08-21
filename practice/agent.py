@@ -8,8 +8,11 @@ class DefaultAgent(object):
         """
         Initialize the agent.
 
-        :param trained_model:
-        :param description:
+        :param trained_model: trained model.
+        :type trained_model: object
+
+        :param description: description of this trained model.
+        :type description: str
         """
         self.trained_model, self.description = trained_model, description
 
@@ -53,6 +56,7 @@ class NEATAgent(DefaultAgent):
         :return: outputted information.
         :rtype: numpy.ndarray
         """
+        # noinspection PyUnresolvedReferences
         outputs = self.trained_model.activate(inputs)
         action = self.action_handle(outputs)
 

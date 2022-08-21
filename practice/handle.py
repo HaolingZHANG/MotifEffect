@@ -4,7 +4,7 @@ from neat import genome, stagnation, reproduction, species, config
 from neat.six_util import iteritems, itervalues
 from numpy import zeros
 
-from practice.evolve import GSReproduction, NSReproduction, GlobalGenome, UpdatedSpeciesSet
+from practice.evolve import GSReproduction, NSReproduction, AdjustedReproduction, GlobalGenome, UpdatedSpeciesSet
 from practice.motif import count_motifs_from_matrices, GraphType
 
 
@@ -122,6 +122,10 @@ def create_agent_config(path):
                              path)
     elif path.split(".")[-1] == "novelty":
         return config.Config(genome.DefaultGenome, NSReproduction,
+                             species.DefaultSpeciesSet, stagnation.DefaultStagnation,
+                             path)
+    elif path.split(".")[-1] == "adjusted":
+        return config.Config(genome.DefaultGenome, AdjustedReproduction,
                              species.DefaultSpeciesSet, stagnation.DefaultStagnation,
                              path)
     else:

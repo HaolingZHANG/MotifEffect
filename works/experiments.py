@@ -538,10 +538,10 @@ def experiment4(raw_path, task_path, config_path):
     agent_configs = [create_agent_config(path=config_path + "cartpole-v0.default." + name) for name in agent_names]
     radios = [0.0, 0.1, 0.2, 0.3]
 
-    noise_generator, noise_sampling = NormNoiseGenerator(norm_type="L-2", noise_scale=0.0), 100
+    noise_generator = NormNoiseGenerator(norm_type="L-2", noise_scale=0.0)
     task = NEATCartPoleTask(maximum_generation=20, noise_generator=noise_generator, verbose=False)
 
-    if not exists(raw_path + "practice.train.pkl"):
+    if not exists(path=raw_path + "practice.train.pkl"):
         print("Train agents in the CartPole environment.")
         train_records = {}
         for agent_name, agent_config in zip(agent_names, agent_configs):
@@ -780,8 +780,87 @@ def experiment4(raw_path, task_path, config_path):
         save_data(save_path=task_path + "changed motifs.pkl", information=motif_records)
 
 
+def experiment5(raw_path, task_path, config_path):
+    def record_handle(a):
+        return calculate_matrix_from_agent(a, need_mapping=True)
+
+    agent_names, agent_count, monitor = ["baseline", "adjusted"], 100, Monitor()
+    agent_configs = [create_agent_config(path=config_path + "cartpole-v0.default." + name) for name in agent_names]
+    radios = [0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
+
+    noise_generator = NormNoiseGenerator(norm_type="L-2", noise_scale=0.0)
+    task = NEATCartPoleTask(maximum_generation=100, noise_generator=noise_generator, verbose=False)
+
+    if not exists(path=raw_path + "intervene.train.pkl"):
+        print("Train agents in the CartPole environment.")
+        train_records = {}
+        for agent_name, agent_config in zip(agent_names, agent_configs):
+            for radio in radios:
+                train_records[(agent_name[0], int(radio * 10))] = []
+                task.noise_generator.noise_scale = radio
+                count = 1
+                while count < agent_count:
+                    print("Train " + agent_name + " in the CartPole: " + str(count) + " / " + str(agent_count))
+                    task.reset_experience(record_handle=record_handle)
+                    best_genome = obtain_best(task, agent_config, need_stdout=True)
+                    if best_genome is not None:
+                        agent = NEATAgent(model_genome=best_genome, neat_config=agent_config, description=agent_name,
+                                          action_handle=argmax)
+                        experience = task.get_experience()
+                        record = {"agent": agent, "experience": experience}
+                        train_records[(agent_name[0], int(radio * 100))].append(record)
+                        count += 1
+                    print()
+        save_data(save_path=raw_path + "intervene.train.pkl", information=train_records)
+
+    if not exists(path=raw_path + "intervene.test.pkl"):
+        print("Evaluate the agents under different noise scales.")
+        noise_records, train_records = {}, load_data(load_path=raw_path + "intervene.train.pkl")
+        for (name_index, noise_index), train_info in train_records.items():
+            noise_record = []
+            print("Evaluate " + {"b": "baseline", "a": "adjusted"}[name_index] + ".")
+            for agent_index, agent_info in enumerate(train_info):
+                agent, record, current = agent_info["agent"], zeros(shape=(len(radios), agent_count)), 1
+                for index_1, noise_scale in enumerate(radios):
+                    task.noise_generator.noise_scale = noise_scale
+                    reward_collector = task.run(agent=agent)["rewards"]
+                    for index_2, rewards in enumerate(reward_collector):
+                        record[index_1, index_2] = sum(rewards)
+                        monitor.output(current, len(radios) * agent_count)
+                        current += 1
+                noise_record.append(record)
+            noise_records[(name_index, noise_index)] = array(noise_record)
+        save_data(save_path=raw_path + "intervene.test.pkl", information=noise_records)
+
+    if not exists(path=task_path + "generations.npy"):
+        generation_data, mapping = zeros(shape=(2, len(radios), agent_count)), {"b": 0, "a": 1}
+        for (name_index, noise_index), train_data in load_data(load_path=raw_path + "intervene.train.pkl").items():
+            for agent_index, agent_info in enumerate(train_data):
+                generation_data[mapping[name_index], noise_index // 5, agent_index] = len(agent_info["experience"])
+        save_data(save_path=task_path + "generations.npy", information=generation_data)
+
+    if not exists(path=task_path + "final loops.npy"):
+        reference_motifs, incoherent_loops = get_reference_motifs(), zeros(shape=(len(radios), agent_count))
+        for (name_index, noise_index), train_info in load_data(load_path=raw_path + "intervene.train.pkl").items():
+            if name_index != "b":
+                continue
+            for agent_index, agent_info in enumerate(train_info):
+                motif_count = count_motifs_from_matrices(matrices=[calculate_matrix_from_agent(agent_info["agent"])],
+                                                         search_size=3, graph_type=GraphType.pn, pruning=False,
+                                                         reference_motifs=reference_motifs)[0]
+                incoherent_loops[noise_index // 5, agent_index] = sum(motif_count[-4:])
+        save_data(save_path=task_path + "final loops.npy", information=incoherent_loops)
+
+    if not exists(path=task_path + "accesses.npy"):
+        access_matrix, mapping = zeros(shape=(2, len(radios), len(radios)), dtype=bool), {"b": 0, "a": 1}
+        for (name_index, noise_index), test_data in load_data(load_path=raw_path + "intervene.test.pkl").items():
+            access_matrix[mapping[name_index], noise_index // 5] = mean(mean(test_data, axis=0), axis=1) >= 195
+        save_data(save_path=task_path + "accesses.npy", information=access_matrix)
+
+
 if __name__ == "__main__":
     experiment1(raw_path="../data/results/raw/", task_path="../data/results/task01/")
     experiment2(raw_path="../data/results/raw/", task_path="../data/results/task02/")
     experiment3(raw_path="../data/results/raw/", task_path="../data/results/task03/")
     experiment4(raw_path="../data/results/raw/", task_path="../data/results/task04/", config_path="../data/configs/")
+    experiment5(raw_path="../data/results/raw/", task_path="../data/results/task05/", config_path="../data/configs/")

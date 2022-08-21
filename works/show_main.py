@@ -1,12 +1,258 @@
 from matplotlib import pyplot, rcParams, markers, patches, lines, colors
-from numpy import arange, zeros, ones, linspace, hstack, min, max, mean, argsort, sum, percentile, log10, where
+from numpy import array, arange, zeros, ones, linspace
+from numpy import hstack, min, max, mean, argsort, sum, sin, clip, percentile, log10, exp, where, inf, pi
 from scipy.stats import gaussian_kde, spearmanr
 
-from works import load_data, draw_info, adjust_format
+from effect import NeuralMotif, calculate_landscape, estimate_lipschitz
+
+from works import load_data, acyclic_motifs, draw_info, adjust_format
+
+
+def main01():
+    pyplot.figure(figsize=(10, 4))
+    grid = pyplot.GridSpec(4, 10)
+    pyplot.subplots_adjust(wspace=0, hspace=0)
+    rcParams["font.family"] = "Times New Roman"
+
+    pyplot.subplot(grid[:2, :2])
+    motif, info = acyclic_motifs["incoherent-loop"][1], draw_info["incoherent-loop"]
+    for index, (px, py) in enumerate(zip(info[1], info[2])):
+        if index + 1 in info[3]:
+            pyplot.scatter(px, py, color="white", edgecolor="black", lw=1, s=80, zorder=2)
+        elif index + 1 in info[4]:
+            pyplot.scatter(px, py, color="black", edgecolor="black", lw=1, s=80, zorder=2)
+        elif index + 1 in info[5]:
+            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="right"),
+                           color="white", edgecolor="black", lw=1, s=80, zorder=2)
+            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="left"),
+                           color="gray", edgecolor="black", lw=1, s=80, zorder=2)
+        else:
+            pyplot.scatter(px, py, color="gray", edgecolor="black", lw=1, s=80, zorder=2)
+    x, y = info[1], info[2]
+    for former, latter in [(1, 2), (1, 3), (2, 3)]:
+        if motif.get_edge_data(former, latter)["weight"] == 1:
+            pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
+                            arrowprops=dict(arrowstyle="-|>", color="black",
+                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
+        elif motif.get_edge_data(former, latter)["weight"] == -1:
+            pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
+                            arrowprops=dict(arrowstyle="-|>", color="black", linestyle="dotted",
+                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
+    pyplot.text(x=info[1][0], y=info[2][0] - 0.06, s="x", fontsize=10, va="top", ha="center")
+    pyplot.text(x=info[1][1], y=info[2][1] - 0.06, s="y", fontsize=10, va="top", ha="center")
+    pyplot.text(x=info[1][2], y=info[2][2] + 0.06, s="z", fontsize=10, va="bottom", ha="center")
+    pyplot.text(-0.05, 0.45, "incoherent loop", va="center", ha="center", fontsize=10, rotation=90)
+    pyplot.xlim(-0.10, 1.0)
+    pyplot.ylim(-0.05, 1.0)
+    pyplot.axis("off")
+
+    pyplot.subplot(grid[2:4, :2])
+    motif, info = acyclic_motifs["collider"][1], draw_info["collider"]
+    for index, (px, py) in enumerate(zip(info[1], info[2])):
+        if index + 1 in info[3]:
+            pyplot.scatter(px, py, color="white", edgecolor="black", lw=1, s=80, zorder=2)
+        elif index + 1 in info[4]:
+            pyplot.scatter(px, py, color="black", edgecolor="black", lw=1, s=80, zorder=2)
+        elif index + 1 in info[5]:
+            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="right"),
+                           color="white", edgecolor="black", lw=1, s=80, zorder=2)
+            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="left"),
+                           color="gray", edgecolor="black", lw=1, s=80, zorder=2)
+        else:
+            pyplot.scatter(px, py, color="gray", edgecolor="black", lw=1, s=80, zorder=2)
+    x, y = info[1], info[2]
+    for former, latter in [(1, 3), (2, 3)]:
+        if motif.get_edge_data(former, latter)["weight"] == 1:
+            pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
+                            arrowprops=dict(arrowstyle="-|>", color="black",
+                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
+        elif motif.get_edge_data(former, latter)["weight"] == -1:
+            pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
+                            arrowprops=dict(arrowstyle="-|>", color="black", linestyle="dotted",
+                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
+    pyplot.text(x=info[1][0], y=info[2][0] - 0.06, s="x", fontsize=10, va="top", ha="center")
+    pyplot.text(x=info[1][1], y=info[2][1] - 0.06, s="y", fontsize=10, va="top", ha="center")
+    pyplot.text(x=info[1][2], y=info[2][2] + 0.06, s="z", fontsize=10, va="bottom", ha="center")
+    pyplot.text(-0.05, 0.45, "collider", va="center", ha="center", fontsize=10, rotation=90)
+    pyplot.xlim(-0.10, 1.0)
+    pyplot.ylim(-0.05, 1.0)
+    pyplot.axis("off")
+
+    def get_x():
+        v1 = ones(shape=(10,)) * 0.5
+        v2 = (sin(linspace(-0.5 * pi, 1.5 * pi, 40)) + 1.0) * 0.25 + 0.5
+        v3 = ones(shape=(50,)) * 0.5
+        return array(v1.tolist() + v2.tolist() + v3.tolist())
+
+    def get_yi():
+        v1 = ones(shape=(20,)) * 0.5
+        v2 = (sin(linspace(-0.5 * pi, 1.5 * pi, 40)) + 1.0) * 0.25 + 0.5
+        v3 = ones(shape=(40,)) * 0.5
+        return array(v1.tolist() + v2.tolist() + v3.tolist())
+
+    def get_yc():
+        return ones(shape=(len(inputs_x),)) * 0.5
+
+    def get_zi():
+        v1 = ones(shape=(20,)) * 0.5
+        v2 = (sin(linspace(-0.5 * pi, 1.5 * pi, 60)) + 1.0) * 0.15 + 0.5
+        v3 = ones(shape=(20,)) * 0.5
+        return array(v1.tolist() + v2.tolist() + v3.tolist())
+
+    def get_zc():
+        v1 = ones(shape=(20,)) * 0.5
+        v2 = (sin(linspace(-0.5 * pi, 0.5 * pi, 30)) + 1.0) * 0.25 + 0.5
+        v3 = ones(shape=(50,))
+        return array(v1.tolist() + v2.tolist() + v3.tolist())
+
+    inputs_x = get_x()
+    inputs_yi = get_yi()
+    inputs_yc = get_yc()
+    outputs_zi = get_zi()
+    outputs_zc = get_zc()
+
+    pyplot.subplot(grid[:2, 2:6])
+    pyplot.title("biological network", fontsize=10)
+    pyplot.text(0.09, 0.675, "x molecule", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.09, 0.325, "y molecule", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.20, 0.18, "time", fontsize=7, va="top", ha="center")
+    pyplot.text(0.20, 0.53, "time", fontsize=7, va="top", ha="center")
+    pyplot.plot([0.1, 0.1, 0.3], [0.45, 0.20, 0.20], color="black", linewidth=0.75)
+    pyplot.plot([0.1, 0.1, 0.3], [0.80, 0.55, 0.55], color="black", linewidth=0.75)
+    values = 0.55 + inputs_x * 0.15
+    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
+    values = 0.20 + inputs_yc * 0.15
+    pyplot.plot(linspace(0.1, 0.3, len(values))[20: 60], values[20: 60], color="k", linewidth=0.75, linestyle=":")
+    values = 0.20 + inputs_yi * 0.15
+    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
+    pyplot.text(0.4, 0.53, "reaction", fontsize=7, va="bottom", ha="center")
+    pyplot.annotate(s="", xy=(0.45, 0.5), xytext=(0.35, 0.5),
+                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
+                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
+    pyplot.plot([0.55, 0.55, 0.9], [0.8, 0.2, 0.2], color="black", linewidth=0.75)
+    pyplot.text(0.54, 0.50, "z molecule", fontsize=7, va="center", ha="right", rotation=90)
+    values = 0.15 + outputs_zc * 0.5
+    pyplot.plot(linspace(0.55, 0.90, len(values))[20:], values[20:], color="k", linewidth=0.75, linestyle=":")
+    values = 0.15 + outputs_zi * 0.5
+    pyplot.plot(linspace(0.55, 0.90, len(values)), values, color="k", linewidth=0.75)
+    pyplot.fill_between(linspace(0.55, 0.90, len(values)), 0.4, values, color="silver")
+    pyplot.text(0.725, 0.18, "time", fontsize=7, va="top", ha="center")
+    pyplot.text(0.725, 0.81, "more robust", fontsize=10, color="red", va="bottom", ha="center")
+    pyplot.xticks([])
+    pyplot.yticks([])
+    pyplot.xlim(0, 1)
+    pyplot.ylim(0, 1)
+
+    pyplot.subplot(grid[2:4, 2:6])
+    pyplot.text(0.09, 0.675, "x molecule", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.09, 0.325, "y molecule", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.20, 0.18, "time", fontsize=7, va="top", ha="center")
+    pyplot.text(0.20, 0.53, "time", fontsize=7, va="top", ha="center")
+    pyplot.plot([0.1, 0.1, 0.3], [0.45, 0.20, 0.20], color="black", linewidth=0.75)
+    pyplot.plot([0.1, 0.1, 0.3], [0.80, 0.55, 0.55], color="black", linewidth=0.75)
+    values = 0.60 + inputs_x * 0.15
+    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
+    values = 0.25 + inputs_yi * 0.15
+    pyplot.plot(linspace(0.1, 0.3, len(values))[20: 60], values[20: 60], color="k", linewidth=0.75, linestyle=":")
+    values = 0.25 + inputs_yc * 0.15
+    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
+    pyplot.text(0.4, 0.53, "reaction", fontsize=7, va="bottom", ha="center")
+    pyplot.annotate(s="", xy=(0.45, 0.5), xytext=(0.35, 0.5),
+                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
+                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
+    pyplot.plot([0.55, 0.55, 0.9], [0.8, 0.2, 0.2], color="black", linewidth=0.75)
+    pyplot.text(0.54, 0.50, "z molecule", fontsize=7, va="center", ha="right", rotation=90)
+    values = 0.15 + outputs_zi * 0.5
+    pyplot.plot(linspace(0.55, 0.90, len(values))[20:], values[20:], color="k", linewidth=0.75, linestyle=":")
+    values = 0.15 + outputs_zc * 0.5
+    pyplot.plot(linspace(0.55, 0.90, len(values)), values, color="k", linewidth=0.75)
+    pyplot.fill_between(linspace(0.55, 0.90, len(values)), 0.4, values, color="silver")
+    pyplot.text(0.725, 0.18, "time", fontsize=7, va="top", ha="center")
+
+    pyplot.text(0.725, 0.81, "less robust", fontsize=10, color="red", va="bottom", ha="center")
+    pyplot.xticks([])
+    pyplot.yticks([])
+    pyplot.xlim(0, 1)
+    pyplot.ylim(0, 1)
+
+    gradient_colors = pyplot.get_cmap(name="rainbow")(linspace(0, 1, 41))
+    motif1 = NeuralMotif(motif_type="incoherent-loop", motif_index=2,
+                         activations=("relu", "relu"), aggregations=("max", "max"),
+                         weights=[0.90827476978302, 0.5210987329483032, -0.8107407093048096],
+                         biases=[0.9697856903076172, 0.9693939685821533])
+    motif2 = NeuralMotif(motif_type="collider", motif_index=2,
+                         activations=("relu",), aggregations=("sum",),
+                         weights=[0.4955233335494995, -0.04083000123500824],
+                         biases=[0.9734159708023071])
+    matrix1 = calculate_landscape(value_range=(-1, +1), points=41, motif=motif1).T
+    matrix2 = calculate_landscape(value_range=(-1, +1), points=41, motif=motif2).T
+    lipschitz1 = estimate_lipschitz(value_range=(-1, +1), points=41, motif=motif1, norm_type="L-2", verbose=False)
+    lipschitz2 = estimate_lipschitz(value_range=(-1, +1), points=41, motif=motif2, norm_type="L-2", verbose=False)
+
+    pyplot.subplot(grid[:2, 6:10])
+    pyplot.title("artificial neural network", fontsize=10)
+    c_interval = 0.6 / 41
+    r_interval = c_interval * 0.5
+    for r in range(41):
+        for c in range(41):
+            pyplot.fill_between([r * r_interval + 0.1, (r + 1) * r_interval + 0.1],
+                                c * c_interval + 0.2, (c + 1) * c_interval + 0.2,
+                                color=gradient_colors[int(matrix1[r, c] * 20 + 20.5)])
+    pyplot.text(0.25, 0.18, "x signal", fontsize=7, va="top", ha="center")
+    pyplot.text(0.09, 0.50, "y signal", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.25, 0.81, "z signal", fontsize=7, va="bottom", ha="center")
+    pyplot.plot([0.4, 0.1, 0.1], [0.2, 0.2, 0.8], color="black", linewidth=0.75)
+    pyplot.annotate(s="", xy=(0.55, 0.5), xytext=(0.45, 0.5),
+                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
+                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
+    pyplot.plot([0.65, 0.95, 0.65, 0.65], [0.2, 0.2, 0.8, 0.2], color="black", lw=0.75)
+    pyplot.text(0.5, 0.53, "Lipschitz\nconstant", fontsize=7, va="bottom", ha="center")
+    pyplot.plot([0.65, 0.95], [0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.2],
+                color="black", linestyle=":", linewidth=0.75, zorder=2)
+    pyplot.fill_between([0.65, 0.95], [0.2, 0.2], [0.8, 0.2], color="silver")
+    pyplot.text(0.8, 0.18, "input (x,y) change", fontsize=7, va="top", ha="center")
+    pyplot.text(0.64, 0.5, "output (z) change", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.8, 0.81, "less robust", fontsize=10, color="red", va="bottom", ha="center")
+    pyplot.xticks([])
+    pyplot.yticks([])
+    pyplot.xlim(0, 1)
+    pyplot.ylim(0, 1)
+
+    pyplot.subplot(grid[2:4, 6:10])
+    c_interval = 0.6 / 41
+    r_interval = c_interval * 0.5
+    for r in range(41):
+        for c in range(41):
+            pyplot.fill_between([r * r_interval + 0.1, (r + 1) * r_interval + 0.1],
+                                c * c_interval + 0.2, (c + 1) * c_interval + 0.2,
+                                color=gradient_colors[int(matrix2[r, c] * 20 + 20.5)])
+    pyplot.text(0.25, 0.18, "x signal", fontsize=7, va="top", ha="center")
+    pyplot.text(0.09, 0.50, "y signal", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.25, 0.81, "z signal", fontsize=7, va="bottom", ha="center")
+    pyplot.plot([0.4, 0.1, 0.1], [0.2, 0.2, 0.8], color="black", linewidth=0.75)
+    pyplot.annotate(s="", xy=(0.55, 0.5), xytext=(0.45, 0.5),
+                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
+                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
+    pyplot.plot([0.65, 0.95, 0.65, 0.65], [0.2, 0.2, 0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.2],
+                color="black", lw=0.75)
+    pyplot.text(0.5, 0.53, "Lipschitz\nconstant", fontsize=7, va="bottom", ha="center")
+    pyplot.text(0.8, 0.18, "input (x,y) change", fontsize=7, va="top", ha="center")
+    pyplot.text(0.64, 0.5, "output (z) change", fontsize=7, va="center", ha="right", rotation=90)
+    pyplot.text(0.8, 0.81, "more robust", fontsize=10, color="red", va="bottom", ha="center")
+    pyplot.plot([0.65, 0.65, 0.95], [0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.8, 0.2],
+                color="black", linestyle=":", linewidth=0.75)
+    pyplot.fill_between([0.65, 0.95], [0.2, 0.2], [0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.2], color="silver")
+    pyplot.xticks([])
+    pyplot.yticks([])
+    pyplot.xlim(0, 1)
+    pyplot.ylim(0, 1)
+
+    pyplot.savefig("../data/figures/main01.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
 
 
 # noinspection PyArgumentList,PyTypeChecker
-def main01():
+def main02():
     figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
     grid = pyplot.GridSpec(2, 3)
     rcParams["font.family"] = "Times New Roman"
@@ -14,8 +260,8 @@ def main01():
     pyplot.subplot(grid[:, 0])
     pyplot.bar([0], [log10(28800)], width=0.6, linewidth=0.75, color="#FA897B", edgecolor="black")
     pyplot.bar([1], [log10(480)], width=0.6, linewidth=0.75, color="#86E3CE", edgecolor="black")
-    pyplot.text(0, log10(28800) + 0.02, str(28800), fontsize=8, va="bottom", ha="center")
-    pyplot.text(1, log10(480) + 0.02, str(480), fontsize=8, va="bottom", ha="center")
+    pyplot.text(0, log10(28800) + 0.02, str(28800), fontsize=10, va="bottom", ha="center")
+    pyplot.text(1, log10(480) + 0.02, str(480), fontsize=10, va="bottom", ha="center")
     pyplot.xlabel("population name", fontsize=10)
     pyplot.ylabel("population size", fontsize=10)
     pyplot.xticks([0, 1], [" incoherent loop", "collider"], fontsize=10)
@@ -57,7 +303,7 @@ def main01():
     collider_data = load_data("../data/results/task01/propagation collider.npy")
 
     pyplot.subplot(grid[0, 2])
-    pyplot.text(12.5, 12.5, "incoherent loop", color="white", va="top", ha="right", fontsize=8)
+    pyplot.text(12.5, 12.5, "incoherent loop", color="white", va="top", ha="right", fontsize=10)
     mesh = pyplot.pcolormesh(arange(14), arange(14), loop_data[:13, :13], cmap="RdYlGn_r", vmin=0, vmax=1)
     bar = pyplot.colorbar(mesh, ticks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     bar.set_label("maximum z error rate", fontsize=10)
@@ -71,7 +317,7 @@ def main01():
     pyplot.ylim(0, 13)
 
     pyplot.subplot(grid[1, 2])
-    pyplot.text(12.5, 12.5, "collider", color="white", va="top", ha="right", fontsize=8)
+    pyplot.text(12.5, 12.5, "collider", color="white", va="top", ha="right", fontsize=10)
     mesh = pyplot.pcolormesh(arange(14), arange(14), collider_data[:13, :13], cmap="RdYlGn_r", vmin=0, vmax=1)
     bar = pyplot.colorbar(mesh, ticks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     bar.set_label("maximum z error rate", fontsize=10)
@@ -88,11 +334,11 @@ def main01():
     figure.text(0.338, 0.99, "b", va="center", ha="center", fontsize=12)
     figure.text(0.660, 0.99, "c", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig("../data/figures/main01.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig("../data/figures/main02.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def main02():
+def main03():
     figure = pyplot.figure(figsize=(10, 3.5), tight_layout=True)
     rcParams["font.family"] = "Times New Roman"
 
@@ -123,7 +369,7 @@ def main02():
     locations_2 = load_data("../data/results/task01/location loop.npy")[remain]
 
     pyplot.subplot(1, 3, 2)
-    pyplot.text(110, 110, "incoherent loop", fontsize=8, va="top", ha="right")
+    pyplot.text(110, 110, "incoherent loop", fontsize=10, va="top", ha="right")
     mesh = pyplot.scatter(locations_1[order_1, 0], locations_1[order_1, 1], c=log10(lipschitz_constants_1[order_1]),
                           cmap="RdYlGn_r", s=10, vmin=-1, vmax=2)
     bar = pyplot.colorbar(mesh, ticks=[-1, 0, 1, 2], orientation="horizontal", extend="min", extendfrac=0.4)
@@ -153,7 +399,7 @@ def main02():
     locations_2 = load_data("../data/results/task01/location collider.npy")[remain]
 
     pyplot.subplot(1, 3, 3)
-    pyplot.text(110, 110, "collider", fontsize=8, va="top", ha="right")
+    pyplot.text(110, 110, "collider", fontsize=10, va="top", ha="right")
     mesh = pyplot.scatter(locations_1[order_1, 0], locations_1[order_1, 1], c=log10(lipschitz_constants_1[order_1]),
                           cmap="RdYlGn_r", s=10, vmin=-1, vmax=2)
     bar = pyplot.colorbar(mesh, ticks=[-1, 0, 1, 2], orientation="horizontal", extend="min", extendfrac=0.4)
@@ -177,11 +423,11 @@ def main02():
     figure.text(0.022, 0.990, "a", va="center", ha="center", fontsize=12)
     figure.text(0.350, 0.990, "b", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig("../data/figures/main02.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig("../data/figures/main03.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def main03():
+def main04():
     figure = pyplot.figure(figsize=(10, 4.5), tight_layout=True)
     grid = pyplot.GridSpec(2, 4)
     rcParams["font.family"] = "Times New Roman"
@@ -232,7 +478,7 @@ def main03():
             pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="left"),
                            color="gray", edgecolor="black", lw=1.5, s=80, zorder=2)
         else:
-            pyplot.scatter(px, py, color="gray", edgecolor="black", lw=1.5, s=80, zorder=2)
+            pyplot.scatter(px, py, color="gray", edgecolor="black", lw=1, s=80, zorder=2)
     x, y = info[1], info[2]
     for former, latter in [(1, 2), (1, 3), (2, 3)]:
         pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
@@ -362,11 +608,11 @@ def main03():
     figure.text(0.515, 0.49, "f", va="center", ha="center", fontsize=12)
     figure.text(0.760, 0.49, "g", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig("../data/figures/main03.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig("../data/figures/main04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def main04():
+def main05():
     names = ["geometry", "baseline", "novelty"]
 
     figure = pyplot.figure(figsize=(10, 9), tight_layout=True)
@@ -438,12 +684,105 @@ def main04():
     figure.text(0.349, 0.34, "h", va="center", ha="center", fontsize=12)
     figure.text(0.680, 0.34, "i", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig("../data/figures/main04.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig("../data/figures/main05.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def main06():
+    figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
+    grid = pyplot.GridSpec(2, 3)
+    rcParams["font.family"] = "Times New Roman"
+
+    generation_data = load_data("../data/results/task05/generations.npy")
+
+    pyplot.subplot(grid[:, 0])
+    values = [generation_data[0, _, :] for _ in range(7)]
+    violin_1 = pyplot.violinplot(values, points=100, positions=arange(7) + 0.5,
+                                 widths=0.8, showmeans=False, showextrema=False, showmedians=False)
+    for body in violin_1["bodies"]:
+        center = mean(body.get_paths()[0].vertices[:, 0])
+        body.get_paths()[0].vertices[:, 0] = clip(body.get_paths()[0].vertices[:, 0], -inf, center)
+        body.set_color("#FA897B")
+        body.set_edgecolor("black")
+        body.set_linewidth(1)
+        body.set_alpha(1)
+    pyplot.scatter(arange(7) + 0.4, [mean(value) for value in values],
+                   s=16, linewidth=1, color="black", zorder=2)
+    values = [generation_data[1, _, :] for _ in range(7)]
+    violin_2 = pyplot.violinplot(values, points=100, positions=arange(7) + 0.5,
+                                 widths=0.8, showmeans=False, showextrema=False, showmedians=False)
+    for body in violin_2["bodies"]:
+        center = mean(body.get_paths()[0].vertices[:, 0])
+        body.get_paths()[0].vertices[:, 0] = clip(body.get_paths()[0].vertices[:, 0], center, inf)
+        body.set_color("#86E3CE")
+        body.set_edgecolor("black")
+        body.set_linewidth(1)
+        body.set_alpha(1)
+    scatters = pyplot.scatter(arange(7) + 0.6, [mean(value) for value in values],
+                              s=16, linewidth=1, color="black", zorder=2)
+    pyplot.legend([violin_1["bodies"][0], violin_2["bodies"][0], scatters], ["baseline", "adjusted", "average"],
+                  loc="upper left", fontsize=10)
+    pyplot.xlabel("training error scale", fontsize=10)
+    pyplot.ylabel("used generation", fontsize=10)
+    pyplot.xticks(arange(7) + 0.5, ["0%", "5%", "10%", "15%", "20%", "25%", "30%"], fontsize=10)
+    pyplot.yticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100], fontsize=10)
+    pyplot.xlim(0, 7)
+    pyplot.ylim(0, 100)
+
+    motif_data = load_data(load_path="../data/results/task05/final loops.npy")
+
+    pyplot.subplot(grid[:, 1])
+    pyplot.bar(arange(7) + 0.5, mean(motif_data, axis=1), color="silver", edgecolor="black", linewidth=0.75)
+    for index, values in enumerate(motif_data):
+        if mean(values) == 0:
+            pyplot.scatter(index + 0.5, 0.02, marker="x", s=20, color="black")
+    pyplot.xlabel("training error scale", fontsize=10)
+    pyplot.ylabel("average number of incoherent loops in the best agent", fontsize=10)
+    pyplot.xticks(arange(7) + 0.5, ["0%", "5%", "10%", "15%", "20%", "25%", "30%"], fontsize=10)
+    pyplot.yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0],
+                  ["0.0", "0.2", "0.4", "0.6", "0.8", "1.0", "1.2", "1.4", "1.6", "1.8", "2.0"], fontsize=10)
+    pyplot.xlim(0, 7)
+    pyplot.ylim(0, 2)
+
+    accesses = load_data(load_path="../data/results/task05/accesses.npy")
+
+    pyplot.subplot(grid[0, 2])
+    for i in range(7):
+        for j in range(7):
+            color = "green" if accesses[0, i, j] else "red"
+            pyplot.fill_between([i, i + 1], j, j + 1, color=color, linewidth=0, alpha=0.5)
+    pyplot.xlabel("training error scale", fontsize=10)
+    pyplot.ylabel("evaluating error scale", fontsize=10)
+    pyplot.xticks(arange(7) + 0.5, ["0%", "5%", "10%", "15%", "20%", "25%", "30%"], fontsize=10)
+    pyplot.yticks(arange(7) + 0.5, ["0%", "5%", "10%", "15%", "20%", "25%", "30%"], fontsize=10)
+    pyplot.xlim(0, 7)
+    pyplot.ylim(0, 7)
+
+    pyplot.subplot(grid[1, 2])
+    for i in range(7):
+        for j in range(7):
+            color = "green" if accesses[1, i, j] else "red"
+            pyplot.fill_between([i, i + 1], j, j + 1, color=color, linewidth=0, alpha=0.5)
+    pyplot.xlabel("training error scale", fontsize=10)
+    pyplot.ylabel("evaluating error scale", fontsize=10)
+    pyplot.xticks(arange(7) + 0.5, ["0%", "5%", "10%", "15%", "20%", "25%", "30%"], fontsize=10)
+    pyplot.yticks(arange(7) + 0.5, ["0%", "5%", "10%", "15%", "20%", "25%", "30%"], fontsize=10)
+    pyplot.xlim(0, 7)
+    pyplot.ylim(0, 7)
+
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.352, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.677, 0.99, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.677, 0.50, "d", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig("../data/figures/main06.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
 if __name__ == "__main__":
     main01()
-    main02()
-    main03()
-    main04()
+    # main02()
+    # main03()
+    # main04()
+    # main05()
+    # main06()

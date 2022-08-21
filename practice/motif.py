@@ -145,7 +145,7 @@ def find_same_motifs(motif_matrices):
     return None
 
 
-def obtain_motif(adjacency_matrix, combination, search_size, graph_type=GraphType.zo, limits=None):
+def obtain_motif(adjacency_matrix, combination, search_size, graph_type=GraphType.pn, limits=None):
     """
     Obtain a candidate motif of specific nodes in the adjacency matrix.
 
