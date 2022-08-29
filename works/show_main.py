@@ -150,11 +150,11 @@ def main01():
     pyplot.text(0.20, 0.53, "time", fontsize=7, va="top", ha="center")
     pyplot.plot([0.1, 0.1, 0.3], [0.45, 0.20, 0.20], color="black", linewidth=0.75)
     pyplot.plot([0.1, 0.1, 0.3], [0.80, 0.55, 0.55], color="black", linewidth=0.75)
-    values = 0.60 + inputs_x * 0.15
+    values = 0.55 + inputs_x * 0.15
     pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
-    values = 0.25 + inputs_yi * 0.15
+    values = 0.20 + inputs_yi * 0.15
     pyplot.plot(linspace(0.1, 0.3, len(values))[20: 60], values[20: 60], color="k", linewidth=0.75, linestyle=":")
-    values = 0.25 + inputs_yc * 0.15
+    values = 0.20 + inputs_yc * 0.15
     pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
     pyplot.text(0.4, 0.53, "reaction", fontsize=7, va="bottom", ha="center")
     pyplot.annotate(s="", xy=(0.45, 0.5), xytext=(0.35, 0.5),
