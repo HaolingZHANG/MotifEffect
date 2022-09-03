@@ -5,8 +5,9 @@ You can install this package using pip:
 ```sh
 pip install MotifEffect
 ```
-The packages requires a python version >=3.7, 
-as well as some basic libraries listed in [requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
+The packages requires a python version at least 3.7, 
+as well as some basic libraries listed in 
+[requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
 
 ## Repository Structure
 ```html
@@ -87,7 +88,15 @@ as well as some basic libraries listed in [requirements file](https://github.com
 ```
 
 ## Experiments
-TODO
+Five experiments are executed through 
+[experiments.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/experiments.py) in the works folder.
+
+Among them,
+1. analyzes parameter domain, representational capability, and numerical stability of two motif populations (incoherent loops and colliders).
+2. analyzes the trade-off between representational capability and numerical stability in an intuitive sense.
+3. analyzes the trade-off between representational capability and numerical stability through maximum-minimum loss search.
+4. analyzes motif tendency and robustness of neural networks produced by three different neuroevolution methods.
+5. analyzes motif tendency and robustness of neural networks produced by the original NEAT method and adjusted NEAT method.
 
 ## Citation
 If you think this repository helps or being used in your research, please consider refer this work.
