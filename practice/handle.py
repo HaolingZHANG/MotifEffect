@@ -11,9 +11,24 @@ from practice.motif import count_motifs_from_matrices, GraphType
 class Monitor(object):
 
     def __init__(self):
+        """
+        Initialize the monitor to identify the task progress.
+        """
         self.last_time = None
 
     def output(self, current_state, total_state, extra=None):
+        """
+        Output the current state of process.
+
+        :param current_state: current state of process.
+        :type current_state: int
+
+        :param total_state: total state of process.
+        :type total_state: int
+
+        :param extra: extra vision information if required.
+        :type extra: dict
+        """
         if self.last_time is None:
             self.last_time = datetime.now()
 

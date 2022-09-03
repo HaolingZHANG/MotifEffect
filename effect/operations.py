@@ -9,9 +9,24 @@ from effect.networks import NeuralMotif
 class Monitor(object):
 
     def __init__(self):
+        """
+        Initialize the monitor to identify the task progress.
+        """
         self.last_time = None
 
     def output(self, current_state, total_state, extra=None):
+        """
+        Output the current state of process.
+
+        :param current_state: current state of process.
+        :type current_state: int
+
+        :param total_state: total state of process.
+        :type total_state: int
+
+        :param extra: extra vision information if required.
+        :type extra: dict
+        """
         if self.last_time is None:
             self.last_time = datetime.now()
 
@@ -59,6 +74,18 @@ class Monitor(object):
 
 
 def prepare_data(value_range, points=101):
+    """
+    Prepare database through the range of variable and sampling points.
+
+    :param value_range: range of variable.
+    :type value_range: tuple
+
+    :param points: sampling points.
+    :type points: int
+
+    :return: database.
+    :rtype: torch.Tensor
+    """
     x, y = linspace(value_range[0], value_range[1], points), linspace(value_range[0], value_range[1], points)
     x, y = meshgrid((x, y), indexing="ij")
     x, y = unsqueeze(x.reshape(-1), dim=1), unsqueeze(y.reshape(-1), dim=1)
@@ -72,14 +99,29 @@ def prepare_motifs(motif_type, motif_index, activations, aggregations, sample, w
     """
     Prepare motif based on the selected parameters.
 
-    :param motif_type:
-    :param motif_index:
-    :param activations:
-    :param aggregations:
-    :param sample:
-    :param weights:
-    :param biases:
-    :return:
+    :param motif_type: type of 3-node network motif.
+    :type motif_type: str
+
+    :param motif_index: index of network motif (1 ~ 4).
+    :type motif_index: int
+
+    :param activations: activation function list.
+    :type activations: tuple or list
+
+    :param aggregations: aggregation function list.
+    :type aggregations: tuple or list
+
+    :param sample: generation number.
+    :type sample: int
+
+    :param weights: established weights.
+    :type weights: tuple, list, or None
+
+    :param biases: established biases.
+    :type biases: tuple, list, or None
+
+    :return: generated motif list.
+    :rtype: list
     """
     motifs = []
 
