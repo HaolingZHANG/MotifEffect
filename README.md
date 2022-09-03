@@ -1,20 +1,5 @@
 # Replacing incoherent loops with colliders to improve the robustness of artificial neural networks
 
-Network motifs are the fundamental components of complex networks. 
-Hence their properties determine the properties of the overall network they constitute.
-For most biological networks, incoherent loops are highly enriched, enhancing the overall robustness of the living process.
-Intriguingly, the same may not be true of artificial feed-forward neural networks.
-Incoherent loops have an additional edge compared to colliders, resulting in a wider parameter domain and solution space.
-A tiny portion of incoherent loops possess greater particularity, enabling them to learn more complex functions, but they have lower numerical stability. 
-If input signals contain noise during the learning phase, artificial neural networks with incoherent loops may not provide effective solutions because they cannot distinguish between specific input signals and the noise that interferes with them, which leads to repeated entanglement in the training process.
-Since colliders aren't characterized by the same degree of particularity, artificial neural networks without incoherent loops (or which only contain colliders) will not present this problem.
-Therefore, replacing incoherent loops with colliders is an option if one wishes to increase overall network robustness while maintaining training performance, especially when the training process involves a certain degree of noise.
-Through this work, we provide more fundamental experiences for the robustness design of artificial neural networks from the perspective of network structure.
-
-<p align="center">
-<img src="illustration.svg" alt="motif effect" title="motif effect" width="100%"/>
-</p>
-
 ## Installation
 You can install this package using pip:
 ```sh
@@ -101,8 +86,11 @@ as well as some basic libraries listed in [requirements file](https://github.com
 ├── requirements.txt                         // basic library requirements of this library.
 ```
 
+## Experiments
+TODO
+
 ## Citation
 If you think this repository helps or being used in your research, please consider refer this work.
 Here is a Bibtex entry:
 
-
+TODO
