@@ -103,3 +103,6 @@ If you think this repository helps or being used in your research, please consid
 Here is a Bibtex entry:
 
 TODO
+
+## License
+GPL-3.0 license

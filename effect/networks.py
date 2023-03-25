@@ -20,7 +20,7 @@ class RestrictedWeight(Module):
         super(RestrictedWeight, self).__init__()
 
         if bound is None:
-            bound = (1e-3, 1e0)
+            bound = (1e-2, 1e0)
 
         self.weight, self.is_positive, self.bound = None, is_positive, bound
         self.reset(value=value)
@@ -291,13 +291,13 @@ class NeuralMotif(Module):
         """
         Forward propagate through activating.
 
-        :param values: input values.
+        :param values: input intersected_values.
         :type values: torch.Tensor
 
         :param activate_index: index of activations.
         :type activate_index: int
 
-        :return: output values.
+        :return: output intersected_values.
         :rtype: torch.Tensor
         """
         if self.a[activate_index] == "relu":
@@ -311,13 +311,13 @@ class NeuralMotif(Module):
         """
         Forward propagate through aggregating.
 
-        :param values: input values.
+        :param values: input intersected_values.
         :type values: torch.Tensor
 
         :param aggregate_index: index of aggregations.
         :type aggregate_index: int
 
-        :return: output values.
+        :return: output intersected_values.
         :rtype: torch.Tensor
         """
         if self.g[aggregate_index] == "sum":
@@ -329,15 +329,15 @@ class NeuralMotif(Module):
 
     def add_weight(self, values, weight_indices):
         """
-        Add weight for the values.
+        Add weight for the intersected_values.
 
-        :param values: input values.
+        :param values: input intersected_values.
         :type values: torch.Tensor
 
         :param weight_indices: indices of weight parameter.
         :type weight_indices: torch.Tensor, numpy.ndarray, or list
 
-        :return: output values.
+        :return: output intersected_values.
         :rtype: torch.Tensor
         """
         if len(weight_indices) == 1 and values.size()[1] == 1:
@@ -351,15 +351,15 @@ class NeuralMotif(Module):
 
     def add_bias(self, values, bias_index):
         """
-        Add bias for the values.
+        Add bias for the intersected_values.
 
-        :param values: input values.
+        :param values: input intersected_values.
         :type values: torch.Tensor
 
         :param bias_index: index of bias parameter.
         :type bias_index: int
 
-        :return: output values.
+        :return: output intersected_values.
         :rtype: torch.Tensor
         """
         return self.b[bias_index](values)
@@ -375,12 +375,12 @@ class NeuralMotif(Module):
 
     def reset(self, weights=None, biases=None):
         """
-        Reset the weight and bias values.
+        Reset the weight and bias intersected_values.
 
-        :param weights: established weight values.
+        :param weights: established weight intersected_values.
         :type weights: list or None
 
-        :param biases: established bias values.
+        :param biases: established bias intersected_values.
         :type biases: list or None
         """
         if self.t == "collider":

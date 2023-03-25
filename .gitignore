@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 .idea/
-data/results/raw/*.pkl
-data/results/raw/*.npy
-data/figures/
+works/raw/
+works/data/*.pkl
+works/data/*.npy
+works/show/

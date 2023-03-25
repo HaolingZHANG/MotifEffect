@@ -14,7 +14,7 @@ class Monitor(object):
         """
         self.last_time = None
 
-    def output(self, current_state, total_state, extra=None):
+    def __call__(self, current_state, total_state, extra=None):
         """
         Output the current state of process.
 
@@ -200,6 +200,6 @@ def calculate_gradients(value_range, points, motif, verbose=False):
         values = sources.grad[index].detach().numpy()
         gradients[index] = sqrt(sum(values ** 2))
         if verbose:
-            monitor.output(index + 1, points ** 2, extra={"source": gradients[index]})
+            monitor(index + 1, points ** 2, extra={"source": gradients[index]})
 
     return gradients.reshape(points, points)

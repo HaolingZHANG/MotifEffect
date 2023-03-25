@@ -1,42 +1,19 @@
 from datetime import datetime
-from networkx import DiGraph
 from numpy import zeros
 from numpy import load as n_load
 from numpy import save as n_save
 from pickle import load as p_load
 from pickle import dump as p_save
 
-
-acyclic_motifs = {
-    "collider": [DiGraph([(1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
-                 DiGraph([(1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
-                 DiGraph([(1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
-                 DiGraph([(1, 3, {"weight": -1}), (2, 3, {"weight": -1})])],
-    "fork": [DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1})]),
-             DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1})]),
-             DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1})]),
-             DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1})])],
-    "chain": [DiGraph([(1, 2, {"weight": +1}), (2, 3, {"weight": +1})]),
-              DiGraph([(1, 2, {"weight": +1}), (2, 3, {"weight": -1})]),
-              DiGraph([(1, 2, {"weight": -1}), (2, 3, {"weight": +1})]),
-              DiGraph([(1, 2, {"weight": -1}), (2, 3, {"weight": -1})])],
-    "coherent-loop": [DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
-                      DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
-                      DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
-                      DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1}), (2, 3, {"weight": -1})])],
-    "incoherent-loop": [DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
-                        DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
-                        DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
-                        DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1}), (2, 3, {"weight": -1})])]
-}
+from practice import acyclic_motifs
 
 
 draw_info = {
-    "collider": ("#86E3CE", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1, 2], [3], []),
-    "fork": ("#D0E6A5", [0.5, 0.2, 0.8], [0.20, 0.70, 0.70], [1], [2, 3], []),
-    "chain": ("#FFDD94", [0.2, 0.5, 0.8], [0.20, 0.45, 0.70], [1], [3], []),
-    "coherent-loop": ("#CCABD8", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2]),
-    "incoherent-loop": ("#FA897B", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2])
+    "collider": ("#88CCF8", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2]),
+    "fork": ("#FFFFFF", [0.5, 0.2, 0.8], [0.20, 0.70, 0.70], [1], [3], [2]),
+    "chain": ("#FFFFFF", [0.2, 0.5, 0.8], [0.20, 0.45, 0.70], [1], [3], []),
+    "coherent-loop": ("#FCE0AB", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2]),
+    "incoherent-loop": ("#FCB1AB", [0.2, 0.8, 0.5], [0.20, 0.20, 0.70], [1], [3], [2])
 }
 
 
@@ -54,7 +31,7 @@ class Monitor(object):
     def __init__(self):
         self.last_time = None
 
-    def output(self, current_state, total_state, extra=None):
+    def __call__(self, current_state, total_state, extra=None):
         if self.last_time is None:
             self.last_time = datetime.now()
 

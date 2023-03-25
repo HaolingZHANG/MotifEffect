@@ -1,8 +1,41 @@
 from enum import Enum
 from itertools import combinations, permutations
-from networkx import erdos_renyi_graph
+from networkx import DiGraph, erdos_renyi_graph
 from numpy import zeros, array, all, percentile, mean, std, sqrt, maximum
 from random import choice
+
+
+acyclic_motifs = {
+    "collider": [DiGraph([(1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
+                 DiGraph([(1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
+                 DiGraph([(1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
+                 DiGraph([(1, 3, {"weight": -1}), (2, 3, {"weight": -1})])],
+    "fork": [DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1})]),
+             DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1})]),
+             DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1})]),
+             DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1})])],
+    "chain": [DiGraph([(1, 2, {"weight": +1}), (2, 3, {"weight": +1})]),
+              DiGraph([(1, 2, {"weight": +1}), (2, 3, {"weight": -1})]),
+              DiGraph([(1, 2, {"weight": -1}), (2, 3, {"weight": +1})]),
+              DiGraph([(1, 2, {"weight": -1}), (2, 3, {"weight": -1})])],
+    "coherent-loop": [DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
+                      DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
+                      DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
+                      DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1}), (2, 3, {"weight": -1})])],
+    "incoherent-loop": [DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
+                        DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": +1}), (2, 3, {"weight": -1})]),
+                        DiGraph([(1, 2, {"weight": +1}), (1, 3, {"weight": -1}), (2, 3, {"weight": +1})]),
+                        DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": -1}), (2, 3, {"weight": -1})])]
+}
+
+
+reference_motifs = []
+for motif_type in ["incoherent-loop", "coherent-loop", "collider"]:
+    for acyclic_motif in acyclic_motifs[motif_type]:
+        m = zeros(shape=(3, 3))
+        for former, latter in acyclic_motif.edges:
+            m[former - 1, latter - 1] = acyclic_motif.get_edge_data(former, latter)["weight"]
+        reference_motifs.append(m)
 
 
 class GraphType(Enum):
@@ -172,21 +205,21 @@ def obtain_motif(adjacency_matrix, combination, search_size, graph_type=GraphTyp
     for index_1, node_id_1 in enumerate(combination):
         for index_2, node_id_2 in enumerate(combination):
             if graph_type == GraphType.zo:
-                if adjacency_matrix[node_id_1][node_id_2] != 0:
+                if adjacency_matrix[node_id_1, node_id_2] != 0:
                     if limits is None:
                         motif[index_1, index_2] = 1
-                    elif limits[0] <= adjacency_matrix[node_id_1][node_id_2] <= limits[1]:
+                    elif limits[0] <= adjacency_matrix[node_id_1, node_id_2] <= limits[1]:
                         motif[index_1, index_2] = 1
             elif graph_type == GraphType.pn:
-                if adjacency_matrix[node_id_1][node_id_2] > 0:
+                if adjacency_matrix[node_id_1, node_id_2] > 0:
                     if limits is None:
                         motif[index_1, index_2] = 1
-                    elif adjacency_matrix[node_id_1][node_id_2] <= limits[1]:
+                    elif adjacency_matrix[node_id_1, node_id_2] <= limits[1]:
                         motif[index_1, index_2] = 1
-                elif adjacency_matrix[node_id_1][node_id_2] < 0:
+                elif adjacency_matrix[node_id_1, node_id_2] < 0:
                     if limits is None:
                         motif[index_1, index_2] = -1
-                    elif limits[0] <= adjacency_matrix[node_id_1][node_id_2]:
+                    elif limits[0] <= adjacency_matrix[node_id_1, node_id_2]:
                         motif[index_1, index_2] = -1
             else:
                 raise ValueError("No such graph type.")
@@ -260,7 +293,7 @@ def collect_motifs(adjacency_matrix, search_size=3, graph_type=GraphType.zo, pru
     return results
 
 
-def count_motifs_from_matrices(matrices, search_size, graph_type, pruning, reference_motifs=None):
+def count_motifs_from_matrices(matrices, search_size, graph_type, pruning):
     """
     Statistics the rational motif frequencies from matrix groups.
 
@@ -275,9 +308,6 @@ def count_motifs_from_matrices(matrices, search_size, graph_type, pruning, refer
 
     :param pruning: pruning the arrows by box plot.
     :type pruning: bool
-
-    :param reference_motifs: reference motifs for order.
-    :type reference_motifs: numpy.ndarray or None
 
     :return: motif frequency collector, and the collected motifs if there is.
     :rtype: tuple or numpy.ndarray
@@ -369,13 +399,10 @@ def generate_random_graphs(random_graph_count, variable_number, graph_type, prob
     return random_matrices
 
 
-def calculate_z_scores(reference_motifs, adjacency_matrix, random_graph_count, search_size,
+def calculate_z_scores(adjacency_matrix, random_graph_count, search_size,
                        graph_type=GraphType.zo, pruning=False, verbose=False):
     """
     Calculate z-scores from the adjacency matrix.
-
-    :param reference_motifs: reference motifs used for the order of statistical results.
-    :type reference_motifs: numpy.ndarray
 
     :param adjacency_matrix: the adjacency matrix of the method.
     :type adjacency_matrix: numpy.ndarray

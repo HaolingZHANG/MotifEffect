@@ -4,7 +4,7 @@ from neat import genome, stagnation, reproduction, species, config
 from neat.six_util import iteritems, itervalues
 from numpy import zeros
 
-from practice.evolve import GSReproduction, NSReproduction, AdjustedReproduction, GlobalGenome, UpdatedSpeciesSet
+from practice.evolve import AdjustedGenome, AdjustedReproduction
 from practice.motif import count_motifs_from_matrices, GraphType
 
 
@@ -16,7 +16,7 @@ class Monitor(object):
         """
         self.last_time = None
 
-    def output(self, current_state, total_state, extra=None):
+    def __call__(self, current_state, total_state, extra=None):
         """
         Output the current state of process.
 
@@ -131,16 +131,8 @@ def create_agent_config(path):
         return config.Config(genome.DefaultGenome, reproduction.DefaultReproduction,
                              species.DefaultSpeciesSet, stagnation.DefaultStagnation,
                              path)
-    elif path.split(".")[-1] == "geometry":
-        return config.Config(GlobalGenome, GSReproduction,
-                             UpdatedSpeciesSet, stagnation.DefaultStagnation,
-                             path)
-    elif path.split(".")[-1] == "novelty":
-        return config.Config(genome.DefaultGenome, NSReproduction,
-                             species.DefaultSpeciesSet, stagnation.DefaultStagnation,
-                             path)
-    elif path.split(".")[-1] == "adjusted":
-        return config.Config(genome.DefaultGenome, AdjustedReproduction,
+    elif "adjusted" in path.split(".")[-1]:
+        return config.Config(AdjustedGenome, AdjustedReproduction,
                              species.DefaultSpeciesSet, stagnation.DefaultStagnation,
                              path)
     else:
@@ -189,15 +181,12 @@ def calculate_matrix_from_agent(agent, need_mapping=False):
         return matrix
 
 
-def calculate_agent_frequency(agents, reference_motifs, search_size=3, graph_type=GraphType.pn, pruning=True):
+def calculate_agent_frequency(agents, search_size=3, graph_type=GraphType.pn, pruning=True):
     """
     Calculate the motif frequency of NEAT agents.
 
     :param agents: NEAT agents.
     :type agents: list
-
-    :param reference_motifs: reference motifs for order.
-    :type reference_motifs: numpy.ndarray
 
     :param search_size: motif search size.
     :type search_size: int
@@ -215,5 +204,5 @@ def calculate_agent_frequency(agents, reference_motifs, search_size=3, graph_typ
     for agent in agents:
         matrix_groups.append(calculate_matrix_from_agent(agent, need_mapping=False))
 
-    return count_motifs_from_matrices(matrices=matrix_groups, search_size=search_size, graph_type=graph_type,
-                                      pruning=pruning, reference_motifs=reference_motifs)
+    return count_motifs_from_matrices(matrices=matrix_groups, search_size=search_size,
+                                      graph_type=graph_type, pruning=pruning)

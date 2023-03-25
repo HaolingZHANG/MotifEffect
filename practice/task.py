@@ -116,13 +116,13 @@ class GymTask(object):
 
             if record["done"]:
                 if self.verbose:
-                    self.monitor.output(one_step + 1, one_step + 1)
+                    self.monitor(one_step + 1, one_step + 1)
                 break
             else:
                 state = record["state"]
 
             if self.verbose:
-                self.monitor.output(one_step + 1, self.total_steps)
+                self.monitor(one_step + 1, self.total_steps)
 
         self.environment.close()
         self.environment.seed(None)
@@ -276,7 +276,7 @@ class GymTask(object):
 
 class NEATCartPoleTask(GymTask):
 
-    def __init__(self, maximum_generation, noise_generator=None, need_frames=False, verbose=True):
+    def __init__(self, maximum_generation, noise_generator=None, need_frames=False, verbose=False):
         """
         Initialize the CartPole task for NEAT algorithm.
 
@@ -332,7 +332,7 @@ class NEATCartPoleTask(GymTask):
         :rtype: numpy.ndarray
 
         .. note::
-            The bound of second and fourth values were tested (not infinite see below).
+            The bound of second and fourth intersected_values were tested (not infinite see below).
         """
         lower_bound = -array([4.8, 2.197613184073254, 0.418, 3.3345776572433])
         upper_bound = +array([4.8, 2.197613184073254, 0.418, 3.3345776572433])

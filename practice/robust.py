@@ -97,7 +97,7 @@ def intervene(task, agent, noise_scales, reward_calculator, random_seed=None):
     :param random_seed: random seed for initializing the environment and creating the noise.
     :type random_seed: int or None
 
-    :return: reward record.
+    :return: reward record_1.
     :rtype: numpy.ndarray
     """
     test_records = zeros(shape=(len(noise_scales), task.iterations))

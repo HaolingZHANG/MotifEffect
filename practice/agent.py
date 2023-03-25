@@ -35,7 +35,7 @@ class NEATAgent(DefaultAgent):
         :param description: agent description.
         :type description: str
 
-        :param action_handle: handle of action array.
+        :param action_handle: handle of action nodes.
         :type action_handle: function
         """
         if neat_config.genome_config.feed_forward:
