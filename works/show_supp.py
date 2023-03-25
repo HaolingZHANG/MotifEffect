@@ -479,7 +479,7 @@ def supp04():
 
 
 if __name__ == "__main__":
-    # supp01()
-    # supp02()
-    # supp03()
+    supp01()
+    supp02()
+    supp03()
     supp04()

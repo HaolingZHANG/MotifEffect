@@ -869,7 +869,7 @@ def main04():
 
 
 if __name__ == "__main__":
-    # main01()
-    # main02()
+    main01()
+    main02()
     main03()
-    # main04()
+    main04()
