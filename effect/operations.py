@@ -1,76 +1,8 @@
-from datetime import datetime
 from itertools import product
-from numpy import zeros, sqrt
+from numpy import array, zeros, expand_dims, swapaxes, repeat, vstack, sqrt, min, mean, sum, abs
 from torch import cat, linspace, meshgrid, unsqueeze, squeeze
 
 from effect.networks import NeuralMotif
-
-
-class Monitor(object):
-
-    def __init__(self):
-        """
-        Initialize the monitor to identify the task progress.
-        """
-        self.last_time = None
-
-    def __call__(self, current_state, total_state, extra=None):
-        """
-        Output the current state of process.
-
-        :param current_state: current state of process.
-        :type current_state: int
-
-        :param total_state: total state of process.
-        :type total_state: int
-
-        :param extra: extra vision information if required.
-        :type extra: dict
-        """
-        if self.last_time is None:
-            self.last_time = datetime.now()
-
-        if current_state == 0:
-            return
-
-        position = int(current_state / total_state * 100)
-
-        string = "|"
-
-        for index in range(0, 100, 5):
-            if position >= index:
-                string += "█"
-            else:
-                string += " "
-
-        string += "|"
-
-        pass_time = (datetime.now() - self.last_time).total_seconds()
-        wait_time = int(pass_time * (total_state - current_state) / current_state)
-
-        string += " " * (3 - len(str(position))) + str(position) + "% ("
-
-        string += " " * (len(str(total_state)) - len(str(current_state))) + str(current_state) + "/" + str(total_state)
-
-        if current_state < total_state:
-            minute, second = divmod(wait_time, 60)
-            hour, minute = divmod(minute, 60)
-            string += ") wait " + "%04d:%02d:%02d" % (hour, minute, second)
-        else:
-            minute, second = divmod(pass_time, 60)
-            hour, minute = divmod(minute, 60)
-            string += ") used " + "%04d:%02d:%02d" % (hour, minute, second)
-
-        if extra is not None:
-            string += " " + str(extra).replace("\'", "").replace("{", "(").replace("}", ")") + "."
-        else:
-            string += "."
-
-        print("\r" + string, end="", flush=True)
-
-        if current_state >= total_state:
-            self.last_time = None
-            print()
 
 
 def prepare_data(value_range, points=101):
@@ -167,7 +99,7 @@ def calculate_landscape(value_range, points, motif):
     return motif(prepare_data(value_range=value_range, points=points)).reshape(points, points).detach().numpy()
 
 
-def calculate_gradients(value_range, points, motif, verbose=False):
+def calculate_gradients(value_range, points, motif):
     """
     Calculate the gradient matrix of the selected motif.
 
@@ -180,26 +112,115 @@ def calculate_gradients(value_range, points, motif, verbose=False):
     :param motif: 3-node network motif in the artificial neural network.
     :type motif: effect.networks.NeuralMotif
 
-    :param verbose: need to show process log.
-    :type verbose: bool
-
     :return: gradient matrix.
     :rtype: numpy.ndarray
     """
     sources = prepare_data(value_range=value_range, points=points)
     sources.requires_grad = True
     targets = motif(sources)
-    gradients, monitor = zeros(shape=(points ** 2,)), Monitor()
-
-    if verbose:
-        print("estimate the gradient in the current resolution of the landscape.")
+    gradients = zeros(shape=(points ** 2,))
 
     for index in range(points ** 2):
         # noinspection PyArgumentList
         squeeze(targets[index]).backward(retain_graph=True)
         values = sources.grad[index].detach().numpy()
         gradients[index] = sqrt(sum(values ** 2))
-        if verbose:
-            monitor(index + 1, points ** 2, extra={"source": gradients[index]})
 
     return gradients.reshape(points, points)
+
+
+def generate_qualified_motifs(motif_type, motif_index, activations, aggregations, weight_groups, bias_groups,
+                              value_range, points, minimum_difference=None):
+    """
+    Generate qualified motif with specific requirements.
+
+    :param motif_type: type of motif, i.e. "incoherent-loop", "coherent-loop", or "collider".
+    :type motif_type: str
+
+    :param motif_index: index (or sub-type) of motif, i.e. 1, 2, 3, or 4.
+    :type motif_index: int
+
+    :param activation: activation functions, i.e. "tanh", "sigmoid", or "relu".
+    :type activation: list
+
+    :param aggregations: aggregation functions, i.e. "sum" or "max".
+    :type aggregations: list
+
+    :param weight_groups: used weight value groups.
+    :type weight_groups: list
+
+    :param bias_groups: used bias value groups.
+    :type bias_groups: list
+
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param minimum_difference: minimum difference (L1 loss) between qualified motifs.
+    :type minimum_difference: float
+
+    :return: qualified motifs and their corresponding output landscapes.
+    :rtype: list, numpy.ndarray
+    """
+    signal_groups, saved_motifs = None, []
+    for weights in product(*weight_groups):
+        for biases in product(*bias_groups):
+            motif = NeuralMotif(motif_type=motif_type, motif_index=motif_index,
+                                activations=activations, aggregations=aggregations,
+                                weights=weights, biases=biases)
+            signals = calculate_landscape(value_range=value_range, points=points, motif=motif)
+            signals = expand_dims(signals.reshape(-1), axis=0)
+            if signal_groups is not None:
+                if minimum_difference is not None:
+                    if min(mean(abs(signal_groups - signals), axis=1)) > minimum_difference:
+                        saved_motifs.append(motif)
+                        signal_groups = vstack((signal_groups, signals))
+                else:
+                    saved_motifs.append(motif)
+                    signal_groups = vstack((signal_groups, signals))
+            else:
+                saved_motifs.append(motif)
+                signal_groups = signals
+
+    return saved_motifs, signal_groups
+
+
+def calculate_motif_differences(landscapes):
+    """
+    Calculate difference (L1 loss) between motif landscapes.
+
+    :param landscapes: landscapes of given motifs.
+    :type landscapes: numpy.ndarray
+
+    :return: differences.
+    :rtype: numpy.ndarray
+    """
+    former = repeat(expand_dims(landscapes, 0), len(landscapes), 0)
+    latter = swapaxes(former.copy(), 0, 1)
+
+    return mean(abs(former - latter), axis=2)
+
+
+def calculate_population_differences(source_landscapes, target_landscapes):
+    """
+    Calculate minimum differences (L1 loss) between two motif populations.
+
+    :param source_landscapes: motif landscapes in the source motif population.
+    :type source_landscapes: numpy.ndarray
+
+    :param target_landscapes: motif landscapes in the target (reference) motif population.
+    :type target_landscapes: numpy.ndarray
+
+    :return: minimum differences between two motif populations.
+    :rtype numpy.ndarray
+    """
+    results, source_landscapes = [], expand_dims(source_landscapes, axis=1)
+
+    for source in source_landscapes:
+        matrix = abs(target_landscapes - source)
+        distances = mean(matrix, axis=1)
+        results.append(min(distances))
+
+    return array(results)

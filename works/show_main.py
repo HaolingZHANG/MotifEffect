@@ -5,6 +5,7 @@ from scipy.stats import gaussian_kde, spearmanr
 from warnings import filterwarnings
 
 from practice import acyclic_motifs
+
 from works import load_data, draw_info
 
 filterwarnings("ignore")
@@ -461,7 +462,6 @@ def main02():
 
 def main03():
     task_data = load_data(load_path=task_path + "main03.pkl")
-    # paint_data = load_data("paint_data.pkl")
 
     figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
     grid = pyplot.GridSpec(2, 3)
@@ -484,7 +484,7 @@ def main03():
     pyplot.scatter(loss_change[location], robust_change[location], s=12, color="royalblue",
                    label=str(len(location)) + " / 400", alpha=0.75)
     pyplot.legend(loc="upper left", fontsize=8)
-    pyplot.xlabel("loss growth after training", fontsize=9)
+    pyplot.xlabel("L1 loss growth after training", fontsize=9)
     pyplot.ylabel("variation of Lipschitz constant", fontsize=9)
     pyplot.xticks(linspace(0, 0.12, 7), ["%.2f" % v for v in linspace(0, 0.12, 7)], fontsize=8)
     pyplot.yticks(linspace(-0.8, 0.8, 5), ["\N{MINUS SIGN}0.8", "\N{MINUS SIGN}0.4", "0.0", "+0.4", "+0.8"], fontsize=8)
@@ -511,7 +511,7 @@ def main03():
     pyplot.scatter(loss_change[location], robust_change[location], s=12, color="royalblue",
                    label="  " + str(len(location)) + " / 400", alpha=0.75)
     pyplot.legend(loc="upper left", fontsize=8)
-    pyplot.xlabel("loss growth after training", fontsize=9)
+    pyplot.xlabel("L1 loss growth after training", fontsize=9)
     pyplot.ylabel("variation of Lipschitz constant", fontsize=9)
     pyplot.xticks(linspace(0, 0.12, 7), ["%.2f" % v for v in linspace(0, 0.12, 7)], fontsize=8)
     pyplot.yticks(linspace(-0.8, 0.8, 5), ["\N{MINUS SIGN}0.8", "\N{MINUS SIGN}0.4", "0.0", "+0.4", "+0.8"], fontsize=8)
@@ -655,10 +655,10 @@ def main03():
     pyplot.title("escape strategy of " + math_orders[0] + " and " + math_orders[1], fontsize=9)
     pyplot.text(-1.1, 7, math_orders[0], va="center", ha="center", fontsize=9)
     pyplot.text(-1.1, 2, math_orders[1], va="center", ha="center", fontsize=9)
-    pyplot.vlines(-0.7, 7.2, 8.8, color="tomato", lw=3)
-    pyplot.vlines(-0.7, 5.2, 6.8, color="royalblue", lw=3)
-    pyplot.vlines(-0.7, 2.2, 3.8, color="tomato", lw=3)
-    pyplot.vlines(-0.7, 0.2, 1.8, color="royalblue", lw=3)
+    pyplot.vlines(-0.7, 7, 9, color="tomato", lw=3)
+    pyplot.vlines(-0.7, 5, 7, color="royalblue", lw=3)
+    pyplot.vlines(-0.7, 2, 4, color="tomato", lw=3)
+    pyplot.vlines(-0.7, 0, 2, color="royalblue", lw=3)
     for index_1 in range(3):
         for index_2 in range(8):
             if index_1 == 0:

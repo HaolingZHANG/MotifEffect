@@ -1,69 +1,53 @@
-from itertools import product
-from numpy import linspace, array, zeros, ones, random, expand_dims, vstack, where, uint8
-from numpy import min, mean, sum, abs, median, argmax, all
+from hashlib import md5
+from numpy import linspace, array, zeros, ones, random, min, mean, sum, median, ceil, all, where, uint8
 from os import path, mkdir, listdir
+from umap import UMAP
 
-from effect import NeuralMotif, calculate_landscape, estimate_lipschitz_by_signals, maximum_minimum_loss_search
-from practice import NEATCartPoleTask, NEATAgent, NormNoiseGenerator, count_motifs_from_matrices, GraphType
-from practice import acyclic_motifs, create_agent_config, obtain_best, calculate_matrix_from_agent
+from effect import calculate_landscape, calculate_gradients, estimate_lipschitz_by_signals, generate_qualified_motifs
+from effect import calculate_motif_differences, calculate_population_differences, maximum_minimum_loss_search
 
-from works import Monitor, load_data, save_data
+from practice import acyclic_motifs, NEATCartPoleTask, NormNoiseGenerator, create_agent_config, train_and_test
+
+from works import load_data, save_data
 
 sample_number = 100
 activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
 motif_types, motif_indices = ["incoherent-loop", "coherent-loop", "collider"], [1, 2, 3, 4]
 weight_values, bias_values = linspace(+0.1, +1.0, 10), linspace(-1.0, +1.0, 21)
-value_range, points, monitor = (-1, +1), 41, Monitor()
+value_range, points, threshold = (-1, +1), 41, 1e-2
 learn_rate = (value_range[1] - value_range[0]) / (points - 1) * 1e-1
 loss_threshold, check_threshold, iteration_thresholds = 1e-5, 5, (100, 100)
 
 
 def experiment1(raw_path, sort_path):
-    if not path.exists(path=raw_path + "population/") or not path.exists(path=raw_path + "motif/"):
-        print("Generate motifs of the loop populations and the collider population with interval.")
-        mkdir(raw_path + "population/")
+    if not path.exists(path=raw_path + "motif/") or not path.exists(path=raw_path + "population/"):
         mkdir(raw_path + "motif/")
-        index, total = 0, len(motif_types) * len(motif_indices) * len(activation_selection) * len(aggregation_selection)
+        mkdir(raw_path + "population/")
         for motif_type in motif_types:
             for motif_index in motif_indices:
-                weight_flags, motif_structure = [], acyclic_motifs[motif_type][motif_index - 1]
-                for former, latter in motif_structure.edges:
-                    weight_flags.append(motif_structure.get_edge_data(former, latter)["weight"])
-                weight_groups = [weight_flag * weight_values for weight_flag in weight_flags]
-                if len(motif_structure.edges) == 3:
-                    bias_groups = [bias_values, bias_values]
-                else:
-                    bias_groups = [bias_values]
-                for act in activation_selection:
-                    for agg in aggregation_selection:
-                        if len(motif_structure.edges) == 3:
-                            activations, aggregations = [act, act], [agg, agg]
-                        else:
-                            activations, aggregations = [act], [agg]
-                        feature = motif_type + "." + str(motif_index) + "." + activations[0] + "." + aggregations[0]
-                        signal_groups, saved_motifs = None, []
-                        for weights in product(*weight_groups):
-                            for biases in product(*bias_groups):
-                                motif = NeuralMotif(motif_type=motif_type, motif_index=motif_index,
-                                                    activations=activations, aggregations=aggregations,
-                                                    weights=weights, biases=biases)
-                                signals = calculate_landscape(value_range=value_range, points=points, motif=motif)
-                                signals = expand_dims(signals.reshape(-1), axis=0)
-                                if signal_groups is not None:
-                                    if min(mean(abs(signal_groups - signals), axis=1)) > 0.01:
-                                        signal_groups = vstack((signal_groups, signals))
-                                        saved_motifs.append(motif)
-                                else:
-                                    signal_groups = signals
-                                    saved_motifs.append(motif)
+                for activation in activation_selection:
+                    for aggregation in aggregation_selection:
+                        weight_flags, motif_structure = [], acyclic_motifs[motif_type][motif_index - 1]
+                        for former, latter in motif_structure.edges:
+                            weight_flags.append(motif_structure.get_edge_data(former, latter)["weight"])
 
-                        save_data(save_path=raw_path + "population/" + feature + ".npy", information=signal_groups)
-                        save_data(save_path=raw_path + "motif/" + feature + ".pkl", information=saved_motifs)
-                        monitor(index + 1, total)
-                        index += 1
+                        weight_groups = [weight_flag * weight_values for weight_flag in weight_flags]
+                        if len(motif_structure.edges) == 3:
+                            bias_groups = [bias_values, bias_values]
+                        else:
+                            bias_groups = [bias_values]
+                        if len(motif_structure.edges) == 3:
+                            activations, aggregations = [activation, activation], [aggregation, aggregation]
+                        else:
+                            activations, aggregations = [activation], [aggregation]
+                        feature = motif_type + "." + str(motif_index) + "." + activation + "." + aggregation
+                        result = generate_qualified_motifs(motif_type, motif_index, activations, aggregations,
+                                                           weight_groups, bias_groups, value_range, points, threshold)
+                        motifs, signals = result
+                        save_data(save_path=raw_path + "motif/" + feature + ".pkl", information=motifs)
+                        save_data(save_path=raw_path + "population/" + feature + ".npy", information=signals)
 
     if not path.exists(path=raw_path + "robustness/"):
-        print("Estimate Lipschitz constant for each motif.")
         mkdir(raw_path + "robustness/")
         child_paths = listdir(raw_path + "population/")
         for path_index, child_path in enumerate(child_paths):
@@ -72,14 +56,10 @@ def experiment1(raw_path, sort_path):
                 output = signals.reshape(points, points)
                 lipschitz_values.append(estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2"))
             save_data(save_path=raw_path + "robustness/" + child_path, information=array(lipschitz_values))
-            monitor(path_index + 1, len(child_paths))
 
     if not path.exists(path=raw_path + "difference/"):
-        print("Calculate population difference.")
         mkdir(raw_path + "difference/")
         input_parent_path, output_parent_path = raw_path + "population/", raw_path + "difference/"
-        index, total = 0, len(activation_selection) * len(aggregation_selection)
-        total *= (len(motif_types) * len(motif_indices)) * (len(motif_types) * len(motif_indices) - 1)
         for act in activation_selection:
             for agg in aggregation_selection:
                 for mt1 in motif_types:
@@ -94,27 +74,38 @@ def experiment1(raw_path, sort_path):
                                     info_2 = mt2 + "." + mi2
                                     output_path = output_parent_path + info + " " + info_1 + " for " + info_2 + ".npy"
                                     if not path.exists(output_path):
-                                        sources, targets, results = load_data(input_path_1), load_data(input_path_2), []
-                                        sources = expand_dims(sources, axis=1)
-                                        for source in sources:
-                                            matrix = abs(targets - source)
-                                            distances = mean(matrix, axis=1)
-                                            results.append(min(distances))
-                                        save_data(save_path=output_path, information=array(results))
+                                        sources, targets = load_data(input_path_1), load_data(input_path_2)
+                                        results = calculate_population_differences(sources, targets)
+                                        save_data(save_path=output_path, information=results)
                                     output_path = output_parent_path + info + " " + info_2 + " for " + info_1 + ".npy"
                                     if not path.exists(output_path):
-                                        sources, targets, results = load_data(input_path_2), load_data(input_path_1), []
-                                        sources = expand_dims(sources, axis=1)
-                                        for source in sources:
-                                            matrix = abs(targets - source)
-                                            distances = mean(matrix, axis=1)
-                                            results.append(min(distances))
-                                        save_data(save_path=output_path, information=array(results))
-
-                                    monitor(index + 1, total)
-                                    index += 1
+                                        sources, targets = load_data(input_path_2), load_data(input_path_1)
+                                        results = calculate_population_differences(sources, targets)
+                                        save_data(save_path=output_path, information=results)
 
     if not path.exists(path=sort_path + "supp01.pkl"):
+        task_data = {}
+        matrix_1, matrix_2 = -ones(shape=(18, 4)), -ones(shape=(18, 4))
+        sizes = [(len(weight_values) ** 3) * (len(bias_values) ** 2),
+                 (len(weight_values) ** 3) * (len(bias_values) ** 2),
+                 (len(weight_values) ** 2) * (len(bias_values) ** 1)]
+        for child_path in listdir(raw_path + "population/"):
+            data = load_data(load_path=raw_path + "population/" + child_path)
+            info = child_path.split(".")
+            # noinspection PyTypeChecker
+            location_value = motif_types.index(info[0]) * 6
+            # noinspection PyTypeChecker
+            location_value += activation_selection.index(info[2]) * 2
+            # noinspection PyTypeChecker
+            location_value += aggregation_selection.index(info[3])
+            matrix_1[location_value, int(info[1]) - 1] = len(data)
+            # noinspection PyTypeChecker
+            matrix_2[location_value, int(info[1]) - 1] = len(data) / float(sizes[motif_types.index(info[0])])
+        task_data["a"] = matrix_1
+        task_data["b"] = matrix_2
+        save_data(save_path=sort_path + "supp01.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp02.pkl"):
         task_data = {}
         attrs = []
         for mit in motif_types:
@@ -135,28 +126,6 @@ def experiment1(raw_path, sort_path):
                         data = load_data(load_path=used_path)
                         matrix[index_1, index_2] = len(data[data <= 0.1]) / len(data)
         task_data["a"] = matrix
-        save_data(save_path=sort_path + "supp01.pkl", information=task_data)
-
-    if not path.exists(path=sort_path + "supp02.pkl"):
-        task_data = {}
-        matrix_1, matrix_2 = -ones(shape=(18, 4)), -ones(shape=(18, 4))
-        sizes = [(len(weight_values) ** 3) * (len(bias_values) ** 2),
-                 (len(weight_values) ** 3) * (len(bias_values) ** 2),
-                 (len(weight_values) ** 2) * (len(bias_values) ** 1)]
-        for child_path in listdir(raw_path + "population/"):
-            data = load_data(load_path=raw_path + "population/" + child_path)
-            info = child_path.split(".")
-            # noinspection PyTypeChecker
-            location_value = motif_types.index(info[0]) * 6
-            # noinspection PyTypeChecker
-            location_value += activation_selection.index(info[2]) * 2
-            # noinspection PyTypeChecker
-            location_value += aggregation_selection.index(info[3])
-            matrix_1[location_value, int(info[1]) - 1] = len(data)
-            # noinspection PyTypeChecker
-            matrix_2[location_value, int(info[1]) - 1] = len(data) / float(sizes[motif_types.index(info[0])])
-        task_data["a"] = matrix_1
-        task_data["b"] = matrix_2
         save_data(save_path=sort_path + "supp02.pkl", information=task_data)
 
     if not path.exists(path=sort_path + "supp03.pkl"):
@@ -257,7 +226,9 @@ def experiment1(raw_path, sort_path):
         task_data["b"] = records
         save_data(save_path=sort_path + "main01.pkl", information=task_data)
 
-    if not path.exists(path=sort_path + "main02.pkl") or not path.exists(path=sort_path + "supp04.pkl"):
+    if not path.exists(path=sort_path + "main02.pkl") or \
+            not path.exists(path=sort_path + "supp04.pkl") or \
+            not path.exists(path=sort_path + "supp05.pkl"):
         task_data = {}
         counts = load_data(sort_path + "supp02.pkl")["a"].astype(int)
         size_data, location = {}, 0
@@ -360,11 +331,12 @@ def experiment1(raw_path, sort_path):
                 robust_distributions[(activation, aggregation)][key] = array(both)
         task_data["b"] = robust_distributions[("tanh", "sum")]
         save_data(save_path=sort_path + "main02.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp04.pkl", information={"a": task_data["b"]})
         task_data, panel_indices, index = {}, ["a", "b", "c", "d", "e", "f"], 0
         for activation in activation_selection:
             for aggregation in aggregation_selection:
                 task_data[panel_indices[index]] = robust_distributions[(activation, aggregation)]
-        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp05.pkl", information=task_data)
 
 
 def experiment2(raw_path, sort_path):
@@ -431,15 +403,14 @@ def experiment2(raw_path, sort_path):
             for source_index, source_motif in enumerate(source_motifs):
                 target_motifs = []
                 for motif_index in motif_indices:
+                    activations, aggregations = ["tanh"], ["sum"]
                     weight_flags, motif_structure = [], acyclic_motifs["collider"][motif_index - 1]
-                    for former, latter in motif_structure.edges:
-                        weight_flags.append(motif_structure.get_edge_data(former, latter)["weight"])
-                    for weights in product(*[weight_flag * array([0.5, 1.0]) for weight_flag in weight_flags]):
-                        for biases in product(*[array([-0.5, 0.0, 0.5])]):
-                            motif = NeuralMotif(motif_type="collider", motif_index=motif_index,
-                                                activations=["tanh"], aggregations=["sum"],
-                                                weights=weights, biases=biases)
-                            target_motifs.append(motif)
+                    for former_landscape, latter_landscape in motif_structure.edges:
+                        weight_flags.append(motif_structure.get_edge_data(former_landscape, latter_landscape)["weight"])
+                    weight_groups = [weight_flag * weight_values for weight_flag in weight_flags]
+                    bias_groups = [bias_values]
+                    target_motifs += generate_qualified_motifs("collider", motif_index, activations, aggregations,
+                                                               weight_groups, bias_groups, value_range, points)[0]
                 result = maximum_minimum_loss_search(value_range=value_range, points=points, learn_rate=learn_rate,
                                                      source_motif=source_motif, target_motifs=target_motifs,
                                                      loss_threshold=loss_threshold, check_threshold=check_threshold,
@@ -458,15 +429,14 @@ def experiment2(raw_path, sort_path):
             for source_index, source_motif in enumerate(source_motifs):
                 target_motifs = []
                 for motif_index in motif_indices:
+                    activations, aggregations = ["tanh"], ["sum"]
                     weight_flags, motif_structure = [], acyclic_motifs["collider"][motif_index - 1]
-                    for former, latter in motif_structure.edges:
-                        weight_flags.append(motif_structure.get_edge_data(former, latter)["weight"])
-                    for weights in product(*[weight_flag * array([0.5, 1.0]) for weight_flag in weight_flags]):
-                        for biases in product(*[array([-0.5, 0.0, 0.5])]):
-                            motif = NeuralMotif(motif_type="collider", motif_index=motif_index,
-                                                activations=["tanh"], aggregations=["sum"],
-                                                weights=weights, biases=biases)
-                            target_motifs.append(motif)
+                    for former_landscape, latter_landscape in motif_structure.edges:
+                        weight_flags.append(motif_structure.get_edge_data(former_landscape, latter_landscape)["weight"])
+                    weight_groups = [weight_flag * weight_values for weight_flag in weight_flags]
+                    bias_groups = [bias_values]
+                    target_motifs += generate_qualified_motifs("collider", motif_index, activations, aggregations,
+                                                               weight_groups, bias_groups, value_range, points)[0]
                 result = maximum_minimum_loss_search(value_range=value_range, points=points, learn_rate=learn_rate,
                                                      source_motif=source_motif, target_motifs=target_motifs,
                                                      loss_threshold=loss_threshold, check_threshold=check_threshold,
@@ -484,15 +454,14 @@ def experiment2(raw_path, sort_path):
 
     if not path.exists(path=sort_path + "main03.pkl"):
         task_data = {}
-        robust, losses = [[], [], [], [], [], [], [], []], [[], [], [], [], [], [], [], []]
-        record, index = load_data(load_path=raw_path + "max-min.search.pkl"), 0
-        for motif_type in ["incoherent-loop", "coherent-loop"]:
+        robust_change, loss_change = [[], []], [[], []]
+        record = load_data(load_path=raw_path + "max-min.search.pkl")
+        for index, motif_type in enumerate(["incoherent-loop", "coherent-loop"]):
             for motif_index in [1, 2, 3, 4]:
-                for sample in record[motif_type][motif_index - 1]:
-                    losses[index].append(sample[1][-1] - sample[1][0])
-                    robust[index].append(sample[2][-1, 0] - sample[2][0, 0])
-                index += 1
-        task_data["a"] = (robust, losses)
+                for sample in record[motif_type][motif_index]:
+                    robust_change[index].append(sample[2][-1, 0] - sample[2][0, 0])
+                    loss_change[index].append(sample[1][-1] - sample[1][0])
+        task_data["a"] = (robust_change, loss_change)
         # terminal cases after visualization.
         sample_1 = record["incoherent-loop"][3][99]
         case_1 = [(calculate_landscape(value_range, points, sample_1[0][0][0]), sample_1[2][0, 0]),
@@ -516,168 +485,237 @@ def experiment2(raw_path, sort_path):
                   (calculate_landscape(value_range, points, sample_4[0][-1][1]), sample_4[2][-1, 1])]
         task_data["b"] = {"i": (case_1, case_2), "c": (case_3, case_4)}
         results = {"i": [], "c": []}
-        sample_1 = record["incoherent-loop"][0][69]
-        former = calculate_landscape(value_range, points, sample_1[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_1[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["i"].append([former, latter - former, latter, value_1, value_2])
-        sample_2 = record["incoherent-loop"][0][25]
-        former = calculate_landscape(value_range, points, sample_2[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_2[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["i"].append([former, latter - former, latter, value_1, value_2])
-        sample_3 = record["incoherent-loop"][0][48]
-        former = calculate_landscape(value_range, points, sample_3[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_3[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["i"].append([former, latter - former, latter, value_1, value_2])
-        sample_4 = record["incoherent-loop"][0][34]
-        former = calculate_landscape(value_range, points, sample_4[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_4[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["i"].append([former, latter - former, latter, value_1, value_2])
-        sample_5 = record["coherent-loop"][0][84]
-        former = calculate_landscape(value_range, points, sample_5[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_5[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["c"].append([former, latter - former, latter, value_1, value_2])
-        sample_6 = record["coherent-loop"][0][90]
-        former = calculate_landscape(value_range, points, sample_6[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_6[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["c"].append([former, latter - former, latter, value_1, value_2])
-        sample_7 = record["coherent-loop"][0][25]
-        former = calculate_landscape(value_range, points, sample_7[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_7[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["c"].append([former, latter - former, latter, value_1, value_2])
-        sample_8 = record["coherent-loop"][0][17]
-        former = calculate_landscape(value_range, points, sample_8[0][0][0])
-        latter = calculate_landscape(value_range, points, sample_8[0][-1][0])
-        value_1 = estimate_lipschitz_by_signals(value_range, points, former)
-        value_2 = estimate_lipschitz_by_signals(value_range, points, latter)
-        results["c"].append([former, latter - former, latter, value_1, value_2])
+        sample_1 = record["incoherent-loop"][1][69]
+        former_landscape = calculate_landscape(value_range, points, sample_1[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_1[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["i"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_2 = record["incoherent-loop"][1][25]
+        former_landscape = calculate_landscape(value_range, points, sample_2[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_2[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["i"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_3 = record["incoherent-loop"][1][48]
+        former_landscape = calculate_landscape(value_range, points, sample_3[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_3[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["i"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_4 = record["incoherent-loop"][1][34]
+        former_landscape = calculate_landscape(value_range, points, sample_4[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_4[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["i"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_5 = record["coherent-loop"][1][84]
+        former_landscape = calculate_landscape(value_range, points, sample_5[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_5[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["c"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_6 = record["coherent-loop"][1][90]
+        former_landscape = calculate_landscape(value_range, points, sample_6[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_6[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["c"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_7 = record["coherent-loop"][1][25]
+        former_landscape = calculate_landscape(value_range, points, sample_7[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_7[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["c"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
+        sample_8 = record["coherent-loop"][1][17]
+        former_landscape = calculate_landscape(value_range, points, sample_8[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_8[0][-1][0])
+        value_1 = estimate_lipschitz_by_signals(value_range, points, former_landscape)
+        value_2 = estimate_lipschitz_by_signals(value_range, points, latter_landscape)
+        results["c"].append([former_landscape, latter_landscape - former_landscape, latter_landscape, value_1, value_2])
         task_data["c"] = results
         save_data(save_path=sort_path + "main03.pkl", information=task_data)
 
+    if not path.exists(path=sort_path + "supp06.pkl"):
+        task_data = {}
+        robust_change, loss_change = [[] for _ in range(8)], [[] for _ in range(8)]
+        record, index = load_data(load_path=raw_path + "max-min.search.pkl"), 0
+        for motif_type in ["incoherent-loop", "coherent-loop"]:
+            for motif_index in [1, 2, 3, 4]:
+                for sample in record[motif_type][motif_index]:
+                    robust_change[index].append(sample[2][-1, 0] - sample[2][0, 0])
+                    loss_change[index].append(sample[1][-1] - sample[1][0])
+                index += 1
+        for index in range(8):
+            task_data[chr(ord("a") + index)] = (robust_change[index], loss_change[index])
+        save_data(save_path=sort_path + "supp06.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp07.pkl"):
+        task_data = {}
+        motif_params = [[] for _ in range(8)]
+        record, index = load_data(load_path=raw_path + "max-min.search.pkl"), 0
+        for motif_type in ["incoherent-loop", "coherent-loop"]:
+            for motif_index in [1, 2, 3, 4]:
+                for sample in record[motif_type][motif_index]:
+                    trained_motif = sample[0][-1][0]
+                    weights = [weight.value() for weight in trained_motif.w]
+                    biases = [bias.value() for bias in trained_motif.b]
+                    motif_params[index].append(weights + biases)
+                index += 1
+        for index in range(8):
+            task_data[chr(ord("a") + index)] = motif_params[index]
+        save_data(save_path=sort_path + "supp07.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp08.pkl"):
+        task_data = {}
+        record, index = load_data(load_path=raw_path + "max-min.search.pkl"), 0
+        for motif_type in ["incoherent-loop", "coherent-loop"]:
+            for motif_index in [1, 2, 3, 4]:
+                landscapes = []
+                for sample in record[motif_type][motif_index]:
+                    landscapes.append(calculate_landscape(value_range, points, sample[0][-1][0]).reshape(-1).tolist())
+                differences = calculate_motif_differences(array(landscapes))
+                locations = UMAP(n_components=2, metric="precomputed").fit_transform(X=differences)
+                task_data[chr(ord("a") + index)] = (differences, locations)
+                index += 1
+        save_data(save_path=sort_path + "supp08.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp09.pkl"):
+        task_data = {}
+        record = load_data(load_path=raw_path + "max-min.search.pkl")
+        sample_1 = record["incoherent-loop"][1][69]
+        former_landscape = calculate_landscape(value_range, points, sample_1[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_1[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_1[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_1[0][-1][0])
+        task_data["a"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_2 = record["incoherent-loop"][1][25]
+        former_landscape = calculate_landscape(value_range, points, sample_2[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_2[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_2[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_2[0][-1][0])
+        task_data["b"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_3 = record["incoherent-loop"][1][48]
+        former_landscape = calculate_landscape(value_range, points, sample_3[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_3[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_3[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_3[0][-1][0])
+        task_data["c"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_4 = record["incoherent-loop"][1][34]
+        former_landscape = calculate_landscape(value_range, points, sample_4[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_4[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_4[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_4[0][-1][0])
+        task_data["d"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_5 = record["coherent-loop"][1][84]
+        former_landscape = calculate_landscape(value_range, points, sample_5[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_5[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_5[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_5[0][-1][0])
+        task_data["e"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_6 = record["coherent-loop"][1][90]
+        former_landscape = calculate_landscape(value_range, points, sample_6[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_6[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_6[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_6[0][-1][0])
+        task_data["f"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_7 = record["coherent-loop"][1][25]
+        former_landscape = calculate_landscape(value_range, points, sample_7[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_7[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_7[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_7[0][-1][0])
+        task_data["g"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        sample_8 = record["coherent-loop"][1][17]
+        former_landscape = calculate_landscape(value_range, points, sample_8[0][0][0])
+        latter_landscape = calculate_landscape(value_range, points, sample_8[0][-1][0])
+        former_gradients = calculate_gradients(value_range, points, sample_8[0][0][0])
+        latter_gradients = calculate_gradients(value_range, points, sample_8[0][-1][0])
+        task_data["h"] = (former_landscape, latter_landscape, former_gradients, latter_gradients)
+        save_data(save_path=sort_path + "supp09.pkl", information=task_data)
+
 
 def experiment3(raw_path, sort_path, config_path):
-    agent_names = ["baseline", "adjusted[i]", "adjusted[c]", "adjusted[i+c]"]
-    agent_configs = [create_agent_config(path=config_path + "cartpole-v0.default." + name) for name in agent_names]
-    radios, saved_names = [0.0, 0.1, 0.2, 0.3, 0.4], ["b", "i", "c", "a"]
-
-    def record_handle(a):
-        motif_counts = count_motifs_from_matrices(matrices=[calculate_matrix_from_agent(a)], search_size=3,
-                                                  graph_type=GraphType.pn, pruning=False)[0]
-        return a, sum(motif_counts.reshape(3, 4), axis=1)
+    agent_names, radios = ["b", "i", "c", "a"], [0.0, 0.1, 0.2, 0.3, 0.4]
 
     if not path.exists(path=raw_path + "practice.adjustments.1.pkl"):
+        config_names = ["baseline.config", "adjusted[i].config", "adjusted[c].config", "adjusted[a].config"]
+        agent_configs = [create_agent_config(config_path + config_name) for config_name in config_names]
+        noise_generators, norm_type = {}, "L-2"
+        for radio in radios:
+            noise_generators[radio] = NormNoiseGenerator(norm_type=norm_type, noise_scale=radio)
         record, maximum_generation = {}, 20
-        for agent_name, agent_config, saved_name in zip(agent_names, agent_configs, saved_names):
-            record[saved_name] = {}
+        for agent_name, agent_config in zip(agent_names, agent_configs):
+            record[agent_name] = {}
             for train_radio in radios:
-                record[saved_name][train_radio] = []
-                for repeat in range(sample_number):
-                    noise_generator = NormNoiseGenerator(norm_type="L-2", noise_scale=train_radio)
-                    task = NEATCartPoleTask(maximum_generation=maximum_generation, noise_generator=noise_generator)
-                    task.reset_experience(record_handle=record_handle)
-                    best_genome = obtain_best(task, agent_config, need_stdout=False)
-                    if best_genome is not None:
-                        agent = NEATAgent(model_genome=best_genome, neat_config=agent_config, description=agent_name,
-                                          action_handle=argmax)
-                        experience = task.get_experience()
-                        record_1, record_2 = {"agent": agent, "experience": experience}, {}
-                        for index, noise_scale in enumerate(radios):
-                            task.noise_generator.noise_scale, fitnesses = noise_scale, []
-                            reward_collector = task.run(agent=agent)["rewards"]
-                            for rewards in reward_collector:
-                                fitnesses.append(sum(rewards))
-                            record_2[noise_scale] = fitnesses
-                        record[saved_name][train_radio].append((record_1, record_2))
+                result = train_and_test(task=NEATCartPoleTask(maximum_generation=maximum_generation),
+                                        agent_name=agent_name, agent_config=agent_config, repeats=sample_number,
+                                        train_noise_generator=noise_generators[train_radio],
+                                        test_noise_generators=noise_generators)
+                record[agent_name][train_radio] = result
         save_data(save_path=raw_path + "practice.adjustments.1.pkl", information=record)
 
     if not path.exists(path=raw_path + "practice.adjustments.2.pkl"):
+        config_names = ["baseline.config", "adjusted[i].config", "adjusted[c].config", "adjusted[a].config"]
+        agent_configs = [create_agent_config(config_path + config_name) for config_name in config_names]
+        noise_generators, norm_type = {}, "L-2"
+        for radio in radios:
+            noise_generators[radio] = NormNoiseGenerator(norm_type=norm_type, noise_scale=radio)
         record, maximum_generation, train_radio = {}, 100, 0.3
-        for agent_name, agent_config, saved_name in zip(agent_names, agent_configs, saved_names):
-            record[saved_name] = []
-            for repeat in range(sample_number):
-                noise_generator = NormNoiseGenerator(norm_type="L-2", noise_scale=train_radio)
-                task = NEATCartPoleTask(maximum_generation=maximum_generation, noise_generator=noise_generator)
-                task.reset_experience(record_handle=record_handle)
-                best_genome = obtain_best(task, agent_config, need_stdout=False)
-                if best_genome is not None:
-                    agent = NEATAgent(model_genome=best_genome, neat_config=agent_config, description=agent_name,
-                                      action_handle=argmax)
-                    experience = task.get_experience()
-                    record_1, record_2 = {"agent": agent, "experience": experience}, {}
-                    for index, noise_scale in enumerate(radios):
-                        task.noise_generator.noise_scale, fitnesses = noise_scale, []
-                        reward_collector = task.run(agent=agent)["rewards"]
-                        for rewards in reward_collector:
-                            fitnesses.append(sum(rewards))
-                        record_2[noise_scale] = fitnesses
-                    record[saved_name].append((record_1, record_2))
+        for agent_name, agent_config in zip(agent_names, agent_configs):
+            result = train_and_test(task=NEATCartPoleTask(maximum_generation=maximum_generation),
+                                    agent_name=agent_name, agent_config=agent_config, repeats=sample_number,
+                                    train_noise_generator=noise_generators[train_radio],
+                                    test_noise_generators=noise_generators)
+            record[agent_name] = result
         save_data(save_path=raw_path + "practice.adjustments.2.pkl", information=record)
 
     if not path.exists(path=sort_path + "main04.pkl"):
         task_data = {}
         record_1 = load_data(raw_path + "practice.adjustments.1.pkl")
         matrix = zeros(shape=(4, 5))
-        for strategy_index, strategy in enumerate(["b", "i", "c", "a"]):
-            for noise_index, noise in enumerate([0.0, 0.1, 0.2, 0.3, 0.4]):
-                average_performance = mean([a[0]["agent"].get_fitness() for a in record_1[strategy][noise]])
+        for strategy_index, strategy in enumerate(agent_names):
+            for noise_index, noise in enumerate(radios):
+                average_performance = mean([sample[0].get_fitness() for sample in record_1[strategy][noise]])
                 matrix[strategy_index, noise_index] = average_performance
         task_data["b"] = matrix
         matrix = zeros(shape=(4, 5))
-        for strategy_index, strategy in enumerate(["b", "i", "c", "a"]):
-            for noise_index, noise in enumerate([0.0, 0.1, 0.2, 0.3, 0.4]):
-                median_generation = median([len(a[0]["experience"]) for a in record_1[strategy][noise]])
+        for strategy_index, strategy in enumerate(agent_names):
+            for noise_index, noise in enumerate(radios):
+                median_generation = median([len(sample[1]) for sample in record_1[strategy][noise]])
                 matrix[strategy_index, noise_index] = median_generation
         task_data["c"] = matrix
         matrix = zeros(shape=(4, 5, 5))
-        for strategy_index, strategy in enumerate(["b", "i", "c", "a"]):
+        for strategy_index, strategy in enumerate(agent_names):
             values = zeros(shape=(5, 5))
-            for train_noise_index, noise_1 in enumerate([0.0, 0.1, 0.2, 0.3, 0.4]):
-                for a in record_1[strategy][noise_1]:
-                    sub_values = []
-                    for evaluate_noise_index, noise_2 in enumerate([0.0, 0.1, 0.2, 0.3, 0.4]):
-                        sub_values.append(mean(a[1][noise_2]))
-                    values[train_noise_index] += sub_values
-            matrix[strategy_index] = values / 100.0
+            for train_noise_index, noise_1 in enumerate(radios):
+                for sample in record_1[strategy][noise_1]:
+                    values[train_noise_index] += [sample[2][noise] for noise in radios]
+            matrix[strategy_index] = values / float(sample_number)
         task_data["d"] = matrix
         record_2 = load_data(raw_path + "practice.adjustments.2.pkl")
         matrix = zeros(shape=(4, 2))
         cases = {}
-        for strategy_index, strategy in enumerate(["b", "i", "c", "a"]):
+        for strategy_index, strategy in enumerate(agent_names):
             count_1 = 0
-            for a in record_1[strategy][0.3]:
-                sub_values = []
-                for evaluate_noise_index, noise_2 in enumerate([0.0, 0.1, 0.2, 0.3, 0.4]):
-                    sub_values.append(mean(a[1][noise_2]))
-                if min(sub_values[:4]) >= 195:
+            for sample in record_1[strategy][0.3]:
+                evaluate_result = [sample[2][noise] for noise in radios]
+                if min(evaluate_result[:4]) >= 195:
                     count_1 += 1
             count_2, cases[strategy] = 0, [[], [], []]
-            for a in record_2[strategy]:
-                sub_values = []
-                for evaluate_noise_index, noise_2 in enumerate([0.0, 0.1, 0.2, 0.3, 0.4]):
-                    sub_values.append(mean(a[1][noise_2]))
-                if min(sub_values[:4]) >= 195:
+            for sample in record_2[strategy]:
+                evaluate_result = [sample[2][noise] for noise in radios]
+                if min(evaluate_result[:4]) >= 195:
                     count_2 += 1
                 else:
-                    sub_values = array(sub_values)
-                    if all(sub_values < 195) and sub_values[0] > sub_values[-1] and sub_values[0] > sub_values[2]:
-                        cases[strategy][0].append(sub_values.tolist())
-                    elif all(sub_values < 195):
-                        cases[strategy][1].append(sub_values.tolist())
+                    evaluate_result = array(evaluate_result)
+                    if all(evaluate_result < 195) and \
+                            evaluate_result[0] > evaluate_result[-1] and \
+                            evaluate_result[0] > evaluate_result[2]:
+                        cases[strategy][0].append(evaluate_result.tolist())
+                    elif all(evaluate_result < 195):
+                        cases[strategy][1].append(evaluate_result.tolist())
                     else:
-                        cases[strategy][2].append(sub_values.tolist())
+                        cases[strategy][2].append(evaluate_result.tolist())
             matrix[strategy_index] = [count_1 / 100.0, count_2 / 100.0]
             a = (mean(array(cases[strategy][2]), axis=0), len(cases[strategy][2]), (100 - count_2))
             if len(cases[strategy][0]) > 0:
@@ -693,8 +731,114 @@ def experiment3(raw_path, sort_path, config_path):
         task_data["f"] = cases
         save_data(save_path=sort_path + "main04.pkl", information=task_data)
 
+    if not path.exists(path=sort_path + "supp10.pkl"):
+        task_data = {}
+        record_1, result_1 = load_data(raw_path + "practice.adjustments.1.pkl"), [[], [], [], [], []]
+        for noise_index, noise in enumerate(radios):
+            for strategy_index, strategy in enumerate(agent_names):
+                motif_collections = []
+                for sample in record_1[strategy][noise]:
+                    motif_collections.append(sum(sample[0].get_motif_counts().reshape(3, 4), axis=1).tolist())
+                motif_collections = array(motif_collections)
+                result_1[noise_index].append(mean(motif_collections, axis=0).tolist())
+        task_data["a"] = result_1
+        record_2, result_2 = load_data(raw_path + "practice.adjustments.2.pkl"), []
+        for strategy_index, strategy in enumerate(agent_names):
+            motif_collections = []
+            for sample in record_2[strategy]:
+                motif_collections.append(sum(sample[0].get_motif_counts().reshape(3, 4), axis=1).tolist())
+            motif_collections = array(motif_collections)
+            result_2.append(mean(motif_collections, axis=0).tolist())
+        task_data["b"] = result_2
+        save_data(save_path=sort_path + "supp10.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp11.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "practice.adjustments.2.pkl")
+        result_1, result_2, result_3 = [], [], zeros(shape=(4, 5))
+        for strategy_index, strategy in enumerate(agent_names):
+            result_1.append(mean([sample[0].get_fitness() for sample in record[strategy]]))
+            result_2.append(median([len(sample[1]) for sample in record[strategy]]))
+            collection = zeros(shape=(5,))
+            for sample in record[strategy]:
+                collection += [sample[2][noise] for noise in radios]
+            collection /= float(sample_number)
+            result_3[strategy_index] = collection
+        task_data["a"] = result_1
+        task_data["b"] = result_2
+        task_data["c"] = result_3
+        save_data(save_path=sort_path + "supp11.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp12.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "practice.adjustments.2.pkl")
+        for strategy_index, strategy in enumerate(agent_names):
+            cases = [[], [], [], []]
+            for sample in record[strategy]:
+                sub_values = [sample[2][noise] for noise in radios]
+                collection = sum(sample[0].get_motif_counts().reshape(3, 4), axis=1).tolist()
+                if min(sub_values[:4]) < 195:
+                    sub_values = array(sub_values)
+                    if all(sub_values < 195) and sub_values[0] > sub_values[-1] and sub_values[0] > sub_values[2]:
+                        cases[1].append(collection)
+                    elif all(sub_values < 195):
+                        cases[2].append(collection)
+                    else:
+                        cases[3].append(collection)
+                else:
+                    cases[0].append(collection)
+            a = mean(array(cases[0]), axis=0).tolist()
+            b = mean(array(cases[3]), axis=0).tolist()
+            if len(cases[1]) > 0:
+                c = mean(array(cases[1]), axis=0).tolist()
+            else:
+                c = None
+            if len(cases[2]) > 0:
+                d = mean(array(cases[2]), axis=0).tolist()
+            else:
+                d = None
+            task_data[chr(ord("a") + strategy_index)] = [a, b, c, d]
+        save_data(save_path=sort_path + "supp12.pkl", information=task_data)
+
+
+def data_summary():
+    for parent_path in ["motif", "population", "robustness", "difference"]:
+        for child_path in listdir("./raw/" + parent_path + "/"):
+            md5_hash = md5()
+            with open("./raw/" + parent_path + "/" + child_path, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    md5_hash.update(byte_block)
+            file_size = path.getsize("./raw/" + parent_path + "/" + child_path)
+            info = [parent_path, child_path, md5_hash.hexdigest().upper(), ceil(file_size / 1024).astype(int)]
+            print("|", info[0], "|", info[1], "|", info[2], "|", info[3], "|")
+
+    md5_hash = md5()
+    with open("./raw/max-min.search.pkl", "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            md5_hash.update(byte_block)
+    file_size = path.getsize("./raw/max-min.search.pkl")
+    info = ["N.A", "max-min.search.pkl", md5_hash.hexdigest().upper(), ceil(file_size / 1024).astype(int)]
+    print("|", info[0], "|", info[1], "|", info[2], "|", info[3], "|")
+
+    md5_hash = md5()
+    with open("./raw/practice.adjustments.1.pkl", "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            md5_hash.update(byte_block)
+    file_size = path.getsize("./raw/practice.adjustments.1.pkl")
+    info = ["N.A", "practice.adjustments.1.pkl", md5_hash.hexdigest().upper(), ceil(file_size / 1024).astype(int)]
+    print("|", info[0], "|", info[1], "|", info[2], "|", info[3], "|")
+
+    md5_hash = md5()
+    with open("./raw/practice.adjustments.2.pkl", "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            md5_hash.update(byte_block)
+    file_size = path.getsize("./raw/practice.adjustments.2.pkl")
+    info = ["N.A", "practice.adjustments.2.pkl", md5_hash.hexdigest().upper(), ceil(file_size / 1024).astype(int)]
+    print("|", info[0], "|", info[1], "|", info[2], "|", info[3], "|")
+
 
 if __name__ == "__main__":
     experiment1(raw_path="./raw/", sort_path="./data/")
     experiment2(raw_path="./raw/", sort_path="./data/")
     experiment3(raw_path="./raw/", sort_path="./data/", config_path="./confs/")
+    data_summary()

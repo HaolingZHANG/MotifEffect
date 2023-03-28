@@ -1,10 +1,10 @@
 from numpy import zeros, abs, min, mean, median, max, sqrt, vstack
 
-from effect.operations import Monitor, calculate_landscape
+from effect.operations import calculate_landscape
 
 
 # noinspection PyArgumentList,PyTypeChecker
-def evaluate_propagation(value_range, points, motif, compute_type="max", verbose=False):
+def evaluate_propagation(value_range, points, motif, compute_type="max"):
     """
     Evaluate the error propagation through the selected motif.
 
@@ -20,14 +20,11 @@ def evaluate_propagation(value_range, points, motif, compute_type="max", verbose
     :param compute_type: type to evaluating the error propagation, including "max", "mean", "median", and "min".
     :type compute_type: str
 
-    :param verbose: need to show process log.
-    :type verbose: bool
-
     :return: propagation matrix.
     :rtype: numpy.ndarray
     """
     output = calculate_landscape(value_range=value_range, points=points, motif=motif)
-    propagation, monitor, current = zeros(shape=(points, points)), Monitor(), 0
+    propagation = zeros(shape=(points, points))
 
     if max(output) - min(output) > 0.0:
         for index_1 in range(points):
@@ -48,14 +45,10 @@ def evaluate_propagation(value_range, points, motif, compute_type="max", verbose
                 else:
                     raise ValueError("No such computing type!")
 
-                if verbose:
-                    monitor(current + 1, points ** 2)
-                    current += 1
-
     return propagation
 
 
-def estimate_lipschitz_by_motif(value_range, points, motif, norm_type="L-2", verbose=False):
+def estimate_lipschitz_by_motif(value_range, points, motif, norm_type="L-2"):
     """
     Estimate the Lipschitz constant of the selected motif.
 
@@ -71,19 +64,16 @@ def estimate_lipschitz_by_motif(value_range, points, motif, norm_type="L-2", ver
     :param norm_type: norm type, including "L-1", "L-2", and "L-inf".
     :type norm_type: str
 
-    :param verbose: need to show process log.
-    :type verbose: bool
-
     :return: estimated Lipschitz constant.
     :rtype: float
     """
     output = calculate_landscape(value_range=value_range, points=points, motif=motif)
 
     return estimate_lipschitz_by_signals(value_range=value_range, points=points, output=output,
-                                         norm_type=norm_type, verbose=verbose)
+                                         norm_type=norm_type)
 
 
-def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2", verbose=False):
+def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2"):
     """
     Estimate the Lipschitz constant of the output signals produced by selected motif.
 
@@ -99,14 +89,10 @@ def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2", 
     :param norm_type: norm type, including "L-1", "L-2", and "L-inf".
     :type norm_type: str
 
-    :param verbose: need to show process log.
-    :type verbose: bool
-
     :return: estimated Lipschitz constant.
     :rtype: float
     """
-    constant = 0.0
-    value_interval, monitor, current = (value_range[1] - value_range[0]) / (points - 1), Monitor(), 0
+    value_interval, constant = (value_range[1] - value_range[0]) / (points - 1), 0.0
 
     if max(output) - min(output) > 0.0:
         for index_1 in range(points):
@@ -118,6 +104,7 @@ def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2", 
                               (output[:points - index_1, index_2:] - output[index_1:, :points - index_2]).reshape(-1),
                               (output[:points - index_1, :points - index_2] - output[index_1:, index_2:]).reshape(-1))
                     maximum_output_difference = max(vstack(values))
+
                     if norm_type == "L-1":
                         input_difference = value_1 + value_2
                     elif norm_type == "L-2":
@@ -128,9 +115,5 @@ def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2", 
                         raise ValueError("No such norm type!")
 
                     constant = max([constant, maximum_output_difference / input_difference])
-
-                if verbose:
-                    monitor(current + 1, points ** 2)
-                    current += 1
 
     return constant

@@ -129,7 +129,16 @@ dmypy.json
 .pyre/
 
 .idea/
-works/raw/
+works/raw/*.pkl
+works/raw/*.npy
+works/raw/population/*.pkl
+works/raw/population/*.npy
+works/raw/motif/*.pkl
+works/raw/motif/*.npy
+works/raw/difference/*.pkl
+works/raw/difference/*.npy
+works/raw/robustness/*.pkl
+works/raw/robustness/*.npy
 works/data/*.pkl
 works/data/*.npy
-works/show/
+works/show/*.pdf

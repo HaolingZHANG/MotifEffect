@@ -1,4 +1,3 @@
-from itertools import combinations
 from neat import DefaultGenome, DefaultReproduction
 from neat.config import ConfigParameter
 from neat.activations import ActivationFunctionSet
@@ -6,10 +5,10 @@ from neat.aggregations import AggregationFunctionSet
 from neat.genome import DefaultGenomeConfig
 from neat.math_util import mean
 from neat.six_util import iteritems, itervalues
-from numpy import zeros, min, max, ceil
+from numpy import zeros, array, min, max, ceil
 from random import choice
 
-from practice.motif import obtain_motif, is_same_motif, acyclic_motifs
+from practice.motif import detect_motifs_from_adjacency_matrix
 
 
 class AdjustedReproduction(DefaultReproduction):
@@ -21,7 +20,7 @@ class AdjustedReproduction(DefaultReproduction):
             while True:  # add a forgoing check.
                 genome = genome_type(key)
                 genome.configure_new(genome_config)
-                if self.adjust(genome, genome_config):
+                if not self.detect(genome, genome_config):  # screen special motifs.
                     break
             new_genomes[key] = genome
             self.ancestors[key] = tuple()
@@ -109,7 +108,7 @@ class AdjustedReproduction(DefaultReproduction):
                     child = config.genome_type(gid)
                     child.configure_crossover(parent1, parent2, config.genome_config)
                     child.mutate(config.genome_config)
-                    if self.adjust(child, config.genome_config):
+                    if not self.detect(child, config.genome_config):  # screen special motifs.
                         break
 
                 new_population[gid] = child
@@ -118,48 +117,26 @@ class AdjustedReproduction(DefaultReproduction):
         return new_population
 
     @staticmethod
-    def adjust(model_genome, genome_config):
-        scale = genome_config.num_inputs + genome_config.num_outputs + len(model_genome.nodes)
+    def detect(model_genome, genome_config):
+        adjacency_matrix = create_adjacency_matrix(model_genome, genome_config)
 
-        mapping, matrix = {}, zeros(shape=(scale, scale), dtype=int)
-        for index in range(genome_config.num_inputs):
-            mapping[index - genome_config.num_inputs] = index
+        if genome_config.remove_type in ["i", "a"]:
+            detected_motifs = array([[[+0, -1, +1], [+0, +0, +1], [+0, +0, +0]],
+                                     [[+0, +1, +1], [+0, +0, -1], [+0, +0, +0]],
+                                     [[+0, +1, -1], [+0, +0, +1], [+0, +0, +0]],
+                                     [[+0, -1, -1], [+0, +0, -1], [+0, +0, +0]]])
+            if detect_motifs_from_adjacency_matrix(adjacency_matrix, 3, detected_motifs):
+                return True
 
-        index = genome_config.num_inputs
-        for node_key, node_gene in iteritems(model_genome.nodes):
-            mapping[node_key] = index
-            index += 1
+        if genome_config.remove_type in ["c", "a"]:
+            detected_motifs = array([[[+0, +1, +1], [+0, +0, +1], [+0, +0, +0]],
+                                     [[+0, -1, +1], [+0, +0, -1], [+0, +0, +0]],
+                                     [[+0, -1, -1], [+0, +0, +1], [+0, +0, +0]],
+                                     [[+0, +1, -1], [+0, +0, -1], [+0, +0, +0]]])
+            if detect_motifs_from_adjacency_matrix(adjacency_matrix, 3, detected_motifs):
+                return True
 
-        for connect_gene in itervalues(model_genome.connections):
-            if mapping.get(connect_gene.key[0]) is not None and mapping.get(connect_gene.key[1]) is not None:
-                row = mapping.get(connect_gene.key[0])
-                col = mapping.get(connect_gene.key[1])
-                if connect_gene.weight > 0:
-                    matrix[row, col] = 1
-                elif connect_gene.weight < 0:
-                    matrix[row, col] = -1
-
-        if genome_config.remove_type in ["i", "i+c"]:
-            for combination in combinations([node_id for node_id in range(len(matrix))], 3):
-                obtained_motif = obtain_motif(adjacency_matrix=matrix, combination=combination, search_size=3)
-                for motif_data in acyclic_motifs["incoherent-loop"]:
-                    reference_motif = zeros(shape=(3, 3))
-                    for former, latter in motif_data.edges:
-                        reference_motif[former - 1, latter - 1] = motif_data.get_edge_data(former, latter)["weight"]
-                    if is_same_motif(obtained_motif, reference_motif):
-                        return False
-
-        if genome_config.remove_type in ["c", "i+c"]:
-            for combination in combinations([node_id for node_id in range(len(matrix))], 3):
-                obtained_motif = obtain_motif(adjacency_matrix=matrix, combination=combination, search_size=3)
-                for motif_data in acyclic_motifs["coherent-loop"]:
-                    reference_motif = zeros(shape=(3, 3))
-                    for former, latter in motif_data.edges:
-                        reference_motif[former - 1, latter - 1] = motif_data.get_edge_data(former, latter)["weight"]
-                    if is_same_motif(obtained_motif, reference_motif):
-                        return False
-
-        return True
+        return False
 
 
 class AdjustedGenome(DefaultGenome):
@@ -241,3 +218,36 @@ class AdjustedGenomeConfig(DefaultGenomeConfig):
             raise RuntimeError(error_string)
 
         self.node_indexer = None
+
+
+def create_adjacency_matrix(model_genome, genome_config):
+    scale = genome_config.num_inputs + genome_config.num_outputs + len(model_genome.nodes)
+
+    mapping, adjacency_matrix = {}, zeros(shape=(scale, scale), dtype=int)
+    for index in range(genome_config.num_inputs):
+        mapping[index - genome_config.num_inputs] = index
+
+    index = genome_config.num_inputs
+    for node_key, node_gene in iteritems(model_genome.nodes):
+        mapping[node_key] = index
+        index += 1
+
+    for connect_gene in itervalues(model_genome.connections):
+        if mapping.get(connect_gene.key[0]) is not None and mapping.get(connect_gene.key[1]) is not None:
+            row = mapping.get(connect_gene.key[0])
+            col = mapping.get(connect_gene.key[1])
+            if connect_gene.weight > 0:
+                adjacency_matrix[row, col] = 1
+            elif connect_gene.weight < 0:
+                adjacency_matrix[row, col] = -1
+
+    input_number = genome_config.num_inputs
+    output_number = genome_config.num_outputs
+
+    # remove connection between input nodes.
+    adjacency_matrix[:input_number, :input_number] = 0
+
+    # remove connection from output nodes to other nodes.
+    adjacency_matrix[input_number:input_number + output_number, :] = 0
+
+    return adjacency_matrix

@@ -3,7 +3,7 @@ from numpy import array, argmin, ptp, min
 from torch import optim, nn
 from warnings import filterwarnings
 
-from effect.operations import Monitor, prepare_data
+from effect.operations import prepare_data
 
 filterwarnings(action="ignore", category=UserWarning)
 
@@ -45,7 +45,7 @@ def maximum_minimum_loss_search(value_range, points, source_motif, target_motifs
     """
     record = {"motifs": [], "losses": []}
     input_signals = prepare_data(value_range=value_range, points=points)
-    optimizer, criterion, monitor = optim.Adam(source_motif.parameters(), lr=learn_rate), nn.L1Loss(), Monitor()
+    optimizer, criterion = optim.Adam(source_motif.parameters(), lr=learn_rate), nn.L1Loss()
     source_iterations, target_iterations = iteration_thresholds
 
     for iteration in range(source_iterations):
@@ -60,11 +60,9 @@ def maximum_minimum_loss_search(value_range, points, source_motif, target_motifs
             motifs, losses = minimum_loss_search(value_range=value_range, points=points, learn_rate=learn_rate,
                                                  source_motif=source_motif, target_motif=target_motifs[target_index],
                                                  loss_threshold=loss_threshold, check_threshold=check_threshold,
-                                                 iteration_threshold=target_iterations, verbose=False)
+                                                 iteration_threshold=target_iterations)
             target_motifs[target_index] = motifs[-1]
             target_loss_record.append(losses[-1])
-            if verbose:
-                monitor(target_index + 1, len(target_motifs))
 
         choice = argmin(target_loss_record)  # choose the most similar target motif.
         target_motif, target_loss = target_motifs[choice], min(target_loss_record)
@@ -99,7 +97,7 @@ def maximum_minimum_loss_search(value_range, points, source_motif, target_motifs
 
 
 def minimum_loss_search(value_range, points, source_motif, target_motif,
-                        learn_rate, loss_threshold, check_threshold, iteration_threshold, verbose=True):
+                        learn_rate, loss_threshold, check_threshold, iteration_threshold):
     """
     Train the target motif to achieve the source motif and find the minimum L1 loss between the two motifs.
 
@@ -127,13 +125,10 @@ def minimum_loss_search(value_range, points, source_motif, target_motif,
     :param iteration_threshold: maximum iteration of training the target motif.
     :type iteration_threshold: int
 
-    :param verbose: need to show process log.
-    :type verbose: bool
-
     :return: training motif_collection (trained motifs and losses during training).
     :rtype: list, list, list, list
     """
-    record, monitor = {"motifs": [], "losses": []}, Monitor()
+    record = {"motifs": [], "losses": []}
     optimizer, criterion = optim.Adam(target_motif.parameters(), lr=learn_rate), nn.L1Loss()
 
     input_signals = prepare_data(value_range=value_range, points=points)
@@ -150,12 +145,7 @@ def minimum_loss_search(value_range, points, source_motif, target_motif,
         record["motifs"].append(deepcopy(target_motif))
         record["losses"].append(float(loss))
 
-        if verbose:
-            monitor(iteration + 1, iteration_threshold, extra={"loss": record["losses"][-1]})
-
         if iteration > check_threshold and ptp(record["losses"][-check_threshold:]) < loss_threshold:
-            if verbose:
-                monitor(iteration_threshold, iteration_threshold, extra={"loss": record["losses"][-1]})
             break
 
     return record["motifs"], record["losses"]
