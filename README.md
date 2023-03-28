@@ -72,12 +72,13 @@ as well as some basic libraries listed in
 
 ## Experiments
 Three experiments are executed through 
-[experiments.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/experiments.py) in the works folder.
+[experiments.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/experiments.py) in the 
+[works folder](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/).
 
 Among them,
 1. analyzes parameter domain, representational capability, and numerical stability of three motif populations (incoherent loops, coherent loops, and colliders).
 2. analyzes the trade-off between representational capability and numerical stability based on the set theory and a customized method called maximum-minimum loss search.
-4. analyzes motif tendency and robustness of neural networks produced by the default neuroevolution method (NEAT) and its three variants.
+3. analyzes motif tendency and robustness of neural networks produced by the default neuroevolution method (NEAT) and its three variants.
 
 ## Citation
 If you think this repository helps or being used in your research, please consider refer this work.
