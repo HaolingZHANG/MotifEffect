@@ -67,7 +67,7 @@ as well as some basic libraries listed in
 │    ├── sort_data.py                              // Arrange the supporting data from the core raw data.
 ├── LICENSE                                        // License of this library (GPL-3.0 license).
 ├── README.md                                      // Description document of this library.
-├── requirements.txt                               // basic library requirements of this library.
+├── requirements.txt                               // Basic library requirements of this library.
 ```
 
 ## Experiments
