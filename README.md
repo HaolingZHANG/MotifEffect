@@ -59,6 +59,10 @@ as well as some basic libraries listed in
 │    │    ├── NEATCartPoleTask                     // CartPole task for NEAT method and its variants.
 │    │    ├── NormNoiseGenerator                   // Noise generator based on the norm.
 ├── works                                          // Experiment module of this work.
+│    ├── confs                                     // Configuration folder of neuroevolution tasks.
+│    ├── data                                      // Painting data folder of all the experiments.
+│    ├── raw                                       // Raw data folder of all the experiments.
+│    ├── show                                      // Painted figure folder of all the experiments.
 │    ├── __init__                                  // Preset parameters in the experiments.
 │    ├── experiments.py                            // Run 3 experiments and generate the painting data.
 │    ├── show_main.py                              // Paint figures (in the main text) from the generated data.
