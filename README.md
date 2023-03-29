@@ -20,7 +20,7 @@ as well as some basic libraries listed in
 │    │    ├── calculate_gradients                  // Calculate the gradient matrix of the selected motif.
 │    │    ├── generate_qualified_motifs            // Generate qualified motif with specific requirements.
 │    │    ├── calculate_motif_differences          // Calculate difference (L1 loss) between motif landscapes.
-│    │    ├── calculate_population_differences     // Calculate difference (L1 loss) between motif landscapes.
+│    │    ├── calculate_population_differences     // Calculate minimum differences (L1 loss) between landscapes of two motif populations.
 │    ├── robustness.py                             // Robustness-related operations.
 │    │    ├── evaluate_propagation                 // Evaluate the error propagation through the selected motif.
 │    │    ├── estimate_lipschitz_by_motif          // Estimate the Lipschitz constant of the selected motif.

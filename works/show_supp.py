@@ -1,6 +1,6 @@
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams
-from numpy import arange, linspace, array, percentile, log10, sqrt, min, max, abs, sum, where, nan
+from numpy import arange, linspace, array, percentile, log10, sqrt, min, max, abs, sum, argmax, where, nan
 from scipy.stats import gaussian_kde, spearmanr
 from warnings import filterwarnings
 
@@ -924,12 +924,7 @@ def supp10():
     figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
     for noise_index in range(5):
         ax = pyplot.subplot(6, 1, noise_index + 1)
-        title_1 = "maximum generation =   20 and training error scale = "
-        if noise_index > 0:
-            title_2 = "%d" % (noise_index * 10) + "%"
-        else:
-            title_2 = "   %d" % (noise_index * 10) + "%"
-        pyplot.title(title_1 + title_2, fontsize=9)
+        pyplot.title("maximum generation = 20 and training error scale = %d" % (noise_index * 10) + "%", fontsize=9)
         for index, values in enumerate(array(task_data["a"][noise_index]).T):
             pyplot.bar(arange(len(values)) + bias[index], values, width=0.2, lw=0.75,
                        fc=colors[index], ec="k", label=math_orders[index])
@@ -1056,6 +1051,41 @@ def supp11():
 
 def supp12():
     task_data = load_data(task_path + "supp12.pkl")
+    figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
+    location = 1
+    for index in range(4):
+        cases = task_data[chr(ord("a") + index)]
+        for case_index, case in enumerate(cases):
+            ax = pyplot.subplot(7, 5, location)
+            pyplot.title("case " + str(case_index + 1) + " / " + str(len(cases)), fontsize=9)
+            pyplot.plot(arange(5) + 0.5, case, color="silver", lw=2, marker="o", zorder=0)
+            pyplot.scatter([argmax(case) + 0.5], [max(case)], color="k", zorder=1)
+            pyplot.text(argmax(case) + 0.5, 220, "best", va="center", ha="center", fontsize=8)
+            pyplot.xlabel("error scale", fontsize=9)
+            pyplot.ylabel("performance", fontsize=9)
+            pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=8)
+            pyplot.yticks(arange(50, 201, 50), arange(50, 201, 50), fontsize=8)
+            pyplot.xlim(0, 5)
+            pyplot.ylim(50, 230)
+            # noinspection PyUnresolvedReferences
+            ax.spines["top"].set_visible(False)
+            # noinspection PyUnresolvedReferences
+            ax.spines["right"].set_visible(False)
+            location += 1
+        while location % 5 != 1:
+            location += 1
+
+    figure.align_labels()
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=14)
+    figure.text(0.02, 0.43, "b", va="center", ha="center", fontsize=14)
+    figure.text(0.02, 0.15, "c", va="center", ha="center", fontsize=14)
+
+    pyplot.savefig(save_path + "supp12.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp13():
+    task_data = load_data(task_path + "supp13.pkl")
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
     labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
     colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0], draw_info["collider"][0]]
@@ -1066,7 +1096,9 @@ def supp12():
         ax = pyplot.subplot(4, 1, index + 1)
         record = task_data[chr(ord("a") + index)]
         pyplot.title("training setting: " + labels[index], fontsize=9)
-        for result_type, counts in enumerate(record):
+        rates = []
+        for result_type, (counts, number) in enumerate(record):
+            rates.append(number)
             if counts is not None:
                 for motif_type in range(3):
                     if result_type > 0:
@@ -1080,9 +1112,11 @@ def supp12():
             else:
                 pyplot.text(result_type, 3.0, "N.A", va="center", ha="center", fontsize=8)
         pyplot.legend(loc="upper right", fontsize=8, ncol=3, title="motif type", title_fontsize=8)
-        pyplot.xlabel("training result", fontsize=9)
+        pyplot.xlabel("training result (100 samples)", fontsize=9)
         pyplot.ylabel("average number", fontsize=9)
-        pyplot.xticks([0, 1, 2, 3], ["pass", "fail type 1", "fail type 2", "fail type 3"], fontsize=8)
+        y_ticks = ["pass type ( " + str(rates[0]) + " / 100 )", "fail type 1 ( " + str(rates[1]) + " / 100 )",
+                   "fail type 2 ( " + str(rates[2]) + " / 100 )", "fail type 3 ( " + str(rates[3]) + " / 100 )"]
+        pyplot.xticks([0, 1, 2, 3], y_ticks, fontsize=8)
         pyplot.yticks(arange(0, 51, 10), arange(0, 51, 10), fontsize=8)
         pyplot.xlim(-0.5, 3.5)
         pyplot.ylim(0, 50)
@@ -1097,7 +1131,74 @@ def supp12():
     figure.text(0.02, 0.50, "c", va="center", ha="center", fontsize=14)
     figure.text(0.02, 0.25, "d", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp12.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp13.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp14():
+    task_data = load_data(task_path + "supp14.pkl")
+    pyplot.figure(figsize=(10, 10))
+    raw = 32.5
+    map_1, map_2, map_3 = pyplot.get_cmap("Reds"), pyplot.get_cmap("Oranges"), pyplot.get_cmap("Blues")
+    labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
+    for panel_index, label in zip(["a", "b", "c", "d"], labels):
+        samples = task_data[panel_index]
+        if len(samples) > 0:
+            number = len(samples)
+            pyplot.vlines(-4, raw + 0.40, raw - number + 1 - 0.40, lw=0.75)
+            pyplot.text(-10, (raw * 2 - number + 1) / 2, label, va="center", ha="center", fontsize=9)
+            for sample_index, sample in enumerate(samples):
+                for index, values in enumerate(sample):
+                    if values[0] > 0:
+                        pyplot.fill_between([index, index + 1], raw + 0.15, raw + 0.40,
+                                            fc=map_1([min([log10(values[0]) / 2.0, 1.0])]), lw=0, zorder=1)
+                    if values[1] > 0:
+                        pyplot.fill_between([index, index + 1], raw - 0.15, raw + 0.15,
+                                            fc=map_2([min([log10(values[1]) / 2.0, 1.0])]), lw=0, zorder=1)
+                    if values[2] > 0:
+                        pyplot.fill_between([index, index + 1], raw - 0.40, raw - 0.15,
+                                            fc=map_3([min([log10(values[2]) / 2.0, 1.0])]), lw=0, zorder=1)
+                pyplot.plot([0, len(sample), len(sample), 0, 0],
+                            [raw - 0.4, raw - 0.4, raw + 0.4, raw + 0.4, raw - 0.4],
+                            color="k", lw=0.75, zorder=2)
+                pyplot.fill_between([-4, 0], raw - 0.4, raw + 0.4, fc="#EEEEEE", lw=0, zorder=0)
+                pyplot.text(-2, raw, str(sample_index + 1), va="center", ha="center", fontsize=8, zorder=1)
+                raw -= 1
+            raw -= 1
+
+    pyplot.hlines(1.5, 0, 100, lw=0.75)
+    for value in linspace(0, 100, 11):
+        pyplot.vlines(value, 1.2, 1.5, lw=0.75)
+        pyplot.text(value, 0.8, "%d" % value, va="center", ha="center", fontsize=8)
+    pyplot.text(50, 0.2, "generation", va="center", ha="center", fontsize=9)
+    pyplot.text(110, 30.6, r"$\mathcal{L}_i$ number", va="center", ha="center", fontsize=9)
+    for former, latter, color in zip(linspace(22, 30, 51)[:-1], linspace(22, 30, 51)[1:], map_1(linspace(0, 1, 50))):
+        pyplot.fill_between([108, 110], former, latter, fc=color, lw=0, zorder=0)
+    pyplot.plot([108, 110, 110, 108, 108], [22, 22, 30, 30, 22], color="k", lw=0.75, zorder=2)
+    pyplot.text(110, 20.6, r"$\mathcal{L}_c$ number", va="center", ha="center", fontsize=9)
+    for former, latter, color in zip(linspace(12, 20, 51)[:-1], linspace(12, 20, 51)[1:], map_2(linspace(0, 1, 50))):
+        pyplot.fill_between([108, 110], former, latter, fc=color, lw=0, zorder=0)
+    pyplot.plot([108, 110, 110, 108, 108], [12, 12, 20, 20, 12], color="k", lw=0.75, zorder=2)
+    pyplot.text(110, 10.6, r"$\mathcal{C}$ number", va="center", ha="center", fontsize=9)
+    for former, latter, color in zip(linspace(2, 10, 51)[:-1], linspace(2, 10, 51)[1:], map_3(linspace(0, 1, 50))):
+        pyplot.fill_between([108, 110], former, latter, fc=color, lw=0, zorder=0)
+    pyplot.plot([108, 110, 110, 108, 108], [2, 2, 10, 10, 2], color="k", lw=0.75, zorder=2)
+    labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    values = [-0.2] + log10(array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])).tolist()
+    values = 8.0 / 2.2 * (array(values) + 0.2)
+    for label, value in zip(labels, values):
+        if label in [0, 1, 10, 100]:
+            pyplot.text(112, value + 22, str(label), va="center", ha="left", fontsize=8)
+            pyplot.text(112, value + 12, str(label), va="center", ha="left", fontsize=8)
+            pyplot.text(112, value + 2, str(label), va="center", ha="left", fontsize=8)
+        pyplot.hlines(value + 22, 110, 111, lw=0.75)
+        pyplot.hlines(value + 12, 110, 111, lw=0.75)
+        pyplot.hlines(value + 2, 110, 111, lw=0.75)
+    pyplot.xlim(-14, 115)
+    pyplot.ylim(-0.3, 33)
+    pyplot.axis("off")
+
+    pyplot.savefig(save_path + "supp14.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
@@ -1114,3 +1215,5 @@ if __name__ == "__main__":
     supp10()
     supp11()
     supp12()
+    supp13()
+    supp14()

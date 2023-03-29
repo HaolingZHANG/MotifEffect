@@ -698,24 +698,22 @@ def experiment3(raw_path, sort_path, config_path):
         for strategy_index, strategy in enumerate(agent_names):
             count_1 = 0
             for sample in record_1[strategy][0.3]:
-                evaluate_result = [sample[2][noise] for noise in radios]
-                if min(evaluate_result[:4]) >= 195:
+                evaluation = [sample[2][noise] for noise in radios]
+                if min(evaluation[:4]) >= 195:
                     count_1 += 1
             count_2, cases[strategy] = 0, [[], [], []]
             for sample in record_2[strategy]:
-                evaluate_result = [sample[2][noise] for noise in radios]
-                if min(evaluate_result[:4]) >= 195:
+                evaluation = [sample[2][noise] for noise in radios]
+                if min(evaluation[:4]) >= 195:
                     count_2 += 1
                 else:
-                    evaluate_result = array(evaluate_result)
-                    if all(evaluate_result < 195) and \
-                            evaluate_result[0] > evaluate_result[-1] and \
-                            evaluate_result[0] > evaluate_result[2]:
-                        cases[strategy][0].append(evaluate_result.tolist())
-                    elif all(evaluate_result < 195):
-                        cases[strategy][1].append(evaluate_result.tolist())
+                    evaluation = array(evaluation)
+                    if all(evaluation < 195) and evaluation[0] > evaluation[-1] and evaluation[0] > evaluation[2]:
+                        cases[strategy][0].append(evaluation.tolist())
+                    elif all(evaluation < 195):
+                        cases[strategy][1].append(evaluation.tolist())
                     else:
-                        cases[strategy][2].append(evaluate_result.tolist())
+                        cases[strategy][2].append(evaluation.tolist())
             matrix[strategy_index] = [count_1 / 100.0, count_2 / 100.0]
             a = (mean(array(cases[strategy][2]), axis=0), len(cases[strategy][2]), (100 - count_2))
             if len(cases[strategy][0]) > 0:
@@ -773,32 +771,64 @@ def experiment3(raw_path, sort_path, config_path):
         task_data = {}
         record = load_data(raw_path + "practice.adjustments.2.pkl")
         for strategy_index, strategy in enumerate(agent_names):
+            cases = []
+            for sample in record[strategy]:
+                evaluation = array([sample[2][noise] for noise in radios])
+                if all(evaluation < 195) and evaluation[0] > evaluation[-1] and evaluation[0] > evaluation[2]:
+                    pass
+                elif all(evaluation < 195):
+                    cases.append(evaluation)
+            task_data[chr(ord("a") + strategy_index)] = cases
+        save_data(save_path=sort_path + "supp12.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp13.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "practice.adjustments.2.pkl")
+        for strategy_index, strategy in enumerate(agent_names):
             cases = [[], [], [], []]
             for sample in record[strategy]:
-                sub_values = [sample[2][noise] for noise in radios]
+                evaluation = [sample[2][noise] for noise in radios]
                 collection = sum(sample[0].get_motif_counts().reshape(3, 4), axis=1).tolist()
-                if min(sub_values[:4]) < 195:
-                    sub_values = array(sub_values)
-                    if all(sub_values < 195) and sub_values[0] > sub_values[-1] and sub_values[0] > sub_values[2]:
+                if min(evaluation[:4]) < 195:
+                    evaluation = array(evaluation)
+                    if all(evaluation < 195) and evaluation[0] > evaluation[-1] and evaluation[0] > evaluation[2]:
                         cases[1].append(collection)
-                    elif all(sub_values < 195):
+                    elif all(evaluation < 195):
                         cases[2].append(collection)
                     else:
                         cases[3].append(collection)
                 else:
                     cases[0].append(collection)
-            a = mean(array(cases[0]), axis=0).tolist()
-            b = mean(array(cases[3]), axis=0).tolist()
+            a = (mean(array(cases[0]), axis=0).tolist(), len(cases[0]))
+            b = (mean(array(cases[3]), axis=0).tolist(), len(cases[3]))
             if len(cases[1]) > 0:
-                c = mean(array(cases[1]), axis=0).tolist()
+                c = (mean(array(cases[1]), axis=0).tolist(), len(cases[1]))
             else:
-                c = None
+                c = (None, 0)
             if len(cases[2]) > 0:
-                d = mean(array(cases[2]), axis=0).tolist()
+                d = (mean(array(cases[2]), axis=0).tolist(), len(cases[2]))
             else:
-                d = None
+                d = (None, 0)
             task_data[chr(ord("a") + strategy_index)] = [a, b, c, d]
-        save_data(save_path=sort_path + "supp12.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp13.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp14.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "practice.adjustments.2.pkl")
+        for strategy_index, strategy in enumerate(agent_names):
+            cases = []
+            for sample in record[strategy]:
+                evaluation = array([sample[2][noise] for noise in radios])
+                if all(evaluation < 195) and evaluation[0] > evaluation[-1] and evaluation[0] > evaluation[2]:
+                    pass
+                elif all(evaluation < 195):
+                    motif_data = []
+                    for process_data in sample[1]:
+                        collection = sum(process_data[0].get_motif_counts().reshape(3, 4), axis=1).tolist()
+                        motif_data.append(collection)
+                    cases.append(array(motif_data))
+            task_data[chr(ord("a") + strategy_index)] = cases
+        save_data(save_path=sort_path + "supp14.pkl", information=task_data)
 
 
 def data_summary():
@@ -838,7 +868,7 @@ def data_summary():
 
 
 if __name__ == "__main__":
-    experiment1(raw_path="./raw/", sort_path="./data/")
-    experiment2(raw_path="./raw/", sort_path="./data/")
+    # experiment1(raw_path="./raw/", sort_path="./data/")
+    # experiment2(raw_path="./raw/", sort_path="./data/")
     experiment3(raw_path="./raw/", sort_path="./data/", config_path="./confs/")
-    data_summary()
+    # data_summary()

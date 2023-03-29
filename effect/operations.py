@@ -140,8 +140,8 @@ def generate_qualified_motifs(motif_type, motif_index, activations, aggregations
     :param motif_index: index (or sub-type) of motif, i.e. 1, 2, 3, or 4.
     :type motif_index: int
 
-    :param activation: activation functions, i.e. "tanh", "sigmoid", or "relu".
-    :type activation: list
+    :param activations: activation functions, i.e. "tanh", "sigmoid", or "relu".
+    :type activations: list
 
     :param aggregations: aggregation functions, i.e. "sum" or "max".
     :type aggregations: list
@@ -205,7 +205,7 @@ def calculate_motif_differences(landscapes):
 
 def calculate_population_differences(source_landscapes, target_landscapes):
     """
-    Calculate minimum differences (L1 loss) between two motif populations.
+    Calculate minimum differences (L1 loss) between landscapes of two motif populations.
 
     :param source_landscapes: motif landscapes in the source motif population.
     :type source_landscapes: numpy.ndarray

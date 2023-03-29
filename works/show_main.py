@@ -743,21 +743,35 @@ def main04():
                     arrowprops=dict(arrowstyle="-", color="k", lw=0.75,
                                     shrinkA=0, shrinkB=0, connectionstyle="arc3,rad=0.3"))
     pyplot.text(0.67, 0.67, "angle", va="center", ha="center", fontsize=8)
-    pyplot.annotate(s="", xy=(0.36, 0.85), xytext=(0.50, 0.95),
+    pyplot.annotate(s="", xy=(0.38, 0.85), xytext=(0.50, 0.95),
                     arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75, shrinkA=0, shrinkB=0))
     pyplot.text(0.30, 0.75, "angular\nvelocity", va="center", ha="center", fontsize=8)
     pyplot.xlim(0, 1)
     pyplot.ylim(-0.1, 1.02)
     pyplot.axis("off")
 
-    labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
+    labels = ["default NEAT",
+              r"variation: $\mathcal{L}_c + \mathcal{C}$",
+              r"variation: $\mathcal{L}_i + \mathcal{C}$",
+              r"variation: $\mathcal{C}$"]
     ax = pyplot.subplot(grid[0, 4:8])
-    pyplot.text(4.45, 195.5, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
-    pyplot.hlines(195, -0.5, 4.5, lw=0.75, ls="--", zorder=-1)
     for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
-        pyplot.plot(arange(5), task_data["b"][index], lw=0.75, color="k",
-                    marker="o", mfc=color, mec="k", ms=5, label=label)
-    pyplot.legend(loc="lower left", fontsize=8)
+        locations = arange(5) - 0.3 + 0.2 * index
+        pyplot.bar(locations, task_data["b"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
+    flag = True
+    for index in range(4):
+        locations = arange(5) - 0.3 + 0.2 * index
+        for location, value in zip(locations, task_data["b"][index]):
+            if value >= 195:
+                if flag:
+                    pyplot.scatter([location], [value + 2.0], marker="v", s=15, fc="lawngreen", ec="k",
+                                   label="effective training")
+                    flag = False
+                else:
+                    pyplot.scatter([location], [value + 2.0], marker="v", s=15, fc="lawngreen", ec="k")
+    pyplot.text(4.45, 195.5, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
+    pyplot.hlines(195, -0.5, 4.5, lw=0.75, ls="--", zorder=2)
+    pyplot.legend(loc="lower left", framealpha=1, fontsize=8)
     pyplot.xlabel("training error scale", fontsize=9)
     pyplot.ylabel("average training performance", fontsize=9)
     pyplot.xticks(arange(5), ["0%", "10%", "20%", "30%", "40%"], fontsize=8)
@@ -773,7 +787,18 @@ def main04():
     for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
         locations = arange(5) - 0.3 + 0.2 * index
         pyplot.bar(locations, task_data["c"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
-    pyplot.legend(loc="upper left", fontsize=8)
+    flag = True
+    for index in range(4):
+        locations = arange(5) - 0.3 + 0.2 * index
+        for location, value in zip(locations, task_data["c"][index]):
+            if value == 20:
+                if flag:
+                    pyplot.scatter([location], [value + 0.56], marker="v", s=15, fc="tomato", ec="k",
+                                   label="insufficient training")
+                    flag = False
+                else:
+                    pyplot.scatter([location], [value + 0.56], marker="v", s=15, fc="tomato", ec="k")
+    pyplot.legend(loc="lower right", framealpha=1, fontsize=8)
     pyplot.xlabel("training error scale", fontsize=9)
     pyplot.ylabel("median generation", fontsize=9)
     pyplot.xticks(arange(5), ["0%", "10%", "20%", "30%", "40%"], fontsize=8)
@@ -810,8 +835,11 @@ def main04():
         pyplot.xlim(0, 5)
         pyplot.ylim(0, 5)
 
+    labels = ["default",
+              r"$\mathcal{L}_c + \mathcal{C}$",
+              r"$\mathcal{L}_i + \mathcal{C}$",
+              r"$\mathcal{C}$"]
     ax = pyplot.subplot(grid[2, :4])
-    pyplot.title("30% training error", fontsize=9)
     pyplot.bar(arange(4) - 0.2, task_data["e"][:, 0], width=0.4, fc="w", ec="k", lw=0.75, label="max =   20")
     pyplot.bar(arange(4) + 0.2, task_data["e"][:, 1], width=0.4, fc="lightblue", ec="k", lw=0.75, label="max = 100")
     for value_index, value in enumerate(task_data["e"]):
@@ -820,7 +848,7 @@ def main04():
         pyplot.text(value_index + 0.2, value[1] + 0.04, "%d" % (value[1] * 100) + "%",
                     va="center", ha="center", fontsize=8)
     pyplot.legend(loc="upper left", fontsize=8, title="generation", title_fontsize=8)
-    pyplot.xlabel("training setting", fontsize=9)
+    pyplot.xlabel("training setting (trained under 30% error)", fontsize=9)
     pyplot.ylabel("pass rate (resist ≤ 30% error)", fontsize=9)
     pyplot.xticks(arange(4), labels, fontsize=8)
     pyplot.yticks(linspace(0, 1, 6), [("%d" % (v * 100)) + "%" for v in linspace(0, 1, 6)], fontsize=8)
@@ -831,6 +859,10 @@ def main04():
     # noinspection PyUnresolvedReferences
     ax.spines["right"].set_visible(False)
 
+    labels = ["default",
+              r"variation: $\mathcal{L}_c + \mathcal{C}$",
+              r"variation: $\mathcal{L}_i + \mathcal{C}$",
+              r"variation: $\mathcal{C}$"]
     markers, colors = ["b", "i", "c", "a"], ["#BF33B5", "#845EC2", "#D73222"]
     for index in range(4):
         ax = pyplot.subplot(grid[2, 4 + index * 2: 4 + (index + 1) * 2])
