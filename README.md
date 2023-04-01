@@ -98,7 +98,8 @@ which means that there is no anthropogenic data filtering or adjusting in the pr
 │    ├── __init__                                  // Preset parameters in the experiments.
 │    ├── experiments.py                            // Run 3 experiments and generate the painting data.
 │    ├── show_main.py                              // Paint figures (in the main text) from the generated data.
-│    ├── show_supp.py                              // Paint figures and videos (in the supporting materials) from the generated data.
+│    ├── show_supp.py                              // Paint figures (in the supporting materials) from the generated data.
+│    ├── show_video.py                             // Create videos (in the supporting materials) from the generated data.
 ├── LICENSE                                        // License of this library (GPL-3.0 license).
 ├── README.md                                      // Description document of this library.
 ├── requirements.txt                               // Basic library requirements of this library.

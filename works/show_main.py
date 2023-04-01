@@ -59,7 +59,7 @@ def main_01():
             for former, latter in motif.edges:
                 location_x, location_y = (x[former - 1] + x[latter - 1]) / 2.0, (y[former - 1] + y[latter - 1]) / 2.0
                 flag = "+" if motif.get_edge_data(former, latter)["weight"] == 1 else "\N{MINUS SIGN}"
-                pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
+                pyplot.annotate("", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
                                 arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                 shrinkA=4, shrinkB=4, lw=0.75, ls=("-" if flag == "+" else ":")))
                 if (former, latter) == (1, 2):
@@ -540,7 +540,7 @@ def main_03():
             pyplot.text(index_1 + 0.5, index_2 * 1.1 - 0.1, "$x$", va="center", ha="center", fontsize=8)
             pyplot.text(index_1 + 0.1, index_2 * 1.1 + 0.3, "$y$", va="center", ha="center", fontsize=8)
         pyplot.scatter([index_1 + 0.5], [2.1], marker="v", color="k", s=10)
-        pyplot.annotate(s="", xy=(index_1 + 0.5, 0.60), xytext=(index_1 + 0.5, 0.95),
+        pyplot.annotate("", xy=(index_1 + 0.5, 0.60), xytext=(index_1 + 0.5, 0.95),
                         arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
     pyplot.text(2.0, -0.25, "$z$", va="center", ha="center", fontsize=8)
     pyplot.plot([0.2, 3.8, 3.8, 0.2, 0.2], [-0.6, -0.6, -0.4, -0.4, -0.6], color="k", lw=0.75, zorder=1)
@@ -603,7 +603,7 @@ def main_03():
             pyplot.text(index_1 + 0.5, index_2 * 1.1 - 0.1, "$x$", va="center", ha="center", fontsize=8)
             pyplot.text(index_1 + 0.1, index_2 * 1.1 + 0.3, "$y$", va="center", ha="center", fontsize=8)
         pyplot.scatter([index_1 + 0.5], [2.1], marker="v", color="k", s=10)
-        pyplot.annotate(s="", xy=(index_1 + 0.5, 0.60), xytext=(index_1 + 0.5, 0.95),
+        pyplot.annotate("", xy=(index_1 + 0.5, 0.60), xytext=(index_1 + 0.5, 0.95),
                         arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
     pyplot.text(2.0, -0.25, "$z$", va="center", ha="center", fontsize=8)
     pyplot.plot([0.2, 3.8, 3.8, 0.2, 0.2], [-0.6, -0.6, -0.4, -0.4, -0.6], color="k", lw=0.75, zorder=1)
@@ -670,7 +670,7 @@ def main_03():
     pyplot.text(-0.1, 4.5, "Lipschitz\nvariation", va="center", ha="center", fontsize=7)
     pyplot.text(0.9, 4.5, "former\nlandscape", va="center", ha="center", fontsize=7)
     pyplot.text(3.3, 4.5, "latter\nlandscape", va="center", ha="center", fontsize=7)
-    pyplot.annotate(s="", xy=(2.8, 4.5), xytext=(1.4, 4.5), arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
+    pyplot.annotate("", xy=(2.8, 4.5), xytext=(1.4, 4.5), arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
     pyplot.text(4.1, 9.0, "$z$", va="center", ha="center", fontsize=9)
     pyplot.plot([4.0, 4.2, 4.2, 4.0, 4.0], [0.2, 0.2, 8.8, 8.8, 0.2], color="k", lw=0.75, zorder=2)
     for index, color in enumerate(pyplot.get_cmap("PRGn")(linspace(0, 1, 100))):
@@ -734,15 +734,15 @@ def main_04():
     pyplot.plot([0.70, 0.50], [0.15, 0.95], color="#CC9966", lw=10, zorder=0)
     pyplot.text(0.43, 1.05, "pole", va="center", ha="center", fontsize=9)
     pyplot.scatter([0.70], [0.15], s=170, fc="silver", ec="k", lw=0, zorder=3)
-    pyplot.annotate(s="", xy=(0.60, 0.15), xytext=(0.50, 0.15),
+    pyplot.annotate("", xy=(0.60, 0.15), xytext=(0.50, 0.15),
                     arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
     pyplot.text(0.50, 0.15, "push", va="center", ha="right", fontsize=8)
     pyplot.plot([0.60, 0.70, 0.70], [0.55, 0.15, 0.60], color="k", lw=0.75, ls="--", zorder=4)
-    pyplot.annotate(s="", xy=(0.60, 0.55), xytext=(0.70, 0.60),
+    pyplot.annotate("", xy=(0.60, 0.55), xytext=(0.70, 0.60),
                     arrowprops=dict(arrowstyle="-", color="k", lw=0.75,
                                     shrinkA=0, shrinkB=0, connectionstyle="arc3,rad=0.3"))
     pyplot.text(0.67, 0.67, "angle", va="center", ha="center", fontsize=8)
-    pyplot.annotate(s="", xy=(0.38, 0.85), xytext=(0.50, 0.95),
+    pyplot.annotate("", xy=(0.38, 0.85), xytext=(0.50, 0.95),
                     arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75, shrinkA=0, shrinkB=0))
     pyplot.text(0.30, 0.75, "angular\nvelocity", va="center", ha="center", fontsize=8)
     pyplot.xlim(0, 1)

@@ -55,12 +55,12 @@ def supp_01():
             x, y = info[1], info[2]
             for former, latter in motif.edges:
                 if motif.get_edge_data(former, latter)["weight"] == 1:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
                 else:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
@@ -120,12 +120,12 @@ def supp_01():
             x, y = info[1], info[2]
             for former, latter in motif.edges:
                 if motif.get_edge_data(former, latter)["weight"] == 1:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
                 else:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
@@ -194,7 +194,7 @@ def supp_02():
     select_1 = array([0, 1, 4, 5, 6, 7])
     select_2 = array([2, 3, 8, 9])
     pyplot.scatter(samples_1[:, 0], 0.0 + samples_1[:, 1], fc="#88CCF8", ec="k", s=16, label="population 1")
-    pyplot.scatter(samples_2[:, 0], 1.2 + samples_2[:, 1], fc="silver", s=16, label="reference")
+    pyplot.scatter(samples_2[:, 0], 1.2 + samples_2[:, 1], fc="silver", s=16, label="population 2")
     pyplot.scatter(samples_1[select_1, 0], 1.2 + samples_1[select_1, 1], fc="k", ec="k", s=16, label="replaceable")
     pyplot.scatter(samples_1[select_2, 0], 1.2 + samples_1[select_2, 1], fc="w", ec="k", s=16, label="irreplaceable")
     pyplot.hlines(0.6, -0.6, 0.6, lw=1)
@@ -212,7 +212,7 @@ def supp_02():
     pyplot.title("replacement rate of population 2 by 1", fontsize=9)
     select_1 = array([0, 3, 4, 11, 23])
     select_2 = array([1, 2, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24])
-    pyplot.scatter(samples_1[:, 0], 1.2 + samples_1[:, 1], fc="silver", s=16, label="reference")
+    pyplot.scatter(samples_1[:, 0], 1.2 + samples_1[:, 1], fc="silver", s=16, label="population 1")
     pyplot.scatter(samples_2[:, 0], 0.0 + samples_2[:, 1], fc="#FCB1AB", ec="k", s=16, label="population 2")
     pyplot.scatter(samples_2[select_1, 0], 1.2 + samples_2[select_1, 1], fc="k", ec="k", s=16, label="replaceable")
     pyplot.scatter(samples_2[select_2, 0], 1.2 + samples_2[select_2, 1], fc="w", ec="k", s=16, label="irreplaceable")
@@ -252,11 +252,11 @@ def supp_03():
     pyplot.text(82, -6, "input y", va="center", ha="center", fontsize=8)
     pyplot.scatter([77], [-9], marker="o", fc="k", ec="k", lw=0.75, s=25)
     pyplot.text(82, -9, "output z", va="center", ha="center", fontsize=8)
-    pyplot.annotate(s="", xy=(78, -12), xytext=(76, -12),
+    pyplot.annotate("", xy=(78, -12), xytext=(76, -12),
                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
     pyplot.text(82, -12, "positive\nweight", va="center", ha="center", fontsize=8)
-    pyplot.annotate(s="", xy=(78, -15), xytext=(76, -15),
+    pyplot.annotate("", xy=(78, -15), xytext=(76, -15),
                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
     pyplot.text(82, -15, "negative\nweight", va="center", ha="center", fontsize=8)
@@ -307,12 +307,12 @@ def supp_03():
             x, y = info[1], info[2]
             for former, latter in motif.edges:
                 if motif.get_edge_data(former, latter)["weight"] == 1:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
                 else:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
@@ -333,12 +333,12 @@ def supp_03():
             x, y = info[1], info[2]
             for former, latter in motif.edges:
                 if motif.get_edge_data(former, latter)["weight"] == 1:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
                 else:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
@@ -430,12 +430,12 @@ def supp_04():
             x, y = info[1], info[2]
             for former, latter in motif.edges:
                 if motif.get_edge_data(former, latter)["weight"] == 1:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
                 else:
-                    pyplot.annotate(s="", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
                                     xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
                                     arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                     shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
