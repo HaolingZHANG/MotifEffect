@@ -115,44 +115,6 @@ def is_same_motif(motif_1, motif_2):
     return False
 
 
-def find_same_motifs(motif_matrices):
-    """
-    Find same motifs in the motif list.
-
-    :param motif_matrices: motif list.
-    :type motif_matrices: numpy.ndarray or list
-
-    :return: same groups.
-    :rtype: list
-    """
-    same_pairs = []
-
-    for (index_1, index_2) in combinations([_ for _ in range(len(motif_matrices))], 2):
-        if is_same_motif(motif_matrices[index_1], motif_matrices[index_2]):
-            same_pairs.append((index_1, index_2))
-
-    if len(same_pairs) > 0:
-        groups = [set(same_pairs[0])]
-        for graph_index_1, graph_index_2 in same_pairs[1:]:
-            found = False
-            for group_index in range(len(groups)):
-                if graph_index_1 in groups[group_index] or graph_index_2 in groups[group_index]:
-                    groups[group_index].add(graph_index_1)
-                    groups[group_index].add(graph_index_2)
-                    found = True
-                    break
-            if not found:
-                groups.append({graph_index_1, graph_index_2})
-
-        same_groups = []
-        for group in groups:
-            same_groups.append(sorted(list(group)))
-
-        return same_groups
-
-    return None
-
-
 def obtain_motif(adjacency_matrix, combination, search_size):
     """
     Obtain a candidate motif of specific nodes in the adjacency matrix.

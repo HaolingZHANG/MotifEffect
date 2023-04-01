@@ -1,8 +1,39 @@
-# Title is still in preparation
+# TODO Title
 
-The packages requires a python version at least 3.7, 
-as well as some basic libraries listed in 
+TODO abstract
+
+## Installation
+You may clone this code repository (using the following command line) or 
+just download this code repository with the ZIP format.  
+
+```sh
+git clone https://github.com/HaolingZHANG/MotifEffect.git
+```
+
+
+It requires a python version at least 3.7, and some well-established libraries listed in 
 [requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
+
+## Experiments
+In this work, three experiments are executed.
+Among them, we
+1. estimate the representational capability and the numerical stability of three motif populations (incoherent loops, coherent loops, and colliders) within a restricted parameter and definition domain.
+2. analyze the trade-off between representational capability and numerical stability based on the set theory and a customized method called maximum-minimum loss search.
+3. analyze training performance and robustness of neural networks produced by the default neuroevolution method (i.e. NEAT) and its three variants based on different motif generation tendency.
+
+In this code repository, all experimental designs and parameter settings are clear (see 
+[experiments.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/experiments.py)
+and
+[NEAT configure description](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/confs/README.md)).
+In just a few months, you can definitely obtain our consistent or similar 
+(due to randomization) raw files in 
+[raw folder](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/raw/README.md) 
+through executing the script.
+Meanwhile, all the figures and videos are created by 
+[show_main.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_main.py) 
+and
+[show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py), 
+which means that there is no anthropogenic data filtering or adjusting in the presentation.
 
 ## Repository Structure
 ```html
@@ -35,7 +66,9 @@ as well as some basic libraries listed in
 │    │    ├── NEATAgent                            // Trained agent for the NEAT method and its variants.
 │    │    ├── create_agent_config                  // Create training configure of agent.
 │    │    ├── obtain_best                          // Obtain best genome in the specific task.
-│    │    ├── train_and_test                       // Train and test the agents in a given NEAT task.
+│    │    ├── train_and_evaluate                   // Train and evaluate agents in a given NEAT task.
+│    │    ├── train                                // Train an agent in a given NEAT task.
+│    │    ├── evaluate                             // Evaluate an agent in a given NEAT task.
 │    ├── evolve.py                                 // Neuroevolution method variation.
 │    │    ├── AdjustedReproduction                 // Adjusted NEAT method (prohibiting the appearance of loops based on the given setting).
 │    │    ├── AdjustedGenome                       // Adjusted Genome, agent of NEAT method (prohibiting the appearance of loops based on the given setting).
@@ -48,7 +81,6 @@ as well as some basic libraries listed in
 │    │    ├── motif_matrix_to_connections          // Change the type from the motif matrix to the graph connections for agent training.
 │    │    ├── connections_to_motif_matrix          // Change the type from the graph connections to the motif matrix for motif calculating.
 │    │    ├── is_same_motif                        // Judge whether the two motifs are the same.
-│    │    ├── find_same_motifs                     // Obtain best genome in the specific task.
 │    │    ├── obtain_motif                         // Obtain a candidate motif of specific nodes in the adjacency matrix.
 │    │    ├── compliance_motif_specification       // Test the rationality of the obtained motif.
 │    │    ├── collect_motifs                       // Collect all the rational motifs from the adjacency matrix.
@@ -66,29 +98,14 @@ as well as some basic libraries listed in
 │    ├── __init__                                  // Preset parameters in the experiments.
 │    ├── experiments.py                            // Run 3 experiments and generate the painting data.
 │    ├── show_main.py                              // Paint figures (in the main text) from the generated data.
-│    ├── show_supp.py                              // Paint figures (in the supporting materials) from the generated data.
-│    ├── show_video.py                             // Paint the supporting videos from the generated data.
-│    ├── sort_data.py                              // Arrange the supporting data from the core raw data.
+│    ├── show_supp.py                              // Paint figures and videos (in the supporting materials) from the generated data.
 ├── LICENSE                                        // License of this library (GPL-3.0 license).
 ├── README.md                                      // Description document of this library.
 ├── requirements.txt                               // Basic library requirements of this library.
 ```
-
-## Experiments
-Three experiments are executed through 
-[experiments.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/experiments.py) in the 
-[works folder](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/).
-
-Among them,
-1. analyzes parameter domain, representational capability, and numerical stability of three motif populations (incoherent loops, coherent loops, and colliders).
-2. analyzes the trade-off between representational capability and numerical stability based on the set theory and a customized method called maximum-minimum loss search.
-3. analyzes motif tendency and robustness of neural networks produced by the default neuroevolution method (NEAT) and its three variants.
 
 ## Citation
 If you think this repository helps or being used in your research, please consider refer this work.
 Here is a Bibtex entry:
 
 TODO
-
-## License
-GPL-3.0 license

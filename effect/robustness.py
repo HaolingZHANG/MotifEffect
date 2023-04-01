@@ -48,32 +48,7 @@ def evaluate_propagation(value_range, points, motif, compute_type="max"):
     return propagation
 
 
-def estimate_lipschitz_by_motif(value_range, points, motif, norm_type="L-2"):
-    """
-    Estimate the Lipschitz constant of the selected motif.
-
-    :param value_range: definition field of two input signals.
-    :type value_range: tuple
-
-    :param points: number of equidistant sampling in the definition field.
-    :type points: int
-
-    :param motif: 3-node network motif in the artificial neural network.
-    :type motif: effect.networks.NeuralMotif
-
-    :param norm_type: norm type, including "L-1", "L-2", and "L-inf".
-    :type norm_type: str
-
-    :return: estimated Lipschitz constant.
-    :rtype: float
-    """
-    output = calculate_landscape(value_range=value_range, points=points, motif=motif)
-
-    return estimate_lipschitz_by_signals(value_range=value_range, points=points, output=output,
-                                         norm_type=norm_type)
-
-
-def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2"):
+def estimate_lipschitz(value_range, points, output, norm_type="L-2"):
     """
     Estimate the Lipschitz constant of the output signals produced by selected motif.
 
@@ -117,3 +92,27 @@ def estimate_lipschitz_by_signals(value_range, points, output, norm_type="L-2"):
                     constant = max([constant, maximum_output_difference / input_difference])
 
     return constant
+
+
+def estimate_lipschitz_by_motif(value_range, points, motif, norm_type="L-2"):
+    """
+    Estimate the Lipschitz constant of the selected motif.
+
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param motif: 3-node network motif in the artificial neural network.
+    :type motif: effect.networks.NeuralMotif
+
+    :param norm_type: norm type, including "L-1", "L-2", and "L-inf".
+    :type norm_type: str
+
+    :return: estimated Lipschitz constant.
+    :rtype: float
+    """
+    output = calculate_landscape(value_range=value_range, points=points, motif=motif)
+
+    return estimate_lipschitz(value_range=value_range, points=points, output=output, norm_type=norm_type)

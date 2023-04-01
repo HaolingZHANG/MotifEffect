@@ -12,7 +12,16 @@ in order to be consistent with the motif effect experiments.
 For the variations, the additional parameter is "remove_type".
 1. "remove_type" is "i" refers to prohibiting incoherent loops 
 from being generated during the evolution of neural networks.
-1. "remove_type" is "c" refers to prohibiting coherent loops 
+2. "remove_type" is "c" refers to prohibiting coherent loops 
 from being generated during the evolution of neural networks.
-1. "remove_type" is "a" refers to prohibiting all the loops (including incoherent loops and coherent loops) 
+3. "remove_type" is "a" refers to prohibiting all the loops (including incoherent loops and coherent loops) 
 from being generated during the evolution of neural networks.
+
+At the stage of training agents, "enabled" parameter in ConnectionGene 
+does not affect the creation of the adjacency matrix. 
+Whether a selected motif is created in the neural network is a fact that will have an impact on subsequent evolution.
+The "enabled" parameter may change from "False" to "True", making the prohibition of selected motifs unsuccessful.
+
+On the contrary, for the agent created by best genome after training, 
+"enabled" parameter in ConnectionGene is considered in the creation of the adjacency matrix. 
+Because the connection to which False "enabled" belongs is not actually used.

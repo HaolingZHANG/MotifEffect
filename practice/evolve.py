@@ -118,8 +118,23 @@ class AdjustedReproduction(DefaultReproduction):
 
     @staticmethod
     def detect(model_genome, genome_config):
-        adjacency_matrix = create_adjacency_matrix(model_genome, genome_config)
+        """
+        Detect selected motifs based on the adjacency matrix of agent.
 
+        :param model_genome: model of genome.
+        :type model_genome: neat.genome.DefaultGenome or practice.evolve.AdjustedGenome
+
+        :param genome_config: genome configuration.
+        :type genome_config: neat.genome.DefaultGenomeConfig or practice.evolve.AdjustedGenomeConfig
+
+        :return: detection result.
+        :rtype: bool
+        """
+        # To more rigorously prohibit the generation of selected motifs,
+        # we do not consider the temporary variable "enabled" in connections during the training phase.
+        adjacency_matrix = create_adjacency_matrix(model_genome, genome_config, consider_enable=False)
+
+        # noinspection PyUnresolvedReferences
         if genome_config.remove_type in ["i", "a"]:
             detected_motifs = array([[[+0, -1, +1], [+0, +0, +1], [+0, +0, +0]],
                                      [[+0, +1, +1], [+0, +0, -1], [+0, +0, +0]],
@@ -128,6 +143,7 @@ class AdjustedReproduction(DefaultReproduction):
             if detect_motifs_from_adjacency_matrix(adjacency_matrix, 3, detected_motifs):
                 return True
 
+        # noinspection PyUnresolvedReferences
         if genome_config.remove_type in ["c", "a"]:
             detected_motifs = array([[[+0, +1, +1], [+0, +0, +1], [+0, +0, +0]],
                                      [[+0, -1, +1], [+0, +0, -1], [+0, +0, +0]],
@@ -153,6 +169,9 @@ class AdjustedGenomeConfig(DefaultGenomeConfig):
     def __init__(self, params):
         """
         Initialize config by params, add ConfigParameter("remove_type", str)
+
+        :param params: parameters of adjusted genome
+        :type params: dict
         """
         # create full set of available activation functions.
         self.num_inputs = 0
@@ -213,41 +232,54 @@ class AdjustedGenomeConfig(DefaultGenomeConfig):
         elif self.structural_mutation_surer.lower() == "default":
             self.structural_mutation_surer = "default"
         else:
-            error_string = "Invalid structural_mutation_surer {!r}".format(
-                self.structural_mutation_surer)
+            error_string = "Invalid structural_mutation_surer {!r}".format(self.structural_mutation_surer)
             raise RuntimeError(error_string)
 
         self.node_indexer = None
 
 
-def create_adjacency_matrix(model_genome, genome_config):
-    scale = genome_config.num_inputs + genome_config.num_outputs + len(model_genome.nodes)
+def create_adjacency_matrix(model_genome, genome_config, consider_enable=True):
+    """
+    Create adjacency matrix based on the genome and its corresponding configuration.
 
-    mapping, adjacency_matrix = {}, zeros(shape=(scale, scale), dtype=int)
+    :param model_genome: model of genome.
+    :type model_genome: neat.genome.DefaultGenome or practice.evolve.AdjustedGenome
+
+    :param genome_config: genome configuration.
+    :type genome_config: neat.genome.DefaultGenomeConfig or practice.evolve.AdjustedGenomeConfig
+
+    :param consider_enable: only consider the weight of connection if it is enable.
+    :type consider_enable: bool
+
+    :return: corresponding adjacency matrix.
+    :rtype: numpy.ndarray
+    """
+    input_number, output_number = genome_config.num_inputs, genome_config.num_outputs
+    scale = input_number + output_number + len(model_genome.nodes)
+
+    mapping, reverse_mapping, adjacency_matrix = {}, {}, zeros(shape=(scale, scale))
     for index in range(genome_config.num_inputs):
         mapping[index - genome_config.num_inputs] = index
+        reverse_mapping[index] = index - genome_config.num_inputs
 
     index = genome_config.num_inputs
     for node_key, node_gene in iteritems(model_genome.nodes):
         mapping[node_key] = index
+        reverse_mapping[index] = node_key
         index += 1
 
     for connect_gene in itervalues(model_genome.connections):
-        if mapping.get(connect_gene.key[0]) is not None and mapping.get(connect_gene.key[1]) is not None:
-            row = mapping.get(connect_gene.key[0])
-            col = mapping.get(connect_gene.key[1])
-            if connect_gene.weight > 0:
-                adjacency_matrix[row, col] = 1
-            elif connect_gene.weight < 0:
-                adjacency_matrix[row, col] = -1
-
-    input_number = genome_config.num_inputs
-    output_number = genome_config.num_outputs
+        row, col = mapping[connect_gene.key[0]], mapping[connect_gene.key[1]]
+        if consider_enable:
+            if connect_gene.enabled:
+                adjacency_matrix[row, col] = connect_gene.weight
+        else:
+            adjacency_matrix[row, col] = connect_gene.weight
 
     # remove connection between input nodes.
     adjacency_matrix[:input_number, :input_number] = 0
 
     # remove connection from output nodes to other nodes.
-    adjacency_matrix[input_number:input_number + output_number, :] = 0
+    adjacency_matrix[input_number:input_number + output_number, input_number + output_number:] = 0
 
     return adjacency_matrix

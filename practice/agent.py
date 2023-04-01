@@ -121,12 +121,12 @@ class NEATAgent(DefaultAgent):
 
 def create_agent_config(config_path):
     """
-    Create training configure of agent.
+    Create training configuration of agent.
 
-    :param config_path: configure path.
+    :param config_path: configuration path.
     :type config_path: str
 
-    :return: agent configure.
+    :return: agent configuration.
     :rtype: neat.config.Config
     """
     if "baseline" in config_path.split(".")[-2]:
@@ -164,12 +164,15 @@ def obtain_best(task, model_config, need_stdout=False, additional_reporters=None
     :rtype: neat.genome.DefaultGenome or (neat.genome.DefaultGenome, list)
     """
     population = Population(model_config, initial_state)
+
     if need_stdout:
         population.add_reporter(reporting.StdOutReporter(False))
     population.add_reporter(statistics.StatisticsReporter())
+
     if additional_reporters is not None:
         for additional_reporter in additional_reporters:
             population.add_reporter(additional_reporter)
+
     best_genome = population.run(task.genomes_fitness, task.maximum_generation)
 
     if additional_reporters is None:
@@ -178,9 +181,9 @@ def obtain_best(task, model_config, need_stdout=False, additional_reporters=None
         return best_genome, additional_reporters
 
 
-def train_and_test(task, agent_name, agent_config, repeats, train_noise_generator, test_noise_generators):
+def train_and_evaluate(task, agent_name, agent_config, repeats, train_noise_generator, test_noise_generators):
     """
-    Train and test the agents in a given NEAT task.
+    Train and evaluate the agents in a given NEAT task.
 
     :param task: task to train agents.
     :type task: practice.task.NEATCartPoleTask
@@ -204,17 +207,69 @@ def train_and_test(task, agent_name, agent_config, repeats, train_noise_generato
     :rtype: list
     """
     records = []
+
     for _ in range(repeats):
-        task.reset_experiences()
-        task.set_noise(train_noise_generator)
-        best_agent = NEATAgent(obtain_best(task, agent_config, need_stdout=True),
-                               agent_config, agent_name, task.action_handle)
-        experience = task.get_experiences()
-        test_record = {}
-        for label, test_noise_generator in test_noise_generators.items():
-            task.set_noise(test_noise_generator)
-            test_record[label] = task.calculate_fitness(task.run(best_agent)["rewards"])
+        best_agent, experience = train(task, agent_name, agent_config, train_noise_generator)
+        test_record = evaluate(task, test_noise_generators, best_agent)
 
         records.append((best_agent, experience, test_record))
 
     return records
+
+
+def train(task, agent_name, agent_config, train_noise_generator):
+    """
+    Train an agent in a given NEAT task.
+
+    :param task: task to train agents.
+    :type task: practice.task.NEATCartPoleTask
+
+    :param agent_name: name of trained agent.
+    :type agent_name: str
+
+    :param agent_config: agent configure.
+    :type agent_config: neat.config.Config
+
+    :param train_noise_generator: noise generator for training process.
+    :type train_noise_generator: practice.task.NormNoiseGenerator
+
+    :return: agent and the experience.
+    :rtype: practice.agent.NEATAgent, list
+    """
+    task.reset_experiences()
+    task.set_noise(train_noise_generator)
+
+    best_genome = obtain_best(task, agent_config, need_stdout=False)
+    best_agent = NEATAgent(best_genome, agent_config, agent_name, task.action_handle)
+
+    experience = task.get_experiences()
+
+    return best_agent, experience
+
+
+def evaluate(task, test_noise_generators, agent):
+    """
+    Evaluate an agent in a given NEAT task.
+
+    :param task: task to train agents.
+    :type task: practice.task.NEATCartPoleTask
+
+    :param test_noise_generators: noise generators for evaluating process.
+    :type test_noise_generators: dict
+
+    :param agent: trained agent.
+    :type agent: practice.agent.NEATAgent
+
+    :return: test record.
+    :rtype: dict
+    """
+    test_record = {}
+
+    for label, test_noise_generator in test_noise_generators.items():
+        task.set_noise(test_noise_generator)
+
+        rewards = task.run(agent)["rewards"]
+
+        test_record[label] = task.calculate_fitness(rewards)
+
+    return test_record

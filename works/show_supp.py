@@ -1,12 +1,15 @@
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams
-from numpy import arange, linspace, array, percentile, log10, sqrt, min, max, abs, sum, argmax, where, nan
+from numpy import arange, linspace, array, zeros, random, percentile, where, nan
+from numpy import log2, log10, sqrt, min, max, abs, sum, argmax, std
+from os import mkdir
 from scipy.stats import gaussian_kde, spearmanr
+from shutil import rmtree
 from warnings import filterwarnings
 
 from practice import acyclic_motifs
 
-from works import load_data, draw_info
+from works import load_data, draw_info, save_data
 
 filterwarnings("ignore")
 
@@ -19,12 +22,11 @@ rcParams["mathtext.cal"] = "Lucida Calligraphy"
 rcParams["mathtext.it"] = "Linux Libertine:italic"
 rcParams["mathtext.bf"] = "Linux Libertine:bold"
 
-task_path = "./data/"
-save_path = "./show/"
+raw_path, sort_path, save_path = "./raw/", "./data/", "./show/"
 
 
-def supp01():
-    task_data = load_data(task_path + "supp01.pkl")
+def supp_01():
+    task_data = load_data(sort_path + "supp01.pkl")
 
     figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
 
@@ -168,8 +170,73 @@ def supp01():
     pyplot.close()
 
 
-def supp02():
-    task_data = load_data(task_path + "supp02.pkl")
+def supp_02():
+    figure = pyplot.figure(figsize=(10, 3.5), tight_layout=True)
+
+    # noinspection PyTypeChecker
+    random.seed(2023)
+    # noinspection PyArgumentList
+    samples_1 = random.random(size=(10, 2)) - 0.5
+    # noinspection PyArgumentList
+    samples_2 = random.random(size=(25, 2)) - 0.5
+
+    pyplot.subplot(1, 3, 1)
+    pyplot.title("hyper-spatial location distribution of samples", fontsize=9)
+    pyplot.scatter(samples_1[:, 0], samples_1[:, 1], fc="#88CCF8", ec="k", s=24, label="population 1 (10 samples)")
+    pyplot.scatter(samples_2[:, 0], samples_2[:, 1], fc="#FCB1AB", ec="k", s=24, label="population 2 (25 samples)")
+    pyplot.legend(loc="upper right", fontsize=8)
+    pyplot.xlim(-0.7, 0.7)
+    pyplot.ylim(-0.6, 0.8)
+    pyplot.xticks([])
+    pyplot.yticks([])
+    pyplot.subplot(1, 3, 2)
+    pyplot.title("replacement rate of population 1 by 2", fontsize=9)
+    select_1 = array([0, 1, 4, 5, 6, 7])
+    select_2 = array([2, 3, 8, 9])
+    pyplot.scatter(samples_1[:, 0], 0.0 + samples_1[:, 1], fc="#88CCF8", ec="k", s=16, label="population 1")
+    pyplot.scatter(samples_2[:, 0], 1.2 + samples_2[:, 1], fc="silver", s=16, label="reference")
+    pyplot.scatter(samples_1[select_1, 0], 1.2 + samples_1[select_1, 1], fc="k", ec="k", s=16, label="replaceable")
+    pyplot.scatter(samples_1[select_2, 0], 1.2 + samples_1[select_2, 1], fc="w", ec="k", s=16, label="irreplaceable")
+    pyplot.hlines(0.6, -0.6, 0.6, lw=1)
+    pyplot.text(0.8, 0.58, "=", va="center", ha="center", fontsize=12)
+    pyplot.hlines(0.6, 1.0, 1.3, lw=1)
+    pyplot.text(1.15, 0.70, str(len(select_1)), va="center", ha="center", fontsize=12)
+    pyplot.text(1.15, 0.45, "10", va="center", ha="center", fontsize=12)
+    pyplot.legend(loc="upper right", fontsize=8)
+    pyplot.xlim(-0.7, 1.4)
+    pyplot.ylim(-0.8, 2.0)
+    pyplot.xticks([])
+    pyplot.yticks([])
+
+    pyplot.subplot(1, 3, 3)
+    pyplot.title("replacement rate of population 2 by 1", fontsize=9)
+    select_1 = array([0, 3, 4, 11, 23])
+    select_2 = array([1, 2, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24])
+    pyplot.scatter(samples_1[:, 0], 1.2 + samples_1[:, 1], fc="silver", s=16, label="reference")
+    pyplot.scatter(samples_2[:, 0], 0.0 + samples_2[:, 1], fc="#FCB1AB", ec="k", s=16, label="population 2")
+    pyplot.scatter(samples_2[select_1, 0], 1.2 + samples_2[select_1, 1], fc="k", ec="k", s=16, label="replaceable")
+    pyplot.scatter(samples_2[select_2, 0], 1.2 + samples_2[select_2, 1], fc="w", ec="k", s=16, label="irreplaceable")
+    pyplot.hlines(0.6, -0.6, 0.6, lw=1)
+    pyplot.text(0.8, 0.58, "=", va="center", ha="center", fontsize=12)
+    pyplot.hlines(0.6, 1.0, 1.3, lw=1)
+    pyplot.text(1.15, 0.70, str(len(select_1)), va="center", ha="center", fontsize=12)
+    pyplot.text(1.15, 0.45, "25", va="center", ha="center", fontsize=12)
+    pyplot.legend(loc="upper right", fontsize=8)
+    pyplot.xlim(-0.7, 1.4)
+    pyplot.ylim(-0.8, 2.0)
+    pyplot.xticks([])
+    pyplot.yticks([])
+
+    figure.text(0.012, 0.99, "a", va="center", ha="center", fontsize=14)
+    figure.text(0.342, 0.99, "b", va="center", ha="center", fontsize=14)
+    figure.text(0.672, 0.99, "c", va="center", ha="center", fontsize=14)
+
+    pyplot.savefig(save_path + "supp02.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_03():
+    task_data = load_data(sort_path + "supp03.pkl")
 
     pyplot.figure(figsize=(10, 8.5), tight_layout=True)
 
@@ -330,12 +397,12 @@ def supp02():
     pyplot.xlim(-10, 71 + 16)
     pyplot.ylim(-73, 0 + 10)
     pyplot.axis("off")
-    pyplot.savefig(save_path + "supp02.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp03():
-    task_data = load_data(task_path + "supp03.pkl")
+def supp_04():
+    task_data = load_data(sort_path + "supp04.pkl")
 
     pyplot.figure(figsize=(10, 3), tight_layout=True)
 
@@ -405,12 +472,12 @@ def supp03():
     pyplot.xlim(0, 24)
     pyplot.ylim(-1.2, 6)
 
-    pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp04():
-    task_data = load_data(task_path + "supp04.pkl")["a"]
+def supp_05():
+    task_data = load_data(sort_path + "supp05.pkl")["a"]
     math_orders = [r"$\mathcal{L}_i$ in $\mathcal{L}_i \cap \mathcal{L}_c \cap \mathcal{C}$",
                    r"$\mathcal{L}_c$ in $\mathcal{L}_i \cap \mathcal{L}_c \cap \mathcal{C}$"]
     used_colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0]]
@@ -480,12 +547,12 @@ def supp04():
     figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=14)
     figure.text(0.020, 0.50, "b", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp05():
-    task_data = load_data(task_path + "supp05.pkl")
+def supp_06():
+    task_data = load_data(sort_path + "supp06.pkl")
 
     pyplot.figure(figsize=(10, 6), tight_layout=True)
     activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
@@ -585,12 +652,12 @@ def supp05():
 
             index += 1
 
-    pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp06():
-    task_data = load_data(task_path + "supp06.pkl")
+def supp_07():
+    task_data = load_data(sort_path + "supp07.pkl")
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
 
     figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
@@ -648,12 +715,12 @@ def supp06():
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
     figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp07():
-    task_data = load_data(task_path + "supp07.pkl")
+def supp_08():
+    task_data = load_data(sort_path + "supp08.pkl")
     param_names = ["weight\n" + r"$x \rightarrow y$",
                    "weight\n" + r"$x \rightarrow z$",
                    "weight\n" + r"$y \rightarrow z$",
@@ -699,12 +766,12 @@ def supp07():
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
     figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp08():
-    task_data = load_data(task_path + "supp08.pkl")
+def supp_09():
+    task_data = load_data(sort_path + "supp09.pkl")
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
     selections = {(0, 0): array([69, 25, 48, 34]), (1, 0): array([84, 90, 25, 17])}
     figure = pyplot.figure(figsize=(10, 8), tight_layout=True)
@@ -769,12 +836,12 @@ def supp08():
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
     figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp09.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp09():
-    task_data = load_data(task_path + "supp09.pkl")
+def supp_10():
+    task_data = load_data(sort_path + "supp10.pkl")
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$"]
 
     figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
@@ -910,12 +977,12 @@ def supp09():
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
     figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp09.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp10():
-    task_data = load_data(task_path + "supp10.pkl")
+def supp_11():
+    task_data = load_data(sort_path + "supp11.pkl")
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
     labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
     colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0], draw_info["collider"][0]]
@@ -930,16 +997,16 @@ def supp10():
                        fc=colors[index], ec="k", label=math_orders[index])
             for location, value in zip(arange(len(values)) + bias[index], values):
                 if value > 0:
-                    pyplot.text(location, value + 1.5, "%.1f" % value, va="center", ha="center", fontsize=8)
+                    pyplot.text(location, value + 1.0, "%.1f" % value, va="center", ha="center", fontsize=8)
                 else:
-                    pyplot.text(location, value + 1.5, "N.A", va="center", ha="center", fontsize=8)
+                    pyplot.text(location, value + 1.0, "N.A", va="center", ha="center", fontsize=8)
         pyplot.legend(loc="upper right", fontsize=8, ncol=3, title="motif type", title_fontsize=8)
         pyplot.xlabel("training setting", fontsize=9)
         pyplot.ylabel("average number", fontsize=9)
         pyplot.xticks(arange(4), labels, fontsize=8)
-        pyplot.yticks(arange(0, 21, 4), arange(0, 21, 4), fontsize=8)
+        pyplot.yticks(arange(0, 17, 4), arange(0, 17, 4), fontsize=8)
         pyplot.xlim(-0.5, 3.5)
-        pyplot.ylim(0, 20)
+        pyplot.ylim(0, 16)
         # noinspection PyUnresolvedReferences
         ax.spines["top"].set_visible(False)
         # noinspection PyUnresolvedReferences
@@ -952,16 +1019,16 @@ def supp10():
                    fc=colors[index], ec="k", label=math_orders[index])
         for location, value in zip(arange(len(values)) + bias[index], values):
             if value > 0:
-                pyplot.text(location, value + 3.0, "%.1f" % value, va="center", ha="center", fontsize=8)
+                pyplot.text(location, value + 1.0, "%.1f" % value, va="center", ha="center", fontsize=8)
             else:
-                pyplot.text(location, value + 3.0, "N.A", va="center", ha="center", fontsize=8)
+                pyplot.text(location, value + 1.0, "N.A", va="center", ha="center", fontsize=8)
     pyplot.legend(loc="upper right", fontsize=8, ncol=3, title="motif type", title_fontsize=8)
     pyplot.xlabel("training setting", fontsize=9)
     pyplot.ylabel("average number", fontsize=9)
     pyplot.xticks(arange(4), labels, fontsize=8)
-    pyplot.yticks(arange(0, 41, 8), arange(0, 41, 8), fontsize=8)
+    pyplot.yticks(arange(0, 17, 4), arange(0, 17, 4), fontsize=8)
     pyplot.xlim(-0.5, 3.5)
-    pyplot.ylim(0, 40)
+    pyplot.ylim(0, 16)
     # noinspection PyUnresolvedReferences
     ax.spines["top"].set_visible(False)
     # noinspection PyUnresolvedReferences
@@ -975,12 +1042,12 @@ def supp10():
     figure.text(0.02, 0.33, "e", va="center", ha="center", fontsize=14)
     figure.text(0.02, 0.17, "f", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp11.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp11():
-    task_data = load_data(task_path + "supp11.pkl")
+def supp_12():
+    task_data = load_data(sort_path + "supp12.pkl")
     labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
 
     figure = pyplot.figure(figsize=(10, 4), tight_layout=True)
@@ -1045,12 +1112,12 @@ def supp11():
     figure.text(0.358, 0.99, "b", va="center", ha="center", fontsize=14)
     figure.text(0.677, 0.99, "c", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp11.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp12.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp12():
-    task_data = load_data(task_path + "supp12.pkl")
+def supp_13():
+    task_data = load_data(sort_path + "supp13.pkl")
     figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
     location = 1
     for index in range(4):
@@ -1061,7 +1128,7 @@ def supp12():
             pyplot.plot(arange(5) + 0.5, case, color="silver", lw=2, marker="o", zorder=0)
             pyplot.scatter([argmax(case) + 0.5], [max(case)], color="k", zorder=1)
             pyplot.text(argmax(case) + 0.5, 220, "best", va="center", ha="center", fontsize=8)
-            pyplot.xlabel("error scale", fontsize=9)
+            pyplot.xlabel("evaluating error scale", fontsize=9)
             pyplot.ylabel("performance", fontsize=9)
             pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=8)
             pyplot.yticks(arange(50, 201, 50), arange(50, 201, 50), fontsize=8)
@@ -1080,12 +1147,12 @@ def supp12():
     figure.text(0.02, 0.43, "b", va="center", ha="center", fontsize=14)
     figure.text(0.02, 0.15, "c", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp12.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp13.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp13():
-    task_data = load_data(task_path + "supp13.pkl")
+def supp_14():
+    task_data = load_data(sort_path + "supp14.pkl")
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
     labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
     colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0], draw_info["collider"][0]]
@@ -1107,19 +1174,19 @@ def supp13():
                     else:
                         pyplot.bar(bias[motif_type] + result_type, counts[motif_type], width=0.2,
                                    fc=colors[motif_type], ec="k", lw=0.75, label=math_orders[motif_type])
-                    pyplot.text(bias[motif_type] + result_type, counts[motif_type] + 3.0, "%.1f" % counts[motif_type],
+                    pyplot.text(bias[motif_type] + result_type, counts[motif_type] + 1.0, "%.1f" % counts[motif_type],
                                 va="center", ha="center", fontsize=8)
             else:
-                pyplot.text(result_type, 3.0, "N.A", va="center", ha="center", fontsize=8)
+                pyplot.text(result_type, 1.0, "N.A", va="center", ha="center", fontsize=8)
         pyplot.legend(loc="upper right", fontsize=8, ncol=3, title="motif type", title_fontsize=8)
         pyplot.xlabel("training result (100 samples)", fontsize=9)
         pyplot.ylabel("average number", fontsize=9)
-        y_ticks = ["pass type ( " + str(rates[0]) + " / 100 )", "fail type 1 ( " + str(rates[1]) + " / 100 )",
-                   "fail type 2 ( " + str(rates[2]) + " / 100 )", "fail type 3 ( " + str(rates[3]) + " / 100 )"]
+        y_ticks = ["pass type ( " + str(rates[0]) + " / 100 )", "failure type 1 ( " + str(rates[1]) + " / 100 )",
+                   "failure type 2 ( " + str(rates[2]) + " / 100 )", "failure type 3 ( " + str(rates[3]) + " / 100 )"]
         pyplot.xticks([0, 1, 2, 3], y_ticks, fontsize=8)
-        pyplot.yticks(arange(0, 51, 10), arange(0, 51, 10), fontsize=8)
+        pyplot.yticks(arange(0, 21, 4), arange(0, 21, 4), fontsize=8)
         pyplot.xlim(-0.5, 3.5)
-        pyplot.ylim(0, 50)
+        pyplot.ylim(0, 20)
         # noinspection PyUnresolvedReferences
         ax.spines["top"].set_visible(False)
         # noinspection PyUnresolvedReferences
@@ -1131,89 +1198,22 @@ def supp13():
     figure.text(0.02, 0.50, "c", va="center", ha="center", fontsize=14)
     figure.text(0.02, 0.25, "d", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp13.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp14():
-    task_data = load_data(task_path + "supp14.pkl")
-    pyplot.figure(figsize=(10, 10))
-    raw = 32.5
-    map_1, map_2, map_3 = pyplot.get_cmap("Reds"), pyplot.get_cmap("Oranges"), pyplot.get_cmap("Blues")
-    labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
-    for panel_index, label in zip(["a", "b", "c", "d"], labels):
-        samples = task_data[panel_index]
-        if len(samples) > 0:
-            number = len(samples)
-            pyplot.vlines(-4, raw + 0.40, raw - number + 1 - 0.40, lw=0.75)
-            pyplot.text(-10, (raw * 2 - number + 1) / 2, label, va="center", ha="center", fontsize=9)
-            for sample_index, sample in enumerate(samples):
-                for index, values in enumerate(sample):
-                    if values[0] > 0:
-                        pyplot.fill_between([index, index + 1], raw + 0.15, raw + 0.40,
-                                            fc=map_1([min([log10(values[0]) / 2.0, 1.0])]), lw=0, zorder=1)
-                    if values[1] > 0:
-                        pyplot.fill_between([index, index + 1], raw - 0.15, raw + 0.15,
-                                            fc=map_2([min([log10(values[1]) / 2.0, 1.0])]), lw=0, zorder=1)
-                    if values[2] > 0:
-                        pyplot.fill_between([index, index + 1], raw - 0.40, raw - 0.15,
-                                            fc=map_3([min([log10(values[2]) / 2.0, 1.0])]), lw=0, zorder=1)
-                pyplot.plot([0, len(sample), len(sample), 0, 0],
-                            [raw - 0.4, raw - 0.4, raw + 0.4, raw + 0.4, raw - 0.4],
-                            color="k", lw=0.75, zorder=2)
-                pyplot.fill_between([-4, 0], raw - 0.4, raw + 0.4, fc="#EEEEEE", lw=0, zorder=0)
-                pyplot.text(-2, raw, str(sample_index + 1), va="center", ha="center", fontsize=8, zorder=1)
-                raw -= 1
-            raw -= 1
-
-    pyplot.hlines(1.5, 0, 100, lw=0.75)
-    for value in linspace(0, 100, 11):
-        pyplot.vlines(value, 1.2, 1.5, lw=0.75)
-        pyplot.text(value, 0.8, "%d" % value, va="center", ha="center", fontsize=8)
-    pyplot.text(50, 0.2, "generation", va="center", ha="center", fontsize=9)
-    pyplot.text(110, 30.6, r"$\mathcal{L}_i$ number", va="center", ha="center", fontsize=9)
-    for former, latter, color in zip(linspace(22, 30, 51)[:-1], linspace(22, 30, 51)[1:], map_1(linspace(0, 1, 50))):
-        pyplot.fill_between([108, 110], former, latter, fc=color, lw=0, zorder=0)
-    pyplot.plot([108, 110, 110, 108, 108], [22, 22, 30, 30, 22], color="k", lw=0.75, zorder=2)
-    pyplot.text(110, 20.6, r"$\mathcal{L}_c$ number", va="center", ha="center", fontsize=9)
-    for former, latter, color in zip(linspace(12, 20, 51)[:-1], linspace(12, 20, 51)[1:], map_2(linspace(0, 1, 50))):
-        pyplot.fill_between([108, 110], former, latter, fc=color, lw=0, zorder=0)
-    pyplot.plot([108, 110, 110, 108, 108], [12, 12, 20, 20, 12], color="k", lw=0.75, zorder=2)
-    pyplot.text(110, 10.6, r"$\mathcal{C}$ number", va="center", ha="center", fontsize=9)
-    for former, latter, color in zip(linspace(2, 10, 51)[:-1], linspace(2, 10, 51)[1:], map_3(linspace(0, 1, 50))):
-        pyplot.fill_between([108, 110], former, latter, fc=color, lw=0, zorder=0)
-    pyplot.plot([108, 110, 110, 108, 108], [2, 2, 10, 10, 2], color="k", lw=0.75, zorder=2)
-    labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    values = [-0.2] + log10(array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])).tolist()
-    values = 8.0 / 2.2 * (array(values) + 0.2)
-    for label, value in zip(labels, values):
-        if label in [0, 1, 10, 100]:
-            pyplot.text(112, value + 22, str(label), va="center", ha="left", fontsize=8)
-            pyplot.text(112, value + 12, str(label), va="center", ha="left", fontsize=8)
-            pyplot.text(112, value + 2, str(label), va="center", ha="left", fontsize=8)
-        pyplot.hlines(value + 22, 110, 111, lw=0.75)
-        pyplot.hlines(value + 12, 110, 111, lw=0.75)
-        pyplot.hlines(value + 2, 110, 111, lw=0.75)
-    pyplot.xlim(-14, 115)
-    pyplot.ylim(-0.3, 33)
-    pyplot.axis("off")
-
     pyplot.savefig(save_path + "supp14.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
 if __name__ == "__main__":
-    supp01()
-    supp02()
-    supp03()
-    supp04()
-    supp05()
-    supp06()
-    supp07()
-    supp08()
-    supp09()
-    supp10()
-    supp11()
-    supp12()
-    supp13()
-    supp14()
+    supp_01()
+    supp_02()
+    supp_03()
+    supp_04()
+    supp_05()
+    supp_06()
+    supp_07()
+    supp_08()
+    supp_09()
+    supp_10()
+    supp_11()
+    supp_12()
+    supp_13()
+    supp_14()

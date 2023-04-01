@@ -19,11 +19,10 @@ rcParams["mathtext.cal"] = "Lucida Calligraphy"
 rcParams["mathtext.it"] = "Linux Libertine:italic"
 rcParams["mathtext.bf"] = "Linux Libertine:bold"
 
-task_path = "./data/"
-save_path = "./show/"
+sort_path, save_path = "./data/", "./show/"
 
 
-def main01():
+def main_01():
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
 
     figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
@@ -45,23 +44,23 @@ def main01():
             bias_x, bias_y = 4 - motif_index, 3 - type_index
             for index, (px, py) in enumerate(zip(info[1], info[2])):
                 if index + 1 in info[3]:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="white", edgecolor="black", lw=0.75, s=30, zorder=2)
+                    pyplot.scatter(px + bias_x, py + bias_y, fc="w", ec="k", lw=0.75, s=30, zorder=2)
                     pyplot.text(px + bias_x, py + bias_y - 0.05, "$x$", va="top", ha="center", fontsize=9)
                 elif index + 1 in info[4]:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="black", edgecolor="black", lw=0.75, s=30, zorder=2)
+                    pyplot.scatter(px + bias_x, py + bias_y, fc="k", ec="k", lw=0.75, s=30, zorder=2)
                     pyplot.text(px + bias_x, py + bias_y + 0.05, "$z$", va="bottom", ha="center", fontsize=9)
                 elif index + 1 in info[5]:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="silver", edgecolor="black", lw=0.75, s=30, zorder=2)
+                    pyplot.scatter(px + bias_x, py + bias_y, fc="silver", ec="k", lw=0.75, s=30, zorder=2)
                     pyplot.text(px + bias_x, py + bias_y - 0.06, "$y$", va="top", ha="center", fontsize=9)
                 else:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="silver", edgecolor="black", lw=0.75, s=30, zorder=2)
+                    pyplot.scatter(px + bias_x, py + bias_y, fc="silver", ec="k", lw=0.75, s=30, zorder=2)
                     pyplot.text(px + bias_x, py + bias_y - 0.06, "$y$", va="top", ha="center", fontsize=9)
             x, y = array(info[1]) + bias_x, array(info[2]) + bias_y
             for former, latter in motif.edges:
                 location_x, location_y = (x[former - 1] + x[latter - 1]) / 2.0, (y[former - 1] + y[latter - 1]) / 2.0
                 flag = "+" if motif.get_edge_data(former, latter)["weight"] == 1 else "\N{MINUS SIGN}"
                 pyplot.annotate(s="", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
-                                arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="black",
+                                arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
                                                 shrinkA=4, shrinkB=4, lw=0.75, ls=("-" if flag == "+" else ":")))
                 if (former, latter) == (1, 2):
                     pyplot.text(location_x, location_y - 0.1, flag, va="center", ha="center", fontsize=9)
@@ -75,7 +74,7 @@ def main01():
     pyplot.axis("off")
 
     pyplot.subplot(grid[:, 2:])
-    task_data = load_data(task_path + "main01.pkl")["b"]
+    task_data = load_data(sort_path + "main01.pkl")["b"]
 
     activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
     for index_1, activation in enumerate(activation_selection):
@@ -171,8 +170,8 @@ def main01():
     pyplot.close()
 
 
-def main02():
-    task_data = load_data(task_path + "main02.pkl")
+def main_02():
+    task_data = load_data(sort_path + "main02.pkl")
 
     used_colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0], draw_info["collider"][0]]
     activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
@@ -460,8 +459,8 @@ def main02():
     pyplot.close()
 
 
-def main03():
-    task_data = load_data(load_path=task_path + "main03.pkl")
+def main_03():
+    task_data = load_data(load_path=sort_path + "main03.pkl")
 
     figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
     grid = pyplot.GridSpec(2, 3)
@@ -722,8 +721,8 @@ def main03():
     pyplot.close()
 
 
-def main04():
-    task_data = load_data(task_path + "main04.pkl")
+def main_04():
+    task_data = load_data(sort_path + "main04.pkl")
 
     figure = pyplot.figure(figsize=(10, 7), tight_layout=True)
     grid = pyplot.GridSpec(3, 12)
@@ -876,7 +875,7 @@ def main04():
                     info = "  " + info
                 pyplot.plot(arange(5) + 0.5, curve, color=colors[case_index], lw=2.5, zorder=case_index, marker="o",
                             label=str(case_index + 1) + ": " + info, alpha=0.75)
-        pyplot.legend(loc="lower left", fontsize=8, title="fail type", title_fontsize=8)
+        pyplot.legend(loc="lower left", fontsize=8, title="failure type", title_fontsize=8)
         pyplot.xlabel("evaluating error scale", fontsize=9)
         pyplot.ylabel("evaluating performance", fontsize=9)
         pyplot.xticks(arange(5) + 0.5, ["0%", "", "20%", "", "40%"], fontsize=8)
@@ -901,7 +900,7 @@ def main04():
 
 
 if __name__ == "__main__":
-    main01()
-    main02()
-    main03()
-    main04()
+    main_01()
+    main_02()
+    main_03()
+    main_04()
