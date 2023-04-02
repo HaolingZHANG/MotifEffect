@@ -41,7 +41,7 @@ def main_01():
         for motif_index, motif in enumerate(motifs):
             pyplot.text(1.5 + motif_index, 3.65 - type_index, "(" + str(motif_index + 1) + ")",
                         va="center", ha="center", fontsize=9)
-            bias_x, bias_y = 4 - motif_index, 3 - type_index
+            bias_x, bias_y = motif_index + 1, 3 - type_index
             for index, (px, py) in enumerate(zip(info[1], info[2])):
                 if index + 1 in info[3]:
                     pyplot.scatter(px + bias_x, py + bias_y, fc="w", ec="k", lw=0.75, s=30, zorder=2)
@@ -749,10 +749,10 @@ def main_04():
     pyplot.ylim(-0.1, 1.02)
     pyplot.axis("off")
 
-    labels = ["default NEAT",
-              r"variation: $\mathcal{L}_c + \mathcal{C}$",
-              r"variation: $\mathcal{L}_i + \mathcal{C}$",
-              r"variation: $\mathcal{C}$"]
+    labels = ["default",
+              r"$\mathcal{L}_c + \mathcal{C}$",
+              r"$\mathcal{L}_i + \mathcal{C}$",
+              r"$\mathcal{C}$"]
     ax = pyplot.subplot(grid[0, 4:8])
     for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
         locations = arange(5) - 0.3 + 0.2 * index
@@ -834,10 +834,6 @@ def main_04():
         pyplot.xlim(0, 5)
         pyplot.ylim(0, 5)
 
-    labels = ["default",
-              r"$\mathcal{L}_c + \mathcal{C}$",
-              r"$\mathcal{L}_i + \mathcal{C}$",
-              r"$\mathcal{C}$"]
     ax = pyplot.subplot(grid[2, :4])
     pyplot.bar(arange(4) - 0.2, task_data["e"][:, 0], width=0.4, fc="w", ec="k", lw=0.75, label="max =   20")
     pyplot.bar(arange(4) + 0.2, task_data["e"][:, 1], width=0.4, fc="lightblue", ec="k", lw=0.75, label="max = 100")
@@ -858,10 +854,6 @@ def main_04():
     # noinspection PyUnresolvedReferences
     ax.spines["right"].set_visible(False)
 
-    labels = ["default",
-              r"variation: $\mathcal{L}_c + \mathcal{C}$",
-              r"variation: $\mathcal{L}_i + \mathcal{C}$",
-              r"variation: $\mathcal{C}$"]
     markers, colors = ["b", "i", "c", "a"], ["#BF33B5", "#845EC2", "#D73222"]
     for index in range(4):
         ax = pyplot.subplot(grid[2, 4 + index * 2: 4 + (index + 1) * 2])
@@ -900,7 +892,7 @@ def main_04():
 
 
 if __name__ == "__main__":
-    main_01()
-    main_02()
-    main_03()
+    # main_01()
+    # main_02()
+    # main_03()
     main_04()
