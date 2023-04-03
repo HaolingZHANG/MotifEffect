@@ -30,9 +30,9 @@ In just a few months, you can definitely obtain our consistent or similar
 [raw folder](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/raw/README.md) 
 through executing the script.
 Meanwhile, all the figures and videos are created by 
-[show_main.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_main.py) 
-and
-[show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py), 
+[show_main.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_main.py), 
+[show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py) and
+[show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py) 
 which means that there is no anthropogenic data filtering or adjusting in the presentation.
 
 ## Repository Structure

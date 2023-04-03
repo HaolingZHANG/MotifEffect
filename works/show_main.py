@@ -838,15 +838,13 @@ def main_04():
     pyplot.bar(arange(4) - 0.2, task_data["e"][:, 0], width=0.4, fc="w", ec="k", lw=0.75, label="max =   20")
     pyplot.bar(arange(4) + 0.2, task_data["e"][:, 1], width=0.4, fc="lightblue", ec="k", lw=0.75, label="max = 100")
     for value_index, value in enumerate(task_data["e"]):
-        pyplot.text(value_index - 0.2, value[0] + 0.04, "%d" % (value[0] * 100) + "%",
-                    va="center", ha="center", fontsize=8)
-        pyplot.text(value_index + 0.2, value[1] + 0.04, "%d" % (value[1] * 100) + "%",
-                    va="center", ha="center", fontsize=8)
+        pyplot.text(value_index - 0.2, value[0] + 0.04, "%d" % (value[0] * 100), va="center", ha="center", fontsize=8)
+        pyplot.text(value_index + 0.2, value[1] + 0.04, "%d" % (value[1] * 100), va="center", ha="center", fontsize=8)
     pyplot.legend(loc="upper left", fontsize=8, title="generation", title_fontsize=8)
     pyplot.xlabel("training setting (trained under 30% error)", fontsize=9)
-    pyplot.ylabel("pass rate (resist ≤ 30% error)", fontsize=9)
+    pyplot.ylabel("qualified agent number", fontsize=9)
     pyplot.xticks(arange(4), labels, fontsize=8)
-    pyplot.yticks(linspace(0, 1, 6), [("%d" % (v * 100)) + "%" for v in linspace(0, 1, 6)], fontsize=8)
+    pyplot.yticks(linspace(0, 1, 6), [("%d" % (v * 100)) for v in linspace(0, 1, 6)], fontsize=8)
     pyplot.xlim(-0.5, 3.5)
     pyplot.ylim(0, 1)
     # noinspection PyUnresolvedReferences
@@ -892,7 +890,7 @@ def main_04():
 
 
 if __name__ == "__main__":
-    # main_01()
-    # main_02()
-    # main_03()
+    main_01()
+    main_02()
+    main_03()
     main_04()

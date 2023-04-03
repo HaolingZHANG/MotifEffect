@@ -1,6 +1,7 @@
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams
-from numpy import arange, linspace, array, random, percentile, log10, sqrt, min, max, abs, sum, argmax, where, nan
+from numpy import arange, linspace, array, random, vstack, percentile, where, nan
+from numpy import log10, sqrt, min, max, abs, mean, sum, argmax
 from scipy.stats import gaussian_kde, spearmanr
 from warnings import filterwarnings
 
@@ -169,37 +170,56 @@ def supp_01():
 
 
 def supp_02():
-    figure = pyplot.figure(figsize=(10, 3.5), tight_layout=True)
-
+    samples_1, samples_2 = None, None
     # noinspection PyTypeChecker
     random.seed(2023)
-    # noinspection PyArgumentList
-    samples_1 = random.random(size=(10, 2)) - 0.5
-    # noinspection PyArgumentList
-    samples_2 = random.random(size=(25, 2)) - 0.5
+    while samples_1 is None or len(samples_1) < 10:
+        # noinspection PyArgumentList
+        location = random.random(size=(1, 2)) - 0.5
+        if samples_1 is not None:
+            if min(mean(abs(samples_1 - location), axis=1)) > 0.1:
+                samples_1 = vstack((samples_1, location))
+        else:
+            samples_1 = location
+    while samples_2 is None or len(samples_2) < 20:
+        # noinspection PyArgumentList
+        location = random.random(size=(1, 2)) - 0.5
+        if samples_2 is not None:
+            if min(mean(abs(samples_2 - location), axis=1)) > 0.1:
+                samples_2 = vstack((samples_2, location))
+        else:
+            samples_2 = location
 
+    figure = pyplot.figure(figsize=(10, 3.5), tight_layout=True)
     pyplot.subplot(1, 3, 1)
     pyplot.title("hyper-spatial location distribution of samples", fontsize=9)
-    pyplot.scatter(samples_1[:, 0], samples_1[:, 1], fc="#88CCF8", ec="k", s=24, label="population 1 (10 samples)")
-    pyplot.scatter(samples_2[:, 0], samples_2[:, 1], fc="#FCB1AB", ec="k", s=24, label="population 2 (25 samples)")
+    pyplot.scatter(samples_1[:, 0], samples_1[:, 1], fc="#88CCF8", ec="k", s=24,
+                   label="population 1 (" + str(len(samples_1)) + " samples)")
+    pyplot.scatter(samples_2[:, 0], samples_2[:, 1], fc="#FCB1AB", ec="k", s=24,
+                   label="population 2 (" + str(len(samples_2)) + " samples)")
     pyplot.legend(loc="upper right", fontsize=8)
     pyplot.xlim(-0.7, 0.7)
     pyplot.ylim(-0.6, 0.8)
     pyplot.xticks([])
     pyplot.yticks([])
+
     pyplot.subplot(1, 3, 2)
     pyplot.title("replacement rate of population 1 by 2", fontsize=9)
-    select_1 = array([0, 1, 4, 5, 6, 7])
-    select_2 = array([2, 3, 8, 9])
+    select = [[], []]
+    for sample_index, sample in enumerate(samples_1):
+        if min(mean(abs(samples_2 - sample), axis=1)) <= 0.1:
+            select[0].append(sample_index)
+        else:
+            select[1].append(sample_index)
     pyplot.scatter(samples_1[:, 0], 0.0 + samples_1[:, 1], fc="#88CCF8", ec="k", s=16, label="population 1")
     pyplot.scatter(samples_2[:, 0], 1.2 + samples_2[:, 1], fc="silver", s=16, label="population 2")
-    pyplot.scatter(samples_1[select_1, 0], 1.2 + samples_1[select_1, 1], fc="k", ec="k", s=16, label="replaceable")
-    pyplot.scatter(samples_1[select_2, 0], 1.2 + samples_1[select_2, 1], fc="w", ec="k", s=16, label="irreplaceable")
+    pyplot.scatter(samples_1[select[0], 0], 1.2 + samples_1[select[0], 1], fc="k", ec="k", s=16, label="replaceable")
+    pyplot.scatter(samples_1[select[1], 0], 1.2 + samples_1[select[1], 1], fc="w", ec="k", s=16, label="irreplaceable")
     pyplot.hlines(0.6, -0.6, 0.6, lw=1)
     pyplot.text(0.8, 0.58, "=", va="center", ha="center", fontsize=12)
     pyplot.hlines(0.6, 1.0, 1.3, lw=1)
-    pyplot.text(1.15, 0.70, str(len(select_1)), va="center", ha="center", fontsize=12)
-    pyplot.text(1.15, 0.45, "10", va="center", ha="center", fontsize=12)
+    pyplot.text(1.15, 0.70, str(len(select[0])), va="center", ha="center", fontsize=12)
+    pyplot.text(1.15, 0.45, str(len(samples_1)), va="center", ha="center", fontsize=12)
     pyplot.legend(loc="upper right", fontsize=8)
     pyplot.xlim(-0.7, 1.4)
     pyplot.ylim(-0.8, 2.0)
@@ -208,17 +228,21 @@ def supp_02():
 
     pyplot.subplot(1, 3, 3)
     pyplot.title("replacement rate of population 2 by 1", fontsize=9)
-    select_1 = array([0, 3, 4, 11, 23])
-    select_2 = array([1, 2, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24])
+    select = [[], []]
+    for sample_index, sample in enumerate(samples_2):
+        if min(mean(abs(samples_1 - sample), axis=1)) <= 0.1:
+            select[0].append(sample_index)
+        else:
+            select[1].append(sample_index)
     pyplot.scatter(samples_1[:, 0], 1.2 + samples_1[:, 1], fc="silver", s=16, label="population 1")
     pyplot.scatter(samples_2[:, 0], 0.0 + samples_2[:, 1], fc="#FCB1AB", ec="k", s=16, label="population 2")
-    pyplot.scatter(samples_2[select_1, 0], 1.2 + samples_2[select_1, 1], fc="k", ec="k", s=16, label="replaceable")
-    pyplot.scatter(samples_2[select_2, 0], 1.2 + samples_2[select_2, 1], fc="w", ec="k", s=16, label="irreplaceable")
+    pyplot.scatter(samples_2[select[0], 0], 1.2 + samples_2[select[0], 1], fc="k", ec="k", s=16, label="replaceable")
+    pyplot.scatter(samples_2[select[1], 0], 1.2 + samples_2[select[1], 1], fc="w", ec="k", s=16, label="irreplaceable")
     pyplot.hlines(0.6, -0.6, 0.6, lw=1)
     pyplot.text(0.8, 0.58, "=", va="center", ha="center", fontsize=12)
     pyplot.hlines(0.6, 1.0, 1.3, lw=1)
-    pyplot.text(1.15, 0.70, str(len(select_1)), va="center", ha="center", fontsize=12)
-    pyplot.text(1.15, 0.45, "25", va="center", ha="center", fontsize=12)
+    pyplot.text(1.15, 0.70, str(len(select[0])), va="center", ha="center", fontsize=12)
+    pyplot.text(1.15, 0.45, str(len(samples_2)), va="center", ha="center", fontsize=12)
     pyplot.legend(loc="upper right", fontsize=8)
     pyplot.xlim(-0.7, 1.4)
     pyplot.ylim(-0.8, 2.0)
