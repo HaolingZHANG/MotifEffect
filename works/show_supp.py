@@ -194,9 +194,9 @@ def supp_02():
     pyplot.subplot(1, 3, 1)
     pyplot.title("hyper-spatial location distribution of samples", fontsize=9)
     pyplot.scatter(samples_1[:, 0], samples_1[:, 1], fc="#88CCF8", ec="k", s=24,
-                   label="population 1 (" + str(len(samples_1)) + " samples)")
+                   label="population a (" + str(len(samples_1)) + " samples)")
     pyplot.scatter(samples_2[:, 0], samples_2[:, 1], fc="#FCB1AB", ec="k", s=24,
-                   label="population 2 (" + str(len(samples_2)) + " samples)")
+                   label="population b (" + str(len(samples_2)) + " samples)")
     pyplot.legend(loc="upper right", fontsize=8)
     pyplot.xlim(-0.7, 0.7)
     pyplot.ylim(-0.6, 0.8)
@@ -204,15 +204,15 @@ def supp_02():
     pyplot.yticks([])
 
     pyplot.subplot(1, 3, 2)
-    pyplot.title("replacement rate of population 1 by 2", fontsize=9)
+    pyplot.title("replacement rate of population a by b", fontsize=9)
     select = [[], []]
     for sample_index, sample in enumerate(samples_1):
         if min(mean(abs(samples_2 - sample), axis=1)) <= 0.1:
             select[0].append(sample_index)
         else:
             select[1].append(sample_index)
-    pyplot.scatter(samples_1[:, 0], 0.0 + samples_1[:, 1], fc="#88CCF8", ec="k", s=16, label="population 1")
-    pyplot.scatter(samples_2[:, 0], 1.2 + samples_2[:, 1], fc="silver", s=16, label="population 2")
+    pyplot.scatter(samples_1[:, 0], 0.0 + samples_1[:, 1], fc="#88CCF8", ec="k", s=16, label="population a")
+    pyplot.scatter(samples_2[:, 0], 1.2 + samples_2[:, 1], fc="silver", s=16, label="population b")
     pyplot.scatter(samples_1[select[0], 0], 1.2 + samples_1[select[0], 1], fc="k", ec="k", s=16, label="replaceable")
     pyplot.scatter(samples_1[select[1], 0], 1.2 + samples_1[select[1], 1], fc="w", ec="k", s=16, label="irreplaceable")
     pyplot.hlines(0.6, -0.6, 0.6, lw=1)
@@ -227,15 +227,15 @@ def supp_02():
     pyplot.yticks([])
 
     pyplot.subplot(1, 3, 3)
-    pyplot.title("replacement rate of population 2 by 1", fontsize=9)
+    pyplot.title("replacement rate of population b by a", fontsize=9)
     select = [[], []]
     for sample_index, sample in enumerate(samples_2):
         if min(mean(abs(samples_1 - sample), axis=1)) <= 0.1:
             select[0].append(sample_index)
         else:
             select[1].append(sample_index)
-    pyplot.scatter(samples_1[:, 0], 1.2 + samples_1[:, 1], fc="silver", s=16, label="population 1")
-    pyplot.scatter(samples_2[:, 0], 0.0 + samples_2[:, 1], fc="#FCB1AB", ec="k", s=16, label="population 2")
+    pyplot.scatter(samples_1[:, 0], 1.2 + samples_1[:, 1], fc="silver", s=16, label="population a")
+    pyplot.scatter(samples_2[:, 0], 0.0 + samples_2[:, 1], fc="#FCB1AB", ec="k", s=16, label="population b")
     pyplot.scatter(samples_2[select[0], 0], 1.2 + samples_2[select[0], 1], fc="k", ec="k", s=16, label="replaceable")
     pyplot.scatter(samples_2[select[1], 0], 1.2 + samples_2[select[1], 1], fc="w", ec="k", s=16, label="irreplaceable")
     pyplot.hlines(0.6, -0.6, 0.6, lw=1)
@@ -735,7 +735,7 @@ def supp_07():
     figure.text(0.020, 0.50, "e", va="center", ha="center", fontsize=14)
     figure.text(0.266, 0.50, "f", va="center", ha="center", fontsize=14)
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
-    figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
+    figure.text(0.760, 0.50, "h", va="center", ha="center", fontsize=14)
 
     pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -786,7 +786,7 @@ def supp_08():
     figure.text(0.020, 0.50, "e", va="center", ha="center", fontsize=14)
     figure.text(0.266, 0.50, "f", va="center", ha="center", fontsize=14)
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
-    figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
+    figure.text(0.760, 0.50, "h", va="center", ha="center", fontsize=14)
 
     pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -856,7 +856,7 @@ def supp_09():
     figure.text(0.020, 0.50, "e", va="center", ha="center", fontsize=14)
     figure.text(0.266, 0.50, "f", va="center", ha="center", fontsize=14)
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
-    figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
+    figure.text(0.760, 0.50, "h", va="center", ha="center", fontsize=14)
 
     pyplot.savefig(save_path + "supp09.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -975,8 +975,13 @@ def supp_10():
                     pyplot.text(0.78, 1.5, "spearman", va="center", ha="left", fontsize=8)
                     pyplot.text(0.78, 1.3, "p-value", va="center", ha="left", fontsize=8)
                     pyplot.text(1.46, 1.5, "= %.2f" % corr, va="center", ha="left", fontsize=8)
-                    pyplot.text(1.46, 1.3, ("= %.2e" % p).upper().replace("-", "\N{MINUS SIGN}"),
-                                va="center", ha="left", fontsize=8)
+                    if p > 1e-50:
+                        pyplot.text(1.46, 1.3, ("= %.2e" % p).upper().replace("-", "\N{MINUS SIGN}"),
+                                    va="center", ha="left", fontsize=8)
+                    else:
+                        pyplot.text(1.46, 1.3, "< 1.00E\N{MINUS SIGN}50",
+                                    va="center", ha="left", fontsize=8)
+
                     gradients = gradients / max(gradients) * 2.2 + 0.4
                     changes = changes / max(changes) * 0.6 + 0.4
                     pyplot.scatter(gradients, changes, color="k", alpha=0.1)
@@ -997,7 +1002,7 @@ def supp_10():
     figure.text(0.020, 0.50, "e", va="center", ha="center", fontsize=14)
     figure.text(0.266, 0.50, "f", va="center", ha="center", fontsize=14)
     figure.text(0.513, 0.50, "g", va="center", ha="center", fontsize=14)
-    figure.text(0.760, 0.50, "i", va="center", ha="center", fontsize=14)
+    figure.text(0.760, 0.50, "h", va="center", ha="center", fontsize=14)
 
     pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -1203,7 +1208,7 @@ def supp_14():
         pyplot.legend(loc="upper right", fontsize=8, ncol=3, title="motif type", title_fontsize=8)
         pyplot.xlabel("training result (100 samples)", fontsize=9)
         pyplot.ylabel("average number", fontsize=9)
-        y_ticks = ["pass type ( " + str(rates[0]) + " / 100 )", "failure type 1 ( " + str(rates[1]) + " / 100 )",
+        y_ticks = ["qualified type ( " + str(rates[0]) + " / 100 )", "failure type 1 ( " + str(rates[1]) + " / 100 )",
                    "failure type 2 ( " + str(rates[2]) + " / 100 )", "failure type 3 ( " + str(rates[3]) + " / 100 )"]
         pyplot.xticks([0, 1, 2, 3], y_ticks, fontsize=8)
         pyplot.yticks(arange(0, 21, 4), arange(0, 21, 4), fontsize=8)

@@ -224,13 +224,11 @@ class NeuralMotif(Module):
                              "expect " + str(request_g) + ", got " + str(len(aggregations)))
 
         for activation in activations:
-            if activation not in ["relu", "tanh", "sigmoid"]:
-                raise ValueError("no such activation type, expect one in "
-                                 "[\"relu\", \"tanh\", \"sigmoid\"].")
+            if activation not in ["tanh", "sigmoid", "relu"]:
+                raise ValueError("no such activation type, expect one in [\"tanh\", \"sigmoid\", \"relu\"].")
         for aggregation in aggregations:
-            if aggregation not in ["sum", "avg", "max"]:
-                raise ValueError("no such aggregation type, expect one in "
-                                 "[\"sum\", \"max\"].")
+            if aggregation not in ["sum", "max"]:
+                raise ValueError("no such aggregation type, expect one in [\"sum\", \"max\"].")
 
         self.t, self.i, self.a, self.g, self.w, self.b = motif_type, motif_index, activations, aggregations, [], []
         self.weight_bound, self.bias_bound = weight_bound, bias_bound
@@ -300,12 +298,14 @@ class NeuralMotif(Module):
         :return: output intersected_values.
         :rtype: torch.Tensor
         """
-        if self.a[activate_index] == "relu":
-            return relu(values)
-        elif self.a[activate_index] == "tanh":
+        if self.a[activate_index] == "tanh":
             return tanh(values)
-        else:
+        elif self.a[activate_index] == "sigmoid":
             return sigmoid(values)
+        elif self.a[activate_index] == "relu":
+            return relu(values)
+        else:
+            raise ValueError("No such activation function type!")
 
     def aggregate(self, values, aggregate_index):
         """
@@ -325,7 +325,7 @@ class NeuralMotif(Module):
         elif self.g[aggregate_index] == "max":
             return unsqueeze(max(values, dim=1)[0], dim=1)
         else:
-            return unsqueeze(mean(values, dim=1), dim=1)
+            raise ValueError("No such aggregation function type!")
 
     def add_weight(self, values, weight_indices):
         """
