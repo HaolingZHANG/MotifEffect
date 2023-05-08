@@ -1,4 +1,4 @@
-# What network motifs tell us about representational capacity, numerical stability and their influence on overall neural networks
+# What network motifs tell us about representational capacity, numerical stability, and their influence on overall neural networks
 
 TODO abstract
 
