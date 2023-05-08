@@ -414,8 +414,8 @@ def experiment_2():
                     weight_flags, motif_structure = [], acyclic_motifs["collider"][motif_index - 1]
                     for former_landscape, latter_landscape in motif_structure.edges:
                         weight_flags.append(motif_structure.get_edge_data(former_landscape, latter_landscape)["weight"])
-                    weight_groups = [weight_flag * weight_values for weight_flag in weight_flags]
-                    bias_groups = [bias_values]
+                    weight_groups = [weight_flag * array([0.5, 1.0]) for weight_flag in weight_flags]
+                    bias_groups = [array([-0.5, 0.0, 0.5])]
                     target_motifs += generate_qualified_motifs("collider", motif_index, activations, aggregations,
                                                                weight_groups, bias_groups, value_range, points)[0]
                 result = maximum_minimum_loss_search(value_range=value_range, points=points, learn_rate=learn_rate,
