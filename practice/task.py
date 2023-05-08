@@ -3,7 +3,7 @@ from gym import make
 from itertools import product
 from matplotlib import pyplot
 from matplotlib.animation import FuncAnimation
-from numpy import array, arange, zeros, linspace, random, repeat, expand_dims, argmax, abs, min, max, sum, mean, clip
+from numpy import array, arange, linspace, random, repeat, expand_dims, argmax, abs, min, max, sum, mean, clip
 from warnings import simplefilter
 
 from practice.agent import NEATAgent

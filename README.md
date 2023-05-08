@@ -43,8 +43,7 @@ which means that there is no anthropogenic data filtering or adjusting in the pr
 │    │    ├── RestrictedWeight                     // Restricted weight module.
 │    │    ├── RestrictedBias                       // Restricted bias module.
 │    │    ├── NeuralMotif                          // Neural Motif module.
-│    ├── operations.py                             // Progress monitor and basic operations
-│    │    ├── Monitor                              // Monitor which outputting the progress based on current state and total state.
+│    ├── operations.py                             // Basic operations.
 │    │    ├── prepare_data                         // Prepare database through the range of variable and sampling points.
 │    │    ├── prepare_motifs                       // Prepare motif based on the selected parameters.
 │    │    ├── calculate_landscape                  // Calculate the output landscape of the selected motif.
@@ -109,4 +108,11 @@ which means that there is no anthropogenic data filtering or adjusting in the pr
 If you think this repository helps or being used in your research, please consider refer this work.
 Here is a Bibtex entry:
 
-TODO
+````
+@article{zhang2023what,
+  title={What network motifs tell us about representational capacity, numerical stability, and their influence on overall neural networks},
+  author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Tegner, Jesper},
+  journal={TODO},
+  year={2023}
+}
+````
