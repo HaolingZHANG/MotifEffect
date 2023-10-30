@@ -23,12 +23,11 @@ sort_path, save_path = "./data/", "./show/"
 
 
 def main_01():
-    math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
-
     figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
     grid = pyplot.GridSpec(1, 5)
 
     pyplot.subplot(grid[:, :2])
+    math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
     for type_index, motif_type in enumerate(["incoherent-loop", "coherent-loop", "collider"]):
         motifs = acyclic_motifs[motif_type]
         info = draw_info[motif_type]
@@ -74,111 +73,9 @@ def main_01():
     pyplot.axis("off")
 
     pyplot.subplot(grid[:, 2:])
-    task_data = load_data(sort_path + "main01.pkl")["b"]
-
-    activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
-    for index_1, activation in enumerate(activation_selection):
-        for index_2, aggregation in enumerate(aggregation_selection):
-            x, y = index_2 * 0.65 + 0.5, 2.5 - index_1
-            pyplot.text(x, y + 0.37, activation + " + " + aggregation, va="center", ha="center", fontsize=9)
-            location, colors = 0, ["#FCB1AB", "#FCE0AB", "#88CCF8"]
-            pyplot.plot([x - 0.2, x - 0.2, x + 0.2, x + 0.2, x - 0.2],
-                        [y + 0.285, y - 0.205, y - 0.205, y + 0.285, y + 0.285], lw=0.75, color="k")
-            pyplot.text(x - 0.35, y + 0.04, "intersection", va="center", ha="center", fontsize=9, rotation=90)
-            sub_x = [x - 0.30, x - 0.27, x - 0.24]
-            for flag_1, flag_2, flag_3 in [[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0], [1, 1, 1]]:
-                left, right, sub_y = [], [], y + 0.25 - location * 0.07
-                if [flag_1, flag_2, flag_3] != [0, 0, 1]:
-                    pyplot.hlines(sub_y + 0.035, x - 0.2, x + 0.2, lw=0.75)
-                if flag_1:
-                    pyplot.scatter([sub_x[0]], [sub_y], s=15, fc=colors[0], ec="k", lw=0.75, zorder=3)
-                else:
-                    pyplot.scatter([sub_x[0]], [sub_y], s=15, marker="x", ec="k", lw=0.75, zorder=3)
-                if flag_2:
-                    pyplot.scatter([sub_x[1]], [sub_y], s=15, fc=colors[1], ec="k", lw=0.75, zorder=3)
-                else:
-                    pyplot.scatter([sub_x[1]], [sub_y], s=15, marker="x", ec="k", lw=0.75, zorder=3)
-                if flag_3:
-                    pyplot.scatter([sub_x[2]], [sub_y], s=15, fc=colors[2], ec="k", lw=0.75, zorder=3)
-                else:
-                    pyplot.scatter([sub_x[2]], [sub_y], s=15, marker="x", ec="k", lw=0.75, zorder=3)
-                pyplot.hlines(sub_y, sub_x[0], sub_x[2], lw=0.75, zorder=2)
-                pyplot.hlines(sub_y, x - 0.215, x - 0.200, lw=0.75, zorder=2)
-                location += 1
-
-            # fix the comparison starting point problem of the set.
-            if len(where(task_data[(activation, aggregation)][3] > 0)[0]) == 1:
-                task_data[(activation, aggregation)][6, 1] += task_data[(activation, aggregation)][3, 1]
-                task_data[(activation, aggregation)][3, 1] = 0
-                task_data[(activation, aggregation)][6, 2] += task_data[(activation, aggregation)][3, 2]
-                task_data[(activation, aggregation)][3, 2] = 0
-            if len(where(task_data[(activation, aggregation)][4] > 0)[0]) == 1:
-                task_data[(activation, aggregation)][6, 0] += task_data[(activation, aggregation)][4, 0]
-                task_data[(activation, aggregation)][4, 0] = 0
-                task_data[(activation, aggregation)][6, 2] += task_data[(activation, aggregation)][4, 2]
-                task_data[(activation, aggregation)][4, 2] = 0
-            if len(where(task_data[(activation, aggregation)][5] > 0)[0]) == 1:
-                task_data[(activation, aggregation)][6, 0] += task_data[(activation, aggregation)][5, 0]
-                task_data[(activation, aggregation)][5, 0] = 0
-                task_data[(activation, aggregation)][6, 1] += task_data[(activation, aggregation)][5, 1]
-                task_data[(activation, aggregation)][5, 1] = 0
-
-            for intersect_index in range(7):
-                sub_y = y + 0.25 - intersect_index * 0.07
-                for type_index in range(3):
-                    sub_x = x - 0.40 / 3.0 + type_index * 0.40 / 3.0
-                    color_value = task_data[(activation, aggregation)][intersect_index, type_index]
-                    color = pyplot.get_cmap("Greens")(color_value * 0.5)
-                    pyplot.fill_between([sub_x - 0.20 / 3.0, sub_x + 0.20 / 3.0], sub_y - 0.035, sub_y + 0.035,
-                                        fc=color, ec=color, lw=0.75, zorder=2)
-                    if color_value == 1:
-                        pyplot.text(sub_x, sub_y - 0.002, "100%", va="center", ha="center", fontsize=7.5)
-                    elif color_value > 0:
-                        pyplot.text(sub_x, sub_y - 0.002, ("%.2f" % (color_value * 100)) + "%",
-                                    va="center", ha="center", fontsize=7.5)
-
-            pyplot.vlines(x - 0.20 / 3.0, y - 0.205, y + 0.285, lw=0.75, zorder=2)
-            pyplot.vlines(x + 0.20 / 3.0, y - 0.205, y + 0.285, lw=0.75, zorder=2)
-            pyplot.vlines(x - 0.40 / 3.0, y - 0.205, y - 0.235, lw=0.75, zorder=2)
-            pyplot.text(x - 0.40 / 3.0, y - 0.30, math_orders[0], va="center", ha="center", fontsize=9)
-            pyplot.vlines(x + 0.00, y - 0.205, y - 0.235, lw=0.75, zorder=2)
-            pyplot.text(x + 0.00, y - 0.30, math_orders[1], va="center", ha="center", fontsize=9)
-            pyplot.vlines(x + 0.40 / 3.0, y - 0.205, y - 0.235, lw=0.75, zorder=2)
-            pyplot.text(x + 0.40 / 3.0, y - 0.30, math_orders[2], va="center", ha="center", fontsize=9)
-            pyplot.text(x + 0.00, y - 0.40, "population", va="center", ha="center", fontsize=9)
-
-    mark = 1.6
-    pyplot.text(mark, 2.75, "intersection size", va="center", ha="center", fontsize=9)
-    pyplot.text(mark, 2.65, "population size", va="center", ha="center", fontsize=9)
-    pyplot.hlines(2.7, mark - 0.14, mark + 0.14, lw=0.75)
-    for index, color in enumerate(pyplot.get_cmap("Greens")(linspace(0.0, 0.5, 100))):
-        pyplot.fill_between([mark - 0.02, mark + 0.02], 0.5 + index * 0.02, 0.5 + (index + 1) * 0.02,
-                            fc=color, lw=0, zorder=1)
-    pyplot.plot([mark - 0.02, mark + 0.02, mark + 0.02, mark - 0.02, mark - 0.02],
-                [0.5, 0.5, 2.5, 2.5, 0.5], lw=0.75, color="k", zorder=2)
-    for index in range(6):
-        pyplot.hlines(0.5 + index * 0.4, mark + 0.02, mark + 0.04, lw=0.75)
-        pyplot.text(mark + 0.06, 0.5 + index * 0.4, str(index * 20) + "%", va="center", ha="left", fontsize=9)
-    pyplot.xlim(0.1, 1.8)
-    pyplot.ylim(0.0, 3.0)
-    pyplot.axis("off")
-
-    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=14)
-    figure.text(0.39, 0.99, "b", va="center", ha="center", fontsize=14)
-
-    pyplot.savefig(save_path + "main01.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def main_02():
-    task_data = load_data(sort_path + "main02.pkl")
-
+    task_data = load_data(sort_path + "main01.pkl")
     used_colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0], draw_info["collider"][0]]
     activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
-
-    figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
-    pyplot.subplot(1, 2, 1)
-
     math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
     for index_1, activation in enumerate(activation_selection):
         for index_2, aggregation in enumerate(aggregation_selection):
@@ -196,8 +93,8 @@ def main_02():
                 location += 1
 
             collected_values = {}
-            for index, (s, r) in enumerate(zip(task_data["a"][0][(activation, aggregation)],
-                                               task_data["a"][1][(activation, aggregation)])):
+            for index, (s, r) in enumerate(zip(task_data["b"][0][(activation, aggregation)],
+                                               task_data["b"][1][(activation, aggregation)])):
                 x_values, y_values = x - 0.27 + array(r) / 4.0 * 0.64, y - 0.22 + (log10(s) - 2) / 5.0 * 0.54
                 pyplot.scatter(x_values, y_values, s=16, fc=used_colors[index], ec="k", lw=0.75, zorder=1)
                 collected_values[index] = {}
@@ -354,6 +251,112 @@ def main_02():
     pyplot.ylim(0, 3)
     pyplot.axis("off")
 
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=14)
+    figure.text(0.39, 0.99, "b", va="center", ha="center", fontsize=14)
+
+    pyplot.savefig(save_path + "main01.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def main_02():
+    task_data = load_data(sort_path + "main02.pkl")
+
+    figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
+    pyplot.subplot(1, 2, 1)
+
+    math_orders = [r"$\mathcal{L}_i$", r"$\mathcal{L}_c$", r"$\mathcal{C}$"]
+    activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
+    for index_1, activation in enumerate(activation_selection):
+        for index_2, aggregation in enumerate(aggregation_selection):
+            x, y = index_2 * 0.65 + 0.5, 2.5 - index_1
+            pyplot.text(x, y + 0.37, activation + " + " + aggregation, va="center", ha="center", fontsize=9)
+            location, colors = 0, ["#FCB1AB", "#FCE0AB", "#88CCF8"]
+            pyplot.plot([x - 0.2, x - 0.2, x + 0.2, x + 0.2, x - 0.2],
+                        [y + 0.285, y - 0.205, y - 0.205, y + 0.285, y + 0.285], lw=0.75, color="k")
+            pyplot.text(x - 0.35, y + 0.04, "intersection", va="center", ha="center", fontsize=9, rotation=90)
+            sub_x = [x - 0.30, x - 0.27, x - 0.24]
+            for flag_1, flag_2, flag_3 in [[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0], [1, 1, 1]]:
+                left, right, sub_y = [], [], y + 0.25 - location * 0.07
+                if [flag_1, flag_2, flag_3] != [0, 0, 1]:
+                    pyplot.hlines(sub_y + 0.035, x - 0.2, x + 0.2, lw=0.75)
+                if flag_1:
+                    pyplot.scatter([sub_x[0]], [sub_y], s=15, fc=colors[0], ec="k", lw=0.75, zorder=3)
+                else:
+                    pyplot.scatter([sub_x[0]], [sub_y], s=15, marker="x", ec="k", lw=0.75, zorder=3)
+                if flag_2:
+                    pyplot.scatter([sub_x[1]], [sub_y], s=15, fc=colors[1], ec="k", lw=0.75, zorder=3)
+                else:
+                    pyplot.scatter([sub_x[1]], [sub_y], s=15, marker="x", ec="k", lw=0.75, zorder=3)
+                if flag_3:
+                    pyplot.scatter([sub_x[2]], [sub_y], s=15, fc=colors[2], ec="k", lw=0.75, zorder=3)
+                else:
+                    pyplot.scatter([sub_x[2]], [sub_y], s=15, marker="x", ec="k", lw=0.75, zorder=3)
+                pyplot.hlines(sub_y, sub_x[0], sub_x[2], lw=0.75, zorder=2)
+                pyplot.hlines(sub_y, x - 0.215, x - 0.200, lw=0.75, zorder=2)
+                location += 1
+
+            # fix the comparison starting point problem of the set.
+            if len(where(task_data["a"][(activation, aggregation)][3] > 0)[0]) == 1:
+                task_data["a"][(activation, aggregation)][6, 1] += task_data["a"][(activation, aggregation)][3, 1]
+                task_data["a"][(activation, aggregation)][3, 1] = 0
+                task_data["a"][(activation, aggregation)][6, 2] += task_data["a"][(activation, aggregation)][3, 2]
+                task_data["a"][(activation, aggregation)][3, 2] = 0
+            if len(where(task_data["a"][(activation, aggregation)][4] > 0)[0]) == 1:
+                task_data["a"][(activation, aggregation)][6, 0] += task_data["a"][(activation, aggregation)][4, 0]
+                task_data["a"][(activation, aggregation)][4, 0] = 0
+                task_data["a"][(activation, aggregation)][6, 2] += task_data["a"][(activation, aggregation)][4, 2]
+                task_data["a"][(activation, aggregation)][4, 2] = 0
+            if len(where(task_data["a"][(activation, aggregation)][5] > 0)[0]) == 1:
+                task_data["a"][(activation, aggregation)][6, 0] += task_data["a"][(activation, aggregation)][5, 0]
+                task_data["a"][(activation, aggregation)][5, 0] = 0
+                task_data["a"][(activation, aggregation)][6, 1] += task_data["a"][(activation, aggregation)][5, 1]
+                task_data["a"][(activation, aggregation)][5, 1] = 0
+
+            for intersect_index in range(7):
+                sub_y = y + 0.25 - intersect_index * 0.07
+                for type_index in range(3):
+                    sub_x = x - 0.40 / 3.0 + type_index * 0.40 / 3.0
+                    color_value = task_data["a"][(activation, aggregation)][intersect_index, type_index]
+                    color = pyplot.get_cmap("Greens")(color_value * 0.5)
+                    if color_value == 1:
+                        pyplot.text(sub_x, sub_y - 0.002, "100%", va="center", ha="center", fontsize=7)
+                        pyplot.fill_between([sub_x - 0.20 / 3.0, sub_x + 0.20 / 3.0], sub_y - 0.035, sub_y + 0.035,
+                                            fc=color, ec=color, lw=0.75, zorder=-1)
+                    elif color_value > 0:
+                        pyplot.text(sub_x, sub_y - 0.002, ("%.2f" % (color_value * 100)) + "%",
+                                    va="center", ha="center", fontsize=7)
+                        pyplot.fill_between([sub_x - 0.20 / 3.0, sub_x + 0.20 / 3.0], sub_y - 0.035, sub_y + 0.035,
+                                            fc=color, ec=color, lw=0.75, zorder=-1)
+
+            pyplot.vlines(x - 0.20 / 3.0, y - 0.205, y + 0.285, lw=0.75, zorder=2)
+            pyplot.vlines(x + 0.20 / 3.0, y - 0.205, y + 0.285, lw=0.75, zorder=2)
+            pyplot.vlines(x - 0.40 / 3.0, y - 0.205, y - 0.235, lw=0.75, zorder=2)
+            pyplot.text(x - 0.40 / 3.0, y - 0.30, math_orders[0], va="center", ha="center", fontsize=9)
+            pyplot.vlines(x + 0.00, y - 0.205, y - 0.235, lw=0.75, zorder=2)
+            pyplot.text(x + 0.00, y - 0.30, math_orders[1], va="center", ha="center", fontsize=9)
+            pyplot.vlines(x + 0.40 / 3.0, y - 0.205, y - 0.235, lw=0.75, zorder=2)
+            pyplot.text(x + 0.40 / 3.0, y - 0.30, math_orders[2], va="center", ha="center", fontsize=9)
+            pyplot.text(x + 0.00, y - 0.40, "population", va="center", ha="center", fontsize=9)
+
+    mark = 1.6
+    pyplot.text(mark, 2.75, "intersection size", va="center", ha="center", fontsize=9)
+    pyplot.text(mark, 2.65, "population size", va="center", ha="center", fontsize=9)
+    pyplot.hlines(2.7, mark - 0.14, mark + 0.14, lw=0.75)
+    for index, color in enumerate(pyplot.get_cmap("Greens")(linspace(0.0, 0.5, 100))):
+        pyplot.fill_between([mark - 0.02, mark + 0.02], 0.5 + index * 0.02, 0.5 + (index + 1) * 0.02,
+                            fc=color, lw=0, zorder=1)
+    pyplot.plot([mark - 0.02, mark + 0.02, mark + 0.02, mark - 0.02, mark - 0.02],
+                [0.5, 0.5, 2.5, 2.5, 0.5], lw=0.75, color="k", zorder=2)
+    for index in range(6):
+        pyplot.hlines(0.5 + index * 0.4, mark + 0.02, mark + 0.04, lw=0.75)
+        pyplot.text(mark + 0.06, 0.5 + index * 0.4, str(index * 20) + "%", va="center", ha="left", fontsize=8)
+    pyplot.xlim(0.15, 1.8)
+    pyplot.ylim(0.0, 3.0)
+    pyplot.axis("off")
+
+    used_colors = [draw_info["incoherent-loop"][0], draw_info["coherent-loop"][0], draw_info["collider"][0]]
+    activation_selection, aggregation_selection = ["tanh", "sigmoid", "relu"], ["sum", "max"]
+
     pyplot.subplot(1, 2, 2)
     pyplot.plot([-1, -1, 3], [4, 0, 0], lw=0.75, color="k")
     for index, info in enumerate(["0", "1", "2", "3", "4"]):
@@ -386,6 +389,7 @@ def main_02():
         pyplot.hlines(y, x[0], x[2], lw=0.75, zorder=2)
         pyplot.hlines(y, -1.03, -1.00, lw=0.75, zorder=2)
         location += 1
+
     record = task_data["b"]
     # fix the comparison starting point problem of the set.
     if len(record[(3, 1)]) == 0 or len(record[(3, 2)]) == 0:
@@ -445,7 +449,7 @@ def main_02():
     radios = radios / max(radios) * 0.65
     pyplot.plot(constants - 1, 0 + radios, color="k", lw=0.75, zorder=3)
     pyplot.fill_between(constants - 1, 0, 0 + radios, fc="gray", lw=0, alpha=0.5)
-    pyplot.text(1.45, 0.70,
+    pyplot.text(1.46, 0.70,
                 r"82.25% $\mathcal{L}_i$ + 96.77% $\mathcal{L}_c$  ($\mathcal{L}_i\ \approx\ \mathcal{L}_c$)",
                 va="center", ha="center", fontsize=9)
     pyplot.xlim(-1.40, 3.00)

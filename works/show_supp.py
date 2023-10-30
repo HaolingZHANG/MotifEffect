@@ -26,11 +26,10 @@ raw_path, sort_path, save_path = "./raw/", "./data/", "./show/"
 
 def supp_01():
     task_data = load_data(sort_path + "supp01.pkl")
-
-    figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
-
     motif_types = ["incoherent-loop", "coherent-loop", "collider"]
     activations, aggregations = ["tanh", "sigmoid", "relu"], ["sum", "max"]
+
+    figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
 
     pyplot.subplot(2, 1, 1)
     for motif_location in arange(3):
@@ -170,6 +169,79 @@ def supp_01():
 
 
 def supp_02():
+    task_data = load_data(sort_path + "supp02.pkl")
+    motif_types = ["incoherent-loop", "coherent-loop", "collider"]
+    activations, aggregations = ["tanh", "sigmoid", "relu"], ["sum", "max"]
+
+    pyplot.figure(figsize=(10, 3), tight_layout=True)
+    for motif_location in arange(3):
+        pyplot.text(motif_location * 8 + 5.0, 5.55, "propagation style", va="center", ha="center", fontsize=10)
+        pyplot.text(motif_location * 8 + 0.6, 2, motif_types[motif_location] + " structure",
+                    va="center", ha="center", fontsize=10, rotation=90)
+        for structure_location in arange(4):
+            info = draw_info[motif_types[motif_location]]
+            info[2][2] = 0.8
+            motif = acyclic_motifs[motif_types[motif_location]][structure_location]
+            bias_x, bias_y = motif_location * 8 + 0.875, 4 - structure_location - 1.0
+            for index, (px, py) in enumerate(zip(info[1], info[2])):
+                if index + 1 in info[3]:
+                    pyplot.scatter(px + bias_x, py + bias_y, color="w", edgecolor="k", lw=0.75, s=15, zorder=2)
+                elif index + 1 in info[4]:
+                    pyplot.scatter(px + bias_x, py + bias_y, color="k", edgecolor="k", lw=0.75, s=15, zorder=2)
+                elif index + 1 in info[5]:
+                    pyplot.scatter(px + bias_x, py + bias_y, color="silver", edgecolor="k", lw=0.75, s=15, zorder=2)
+                else:
+                    pyplot.scatter(px + bias_x, py + bias_y, color="silver", edgecolor="k", lw=0.75, s=15, zorder=2)
+            x, y = info[1], info[2]
+            for former, latter in motif.edges:
+                if motif.get_edge_data(former, latter)["weight"] == 1:
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                                    xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
+                                    arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
+                                                    shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
+                else:
+                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
+                                    xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
+                                    arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
+                                                    shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
+        for function_location in arange(6):
+            x = motif_location * 8 + function_location + 2.0 + 0.5
+            if function_location % 2 == 0:
+                pyplot.plot([x, x, x + 0.3, x + 0.3], [4.6, 4.7, 4.7, 4.8], color="k", lw=0.75)
+                pyplot.text(x, 4.4, aggregations[function_location % 2], va="center", ha="center", fontsize=8)
+                pyplot.text(x + 0.5, 5.0, activations[(function_location // 2) % 3], va="center", ha="center",
+                            fontsize=8)
+            else:
+                pyplot.plot([x, x, x - 0.3, x - 0.3], [4.6, 4.7, 4.7, 4.8], color="k", lw=0.75)
+                pyplot.text(x, 4.4, aggregations[function_location % 2], va="center", ha="center", fontsize=8)
+
+            for structure_location in arange(4):
+                y = 4 - structure_location - 0.5
+                value = task_data["a"][motif_location * 6 + function_location, structure_location]
+                pyplot.fill_between([x - 0.4, x + 0.4], y - 0.4, y + 0.4,
+                                    fc=pyplot.get_cmap("RdYlGn_r")([value / 5.0]), ec="k", lw=0.75)
+                pyplot.text(x, y - 0.05, "%.2f" % value, va="center", ha="center", fontsize=6)
+    pyplot.text(13, -0.35, "median Lipschitz constant for all collected samples",
+                va="center", ha="center", fontsize=10)
+    pyplot.plot([2.1, 23.9, 23.9, 2.1, 2.1], [-0.6, -0.6, -0.8, -0.8, -0.6], color="k", lw=0.75)
+    colors = pyplot.get_cmap("RdYlGn_r")(linspace(0, 0.8, 100))
+    interval = (23.9 - 2.1) / 100.0
+    for index in range(100):
+        pyplot.fill_between([2.1 + index * interval, 2.1 + (index + 1) * interval], -0.8, -0.6, color=colors[index],
+                            lw=0)
+    interval = (23.9 - 2.1) / 4.0
+    for index in range(5):
+        pyplot.vlines(2.1 + index * interval, -0.9, -0.8, lw=0.75)
+        pyplot.text(2.1 + index * interval, -1.1, "%.1f" % index, va="center", ha="center", fontsize=8)
+    pyplot.axis("off")
+    pyplot.xlim(0, 24)
+    pyplot.ylim(-1.2, 6)
+
+    pyplot.savefig(save_path + "supp02.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_03():
     samples_1, samples_2 = None, None
     # noinspection PyTypeChecker
     random.seed(2023)
@@ -253,12 +325,12 @@ def supp_02():
     figure.text(0.342, 0.99, "b", va="center", ha="center", fontsize=14)
     figure.text(0.672, 0.99, "c", va="center", ha="center", fontsize=14)
 
-    pyplot.savefig(save_path + "supp02.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_03():
-    task_data = load_data(sort_path + "supp03.pkl")
+def supp_04():
+    task_data = load_data(sort_path + "supp02.pkl")
 
     pyplot.figure(figsize=(10, 8.5), tight_layout=True)
 
@@ -419,81 +491,6 @@ def supp_03():
     pyplot.xlim(-10, 71 + 16)
     pyplot.ylim(-73, 0 + 10)
     pyplot.axis("off")
-    pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_04():
-    task_data = load_data(sort_path + "supp04.pkl")
-
-    pyplot.figure(figsize=(10, 3), tight_layout=True)
-
-    motif_types = ["incoherent-loop", "coherent-loop", "collider"]
-    activations, aggregations = ["tanh", "sigmoid", "relu"], ["sum", "max"]
-
-    for motif_location in arange(3):
-        pyplot.text(motif_location * 8 + 5.0, 5.55, "propagation style", va="center", ha="center", fontsize=10)
-        pyplot.text(motif_location * 8 + 0.6, 2, motif_types[motif_location] + " structure",
-                    va="center", ha="center", fontsize=10, rotation=90)
-        for structure_location in arange(4):
-            info = draw_info[motif_types[motif_location]]
-            info[2][2] = 0.8
-            motif = acyclic_motifs[motif_types[motif_location]][structure_location]
-            bias_x, bias_y = motif_location * 8 + 0.875, 4 - structure_location - 1.0
-            for index, (px, py) in enumerate(zip(info[1], info[2])):
-                if index + 1 in info[3]:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="w", edgecolor="k", lw=0.75, s=15, zorder=2)
-                elif index + 1 in info[4]:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="k", edgecolor="k", lw=0.75, s=15, zorder=2)
-                elif index + 1 in info[5]:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="silver", edgecolor="k", lw=0.75, s=15, zorder=2)
-                else:
-                    pyplot.scatter(px + bias_x, py + bias_y, color="silver", edgecolor="k", lw=0.75, s=15, zorder=2)
-            x, y = info[1], info[2]
-            for former, latter in motif.edges:
-                if motif.get_edge_data(former, latter)["weight"] == 1:
-                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
-                                    xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
-                                    arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
-                                                    shrinkA=3, shrinkB=2, lw=0.75, linestyle="-"))
-                else:
-                    pyplot.annotate("", xy=(x[latter - 1] + bias_x, y[latter - 1] + bias_y),
-                                    xytext=(x[former - 1] + bias_x, y[former - 1] + bias_y),
-                                    arrowprops=dict(arrowstyle="-|>, head_length=0.2, head_width=0.15", color="k",
-                                                    shrinkA=3, shrinkB=2, lw=0.75, linestyle=":"))
-        for function_location in arange(6):
-            x = motif_location * 8 + function_location + 2.0 + 0.5
-            if function_location % 2 == 0:
-                pyplot.plot([x, x, x + 0.3, x + 0.3], [4.6, 4.7, 4.7, 4.8], color="k", lw=0.75)
-                pyplot.text(x, 4.4, aggregations[function_location % 2], va="center", ha="center", fontsize=8)
-                pyplot.text(x + 0.5, 5.0, activations[(function_location // 2) % 3], va="center", ha="center",
-                            fontsize=8)
-            else:
-                pyplot.plot([x, x, x - 0.3, x - 0.3], [4.6, 4.7, 4.7, 4.8], color="k", lw=0.75)
-                pyplot.text(x, 4.4, aggregations[function_location % 2], va="center", ha="center", fontsize=8)
-
-            for structure_location in arange(4):
-                y = 4 - structure_location - 0.5
-                value = task_data["a"][motif_location * 6 + function_location, structure_location]
-                pyplot.fill_between([x - 0.4, x + 0.4], y - 0.4, y + 0.4,
-                                    fc=pyplot.get_cmap("RdYlGn_r")([value / 5.0]), ec="k", lw=0.75)
-                pyplot.text(x, y - 0.05, "%.2f" % value, va="center", ha="center", fontsize=6)
-    pyplot.text(13, -0.35, "median Lipschitz constant for all collected samples",
-                va="center", ha="center", fontsize=10)
-    pyplot.plot([2.1, 23.9, 23.9, 2.1, 2.1], [-0.6, -0.6, -0.8, -0.8, -0.6], color="k", lw=0.75)
-    colors = pyplot.get_cmap("RdYlGn_r")(linspace(0, 0.8, 100))
-    interval = (23.9 - 2.1) / 100.0
-    for index in range(100):
-        pyplot.fill_between([2.1 + index * interval, 2.1 + (index + 1) * interval], -0.8, -0.6, color=colors[index],
-                            lw=0)
-    interval = (23.9 - 2.1) / 4.0
-    for index in range(5):
-        pyplot.vlines(2.1 + index * interval, -0.9, -0.8, lw=0.75)
-        pyplot.text(2.1 + index * interval, -1.1, "%.1f" % index, va="center", ha="center", fontsize=8)
-    pyplot.axis("off")
-    pyplot.xlim(0, 24)
-    pyplot.ylim(-1.2, 6)
-
     pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 

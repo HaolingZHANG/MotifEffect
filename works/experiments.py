@@ -112,6 +112,22 @@ def experiment_1():
 
     if not path.exists(path=sort_path + "supp02.pkl"):
         task_data = {}
+        matrix = -ones(shape=(18, 4))
+        for child_path in listdir(raw_path + "robustness/"):
+            data = load_data(load_path=raw_path + "robustness/" + child_path)
+            info = child_path.split(".")
+            # noinspection PyTypeChecker
+            location_value = motif_types.index(info[0]) * 6
+            # noinspection PyTypeChecker
+            location_value += activation_selection.index(info[2]) * 2
+            # noinspection PyTypeChecker
+            location_value += aggregation_selection.index(info[3])
+            matrix[location_value, int(info[1]) - 1] = median(data)
+        task_data["a"] = matrix
+        save_data(save_path=sort_path + "supp02.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "supp04.pkl"):
+        task_data = {}
         attrs = []
         for mit in motif_types:
             for number in [1, 2, 3, 4]:
@@ -131,111 +147,11 @@ def experiment_1():
                         data = load_data(load_path=used_path)
                         matrix[index_1, index_2] = len(data[data <= 0.1]) / len(data)
         task_data["a"] = matrix
-        save_data(save_path=sort_path + "supp02.pkl", information=task_data)
-
-    if not path.exists(path=sort_path + "supp03.pkl"):
-        task_data = {}
-        matrix = -ones(shape=(18, 4))
-        for child_path in listdir(raw_path + "robustness/"):
-            data = load_data(load_path=raw_path + "robustness/" + child_path)
-            info = child_path.split(".")
-            # noinspection PyTypeChecker
-            location_value = motif_types.index(info[0]) * 6
-            # noinspection PyTypeChecker
-            location_value += activation_selection.index(info[2]) * 2
-            # noinspection PyTypeChecker
-            location_value += aggregation_selection.index(info[3])
-            matrix[location_value, int(info[1]) - 1] = median(data)
-        task_data["a"] = matrix
-        save_data(save_path=sort_path + "supp03.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
 
     if not path.exists(path=sort_path + "main01.pkl"):
         task_data = {}
-        counts = load_data(load_path=sort_path + "supp02.pkl")["a"]
-        references = {}
-        for activation in activation_selection:
-            for aggregation in aggregation_selection:
-                references[(activation, aggregation)] = {}
-        index = 0
-        for source_motif_type in motif_types:
-            for activation in activation_selection:
-                for aggregation in aggregation_selection:
-                    references[(activation, aggregation)][source_motif_type] = []
-                    for motif_index in motif_indices:
-                        values = zeros(shape=(counts[index, motif_index - 1], 3), dtype=uint8)
-                        references[(activation, aggregation)][source_motif_type].append(values)
-                    index += 1
-        attrs = []
-        for mit in motif_types:
-            for number in motif_indices:
-                for act in activation_selection:
-                    for agg in aggregation_selection:
-                        attrs.append((mit, str(number), act, agg))
-        for index_1 in range(len(attrs)):
-            attr_1 = attrs[index_1]
-            for index_2 in range(len(attrs)):
-                attr_2 = attrs[index_2]
-                if attr_1[2] == attr_2[2] and attr_1[3] == attr_2[3]:
-                    used_path = raw_path + "difference/" + "[" + attr_1[2] + "." + attr_2[3] + "] "
-                    used_path += attr_1[0] + "." + attr_1[1] + " for " + attr_2[0] + "." + attr_2[1]
-                    used_path += ".npy"
-                    if path.exists(used_path):
-                        locations = where(load_data(load_path=used_path) <= 0.1)[0]
-                        target_index = motif_types.index(attr_2[0])
-                        references[(attr_1[2], attr_1[3])][attr_1[0]][int(attr_1[1]) - 1][locations, target_index] = 1
-        occupation, records = {}, {}
-        for (activation, aggregation), reference in references.items():
-            occupation[(activation, aggregation)] = {}
-            for source_motif_type, value_groups in reference.items():
-                ignore_index = motif_types.index(source_motif_type)
-                used_indices = []
-                for index in range(3):
-                    if index != ignore_index:
-                        used_indices.append(index)
-                individual, for_1, for_2, for_both = 0, 0, 0, 0
-                for values in value_groups:
-                    used_intersections = []
-                    for index, intersections in enumerate(values.T):
-                        if ignore_index == index:
-                            continue
-                        used_intersections.append(intersections)
-                    intersection_identities = used_intersections[0] * 2 + used_intersections[1]
-                    individual += len(where(intersection_identities == 0)[0])
-                    for_2 += len(where(intersection_identities == 1)[0])
-                    for_1 += len(where(intersection_identities == 2)[0])
-                    for_both += len(where(intersection_identities == 3)[0])
-                occupation[(activation, aggregation)][source_motif_type] = {}
-                occupation[(activation, aggregation)][source_motif_type]["self"] = individual
-                occupation[(activation, aggregation)][source_motif_type][motif_types[used_indices[0]]] = for_1
-                occupation[(activation, aggregation)][source_motif_type][motif_types[used_indices[1]]] = for_2
-                occupation[(activation, aggregation)][source_motif_type]["both"] = for_both
-        intersections = [[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
-        locations = {("incoherent-loop", "self"): (2, 0),
-                     ("incoherent-loop", "coherent-loop"): (5, 0),
-                     ("incoherent-loop", "collider"): (4, 0),
-                     ("incoherent-loop", "both"): (6, 0),
-                     ("coherent-loop", "self"): (1, 1),
-                     ("coherent-loop", "incoherent-loop"): (5, 1),
-                     ("coherent-loop", "collider"): (3, 1),
-                     ("coherent-loop", "both"): (6, 1),
-                     ("collider", "self"): (0, 2),
-                     ("collider", "incoherent-loop"): (4, 2),
-                     ("collider", "coherent-loop"): (3, 2),
-                     ("collider", "both"): (6, 2)}
-        for (activation, aggregation), record in occupation.items():
-            records[(activation, aggregation)] = zeros(shape=(len(intersections), 3))
-            for motif_type, information in record.items():
-                total_value = sum(list(information.values()))
-                for target, value in information.items():
-                    records[(activation, aggregation)][locations[(motif_type, target)]] = value / total_value
-        task_data["b"] = records
-        save_data(save_path=sort_path + "main01.pkl", information=task_data)
-
-    if not path.exists(path=sort_path + "main02.pkl") or \
-            not path.exists(path=sort_path + "supp04.pkl") or \
-            not path.exists(path=sort_path + "supp05.pkl"):
-        task_data = {}
-        counts = load_data(sort_path + "supp02.pkl")["a"].astype(int)
+        counts = load_data(sort_path + "supp01.pkl")["a"].astype(int)
         size_data, location = {}, 0
         for _ in motif_types:
             for activation in activation_selection:
@@ -245,7 +161,7 @@ def experiment_1():
                     else:
                         size_data[(activation, aggregation)] = [counts[location, :].tolist()]
                     location += 1
-        lipschitz_values = load_data(sort_path + "supp03.pkl")["a"]
+        lipschitz_values = load_data(sort_path + "supp02.pkl")["a"]
         robust_data, location = {}, 0
         for _ in motif_types:
             for activation in activation_selection:
@@ -255,7 +171,12 @@ def experiment_1():
                     else:
                         robust_data[(activation, aggregation)] = [lipschitz_values[location, :].tolist()]
                     location += 1
-        task_data["a"] = (size_data, robust_data)
+        task_data["b"] = (size_data, robust_data)
+        save_data(save_path=sort_path + "main01.pkl", information=task_data)
+
+    if not path.exists(path=sort_path + "main02.pkl") or not path.exists(path=sort_path + "supp05.pkl"):
+        task_data = {}
+        counts = load_data(sort_path + "supp01.pkl")["a"].astype(int)
         references = {}
         for activation in activation_selection:
             for aggregation in aggregation_selection:
@@ -287,7 +208,6 @@ def experiment_1():
                         locations = where(load_data(load_path=used_path) <= 0.1)[0]
                         target_index = motif_types.index(attr_2[0])
                         references[(attr_1[2], attr_1[3])][attr_1[0]][int(attr_1[1]) - 1][locations, target_index] = 1
-        robust_distributions = {}
         locations = {("incoherent-loop", "self"): (2, 0),
                      ("incoherent-loop", "coherent-loop"): (5, 0),
                      ("incoherent-loop", "collider"): (4, 0),
@@ -300,6 +220,42 @@ def experiment_1():
                      ("collider", "incoherent-loop"): (4, 2),
                      ("collider", "coherent-loop"): (3, 2),
                      ("collider", "both"): (6, 2)}
+        occupation, records = {}, {}
+        for (activation, aggregation), reference in references.items():
+            occupation[(activation, aggregation)] = {}
+            for source_motif_type, value_groups in reference.items():
+                ignore_index = motif_types.index(source_motif_type)
+                used_indices = []
+                for index in range(3):
+                    if index != ignore_index:
+                        used_indices.append(index)
+                individual, for_1, for_2, for_both = 0, 0, 0, 0
+                for values in value_groups:
+                    used_intersections = []
+                    for index, intersections in enumerate(values.T):
+                        if ignore_index == index:
+                            continue
+                        used_intersections.append(intersections)
+                    intersection_identities = used_intersections[0] * 2 + used_intersections[1]
+                    individual += len(where(intersection_identities == 0)[0])
+                    for_2 += len(where(intersection_identities == 1)[0])
+                    for_1 += len(where(intersection_identities == 2)[0])
+                    for_both += len(where(intersection_identities == 3)[0])
+                occupation[(activation, aggregation)][source_motif_type] = {}
+                occupation[(activation, aggregation)][source_motif_type]["self"] = individual
+                occupation[(activation, aggregation)][source_motif_type][motif_types[used_indices[0]]] = for_1
+                occupation[(activation, aggregation)][source_motif_type][motif_types[used_indices[1]]] = for_2
+                occupation[(activation, aggregation)][source_motif_type]["both"] = for_both
+        intersections = [[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
+        # noinspection PyUnresolvedReferences
+        for (activation, aggregation), record in occupation.items():
+            records[(activation, aggregation)] = zeros(shape=(len(intersections), 3))
+            for motif_type, information in record.items():
+                total_value = sum(list(information.values()))
+                for target, value in information.items():
+                    records[(activation, aggregation)][locations[(motif_type, target)]] = value / total_value
+        task_data["a"] = records
+        robust_distributions = {}
         for (activation, aggregation), reference in references.items():
             robust_distributions[(activation, aggregation)] = {}
             for source_motif_type, value_groups in reference.items():
@@ -336,7 +292,6 @@ def experiment_1():
                 robust_distributions[(activation, aggregation)][key] = array(both)
         task_data["b"] = robust_distributions[("tanh", "sum")]
         save_data(save_path=sort_path + "main02.pkl", information=task_data)
-        save_data(save_path=sort_path + "supp04.pkl", information={"a": task_data["b"]})
         task_data, panel_indices, index = {}, ["a", "b", "c", "d", "e", "f"], 0
         for activation in activation_selection:
             for aggregation in aggregation_selection:
