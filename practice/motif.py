@@ -1,6 +1,8 @@
 from itertools import combinations, permutations
 from networkx import DiGraph
-from numpy import zeros, array, all, sqrt
+from numpy import ndarray, zeros, array, all, sqrt
+from typing import Union
+
 
 acyclic_motifs = {
     "incoherent-loop": [DiGraph([(1, 2, {"weight": -1}), (1, 3, {"weight": +1}), (2, 3, {"weight": +1})]),
@@ -18,7 +20,8 @@ acyclic_motifs = {
 }
 
 
-def motif_matrix_to_fingerprint(motif_matrix):
+def motif_matrix_to_fingerprint(motif_matrix: ndarray) \
+        -> tuple:
     """
     Change the type from the motif to the fingerprint for saving.
 
@@ -31,7 +34,8 @@ def motif_matrix_to_fingerprint(motif_matrix):
     return tuple(motif_matrix.reshape(-1).tolist())
 
 
-def fingerprint_to_motif_matrix(fingerprint):
+def fingerprint_to_motif_matrix(fingerprint: tuple) \
+        -> ndarray:
     """
     Change the type from the fingerprint to the motif for motif calculating.
 
@@ -46,7 +50,8 @@ def fingerprint_to_motif_matrix(fingerprint):
     return array(list(fingerprint)).reshape(search_size, search_size)
 
 
-def motif_matrix_to_connections(motif_matrix):
+def motif_matrix_to_connections(motif_matrix: ndarray) \
+        -> list:
     """
     Change the type from the motif matrix to the graph connections for agent training.
 
@@ -66,7 +71,9 @@ def motif_matrix_to_connections(motif_matrix):
     return connections
 
 
-def connections_to_motif_matrix(connections, search_size):
+def connections_to_motif_matrix(connections: list,
+                                search_size: int) \
+        -> ndarray:
     """
     Change the type from the graph connections to the motif matrix for motif calculating.
 
@@ -87,7 +94,9 @@ def connections_to_motif_matrix(connections, search_size):
     return array(motif_matrix)
 
 
-def is_same_motif(motif_1, motif_2):
+def is_same_motif(motif_1: ndarray,
+                  motif_2: ndarray) \
+        -> bool:
     """
     Judge whether the two motifs are the same.
 
@@ -107,6 +116,7 @@ def is_same_motif(motif_1, motif_2):
         restructured_motif = zeros(shape=motif_2.shape)
         for tail_index in range(len(motif_1)):
             for head_index in range(len(motif_1[tail_index])):
+                # noinspection PyUnresolvedReferences
                 restructured_motif[rule[tail_index], rule[head_index]] = motif_1[tail_index, head_index]
 
         if all(restructured_motif == motif_2):
@@ -115,7 +125,9 @@ def is_same_motif(motif_1, motif_2):
     return False
 
 
-def obtain_motif(adjacency_matrix, combination, search_size):
+def obtain_motif(adjacency_matrix: ndarray,
+                 combination: Union[list, tuple],
+                 search_size: int):
     """
     Obtain a candidate motif of specific nodes in the adjacency matrix.
 
@@ -143,7 +155,8 @@ def obtain_motif(adjacency_matrix, combination, search_size):
     return motif
 
 
-def compliance_motif_specification(motif):
+def compliance_motif_specification(motif: ndarray) \
+        -> bool:
     """
     Test the rationality of the obtained motif.
 
@@ -160,7 +173,9 @@ def compliance_motif_specification(motif):
     return True
 
 
-def collect_motifs(adjacency_matrix, search_size=3):
+def collect_motifs(adjacency_matrix: ndarray,
+                   search_size=3) \
+        -> list:
     """
     Collect all the rational motifs from the adjacency matrix.
 
@@ -171,7 +186,7 @@ def collect_motifs(adjacency_matrix, search_size=3):
     :type search_size: int
 
     :return: collected motif set.
-    :rtype: dict
+    :rtype: list
     """
     collector, saved_motif_matrices = {}, []
     for combination in combinations([node_id for node_id in range(len(adjacency_matrix))], search_size):
@@ -194,7 +209,10 @@ def collect_motifs(adjacency_matrix, search_size=3):
     return results
 
 
-def count_motifs_from_adjacency_matrix(matrix, search_size, reference_motifs=None):
+def count_motifs_from_adjacency_matrix(matrix: ndarray,
+                                       search_size: int,
+                                       reference_motifs: Union[ndarray, list] = None) \
+        -> ndarray:
     """
     Count the rational motif frequencies from a given adjacency matrix.
 
@@ -228,7 +246,10 @@ def count_motifs_from_adjacency_matrix(matrix, search_size, reference_motifs=Non
     return counts
 
 
-def detect_motifs_from_adjacency_matrix(matrix, search_size, detected_motifs):
+def detect_motifs_from_adjacency_matrix(matrix: ndarray,
+                                        search_size: int,
+                                        detected_motifs: Union[list, tuple, ndarray]) \
+        -> bool:
     """
     Detect motifs from a given adjacency matrix.
 

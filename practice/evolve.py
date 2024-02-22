@@ -1,19 +1,108 @@
 from neat import DefaultGenome, DefaultReproduction
-from neat.config import ConfigParameter
+from neat.config import Config, ConfigParameter
 from neat.activations import ActivationFunctionSet
 from neat.aggregations import AggregationFunctionSet
 from neat.genome import DefaultGenomeConfig
 from neat.math_util import mean
 from neat.six_util import iteritems, itervalues
-from numpy import zeros, array, min, max, ceil
+from numpy import ndarray, zeros, array, min, max, ceil
 from random import choice
+from typing import Union
 
 from practice.motif import detect_motifs_from_adjacency_matrix
 
 
+class AdjustedGenome(DefaultGenome):
+
+    @classmethod
+    def parse_config(cls,
+                     param_dict: dict):
+        super().parse_config(param_dict)
+        return AdjustedGenomeConfig(param_dict)
+
+
+class AdjustedGenomeConfig(DefaultGenomeConfig):
+
+    # noinspection PyMissingConstructor
+    def __init__(self,
+                 params: dict):
+        """
+        Initialize config by params, add ConfigParameter("remove_type", str)
+
+        :param params: parameters of adjusted genome.
+        :type params: dict
+        """
+        # create full set of available activation functions.
+        self.num_inputs = 0
+        self.num_outputs = 0
+        self.single_structural_mutation = None
+        self.activation_defs = ActivationFunctionSet()
+        # ditto for aggregation functions - name difference for backward compatibility
+        self.aggregation_function_defs = AggregationFunctionSet()
+        self.aggregation_defs = self.aggregation_function_defs
+
+        self._params = [ConfigParameter("num_inputs", int),
+                        ConfigParameter("num_outputs", int),
+                        ConfigParameter("num_hidden", int),
+                        ConfigParameter("remove_type", str),
+                        ConfigParameter("feed_forward", bool),
+                        ConfigParameter("compatibility_disjoint_coefficient", float),
+                        ConfigParameter("compatibility_weight_coefficient", float),
+                        ConfigParameter("conn_add_prob", float),
+                        ConfigParameter("conn_delete_prob", float),
+                        ConfigParameter("node_add_prob", float),
+                        ConfigParameter("node_delete_prob", float),
+                        ConfigParameter("single_structural_mutation", bool, "false"),
+                        ConfigParameter("structural_mutation_surer", str, "default"),
+                        ConfigParameter("initial_connection", str, "unconnected")]
+
+        # Gather configuration data from the gene classes.
+        self.node_gene_type = params["node_gene_type"]
+        self._params += self.node_gene_type.get_config_params()
+        self.connection_gene_type = params["connection_gene_type"]
+        self._params += self.connection_gene_type.get_config_params()
+
+        # Use the configuration data to interpret the supplied parameters.
+        for p in self._params:
+            setattr(self, p.name, p.interpret(params))
+
+        # By convention, input pins have negative keys, and the output
+        # pins have keys 0,1,...
+        self.input_keys = [-i - 1 for i in range(self.num_inputs)]
+        self.output_keys = [i for i in range(self.num_outputs)]
+
+        self.connection_fraction = None
+
+        # Verify that initial connection type is valid.
+        if "partial" in self.initial_connection:
+            c, p = self.initial_connection.split()
+            self.initial_connection = c
+            self.connection_fraction = float(p)
+            if not (0 <= self.connection_fraction <= 1):
+                raise RuntimeError("Partial connection value must be between 0.0 and 1.0, inclusive.")
+
+        assert self.initial_connection in DefaultGenomeConfig.allowed_connectivity
+
+        # Verify structural_mutation_surer is valid.
+        if self.structural_mutation_surer.lower() in ["1", "yes", "true", "on"]:
+            self.structural_mutation_surer = "true"
+        elif self.structural_mutation_surer.lower() in ["0", "no", "false", "off"]:
+            self.structural_mutation_surer = "false"
+        elif self.structural_mutation_surer.lower() == "default":
+            self.structural_mutation_surer = "default"
+        else:
+            error_string = "Invalid structural_mutation_surer {!r}".format(self.structural_mutation_surer)
+            raise RuntimeError(error_string)
+
+        self.node_indexer = None
+
+
 class AdjustedReproduction(DefaultReproduction):
 
-    def create_new(self, genome_type, genome_config, num_genomes):
+    def create_new(self,
+                   genome_type,
+                   genome_config: Union[DefaultGenomeConfig, AdjustedGenomeConfig],
+                   num_genomes: int):
         new_genomes = {}
         for i in range(num_genomes):
             key = next(self.genome_indexer)
@@ -27,7 +116,11 @@ class AdjustedReproduction(DefaultReproduction):
 
         return new_genomes
 
-    def reproduce(self, config, species, pop_size, generation):
+    def reproduce(self,
+                  config: Config,
+                  species,
+                  pop_size: int,
+                  generation: int):
         # Filter out stagnated species, collect the set of non-stagnated species members,
         # and compute their average adjusted fitness.
         all_fitnesses, remaining_species = [], []
@@ -117,7 +210,8 @@ class AdjustedReproduction(DefaultReproduction):
         return new_population
 
     @staticmethod
-    def detect(model_genome, genome_config):
+    def detect(model_genome: Union[DefaultGenome, AdjustedGenome],
+               genome_config: Union[DefaultGenomeConfig, AdjustedGenomeConfig]):
         """
         Detect selected motifs based on the adjacency matrix of agent.
 
@@ -155,90 +249,10 @@ class AdjustedReproduction(DefaultReproduction):
         return False
 
 
-class AdjustedGenome(DefaultGenome):
-
-    @classmethod
-    def parse_config(cls, param_dict):
-        super().parse_config(param_dict)
-        return AdjustedGenomeConfig(param_dict)
-
-
-class AdjustedGenomeConfig(DefaultGenomeConfig):
-
-    # noinspection PyMissingConstructor
-    def __init__(self, params):
-        """
-        Initialize config by params, add ConfigParameter("remove_type", str)
-
-        :param params: parameters of adjusted genome
-        :type params: dict
-        """
-        # create full set of available activation functions.
-        self.num_inputs = 0
-        self.num_outputs = 0
-        self.single_structural_mutation = None
-        self.activation_defs = ActivationFunctionSet()
-        # ditto for aggregation functions - name difference for backward compatibility
-        self.aggregation_function_defs = AggregationFunctionSet()
-        self.aggregation_defs = self.aggregation_function_defs
-
-        self._params = [ConfigParameter("num_inputs", int),
-                        ConfigParameter("num_outputs", int),
-                        ConfigParameter("num_hidden", int),
-                        ConfigParameter("remove_type", str),
-                        ConfigParameter("feed_forward", bool),
-                        ConfigParameter("compatibility_disjoint_coefficient", float),
-                        ConfigParameter("compatibility_weight_coefficient", float),
-                        ConfigParameter("conn_add_prob", float),
-                        ConfigParameter("conn_delete_prob", float),
-                        ConfigParameter("node_add_prob", float),
-                        ConfigParameter("node_delete_prob", float),
-                        ConfigParameter("single_structural_mutation", bool, "false"),
-                        ConfigParameter("structural_mutation_surer", str, "default"),
-                        ConfigParameter("initial_connection", str, "unconnected")]
-
-        # Gather configuration data from the gene classes.
-        self.node_gene_type = params["node_gene_type"]
-        self._params += self.node_gene_type.get_config_params()
-        self.connection_gene_type = params["connection_gene_type"]
-        self._params += self.connection_gene_type.get_config_params()
-
-        # Use the configuration data to interpret the supplied parameters.
-        for p in self._params:
-            setattr(self, p.name, p.interpret(params))
-
-        # By convention, input pins have negative keys, and the output
-        # pins have keys 0,1,...
-        self.input_keys = [-i - 1 for i in range(self.num_inputs)]
-        self.output_keys = [i for i in range(self.num_outputs)]
-
-        self.connection_fraction = None
-
-        # Verify that initial connection type is valid.
-        if "partial" in self.initial_connection:
-            c, p = self.initial_connection.split()
-            self.initial_connection = c
-            self.connection_fraction = float(p)
-            if not (0 <= self.connection_fraction <= 1):
-                raise RuntimeError("Partial connection value must be between 0.0 and 1.0, inclusive.")
-
-        assert self.initial_connection in DefaultGenomeConfig.allowed_connectivity
-
-        # Verify structural_mutation_surer is valid.
-        if self.structural_mutation_surer.lower() in ["1", "yes", "true", "on"]:
-            self.structural_mutation_surer = "true"
-        elif self.structural_mutation_surer.lower() in ["0", "no", "false", "off"]:
-            self.structural_mutation_surer = "false"
-        elif self.structural_mutation_surer.lower() == "default":
-            self.structural_mutation_surer = "default"
-        else:
-            error_string = "Invalid structural_mutation_surer {!r}".format(self.structural_mutation_surer)
-            raise RuntimeError(error_string)
-
-        self.node_indexer = None
-
-
-def create_adjacency_matrix(model_genome, genome_config, consider_enable=True):
+def create_adjacency_matrix(model_genome: Union[DefaultGenome, AdjustedGenome],
+                            genome_config: Union[DefaultGenomeConfig, AdjustedGenomeConfig],
+                            consider_enable: bool = True) \
+        -> ndarray:
     """
     Create adjacency matrix based on the genome and its corresponding configuration.
 
@@ -248,7 +262,7 @@ def create_adjacency_matrix(model_genome, genome_config, consider_enable=True):
     :param genome_config: genome configuration.
     :type genome_config: neat.genome.DefaultGenomeConfig or practice.evolve.AdjustedGenomeConfig
 
-    :param consider_enable: only consider the weight of connection if it is enable.
+    :param consider_enable: only consider the weight of connection if it is enabled.
     :type consider_enable: bool
 
     :return: corresponding adjacency matrix.

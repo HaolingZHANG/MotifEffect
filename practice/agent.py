@@ -1,15 +1,19 @@
 from copy import deepcopy
-from neat import Population, reporting, statistics
-from neat import genome, stagnation, reproduction, species, config
-from neat.nn import FeedForwardNetwork, RecurrentNetwork
+from neat import Population, reporting, statistics, DefaultGenome
+from neat import genome, stagnation, reproduction, species, config, nn
+from numpy import ndarray
+from typing import Tuple, Union
 
 from practice.evolve import AdjustedGenome, AdjustedReproduction, create_adjacency_matrix
 from practice.motif import count_motifs_from_adjacency_matrix
+from practice.noise import NormNoiseGenerator
 
 
 class DefaultAgent(object):
 
-    def __init__(self, trained_model, description):
+    def __init__(self,
+                 trained_model,
+                 description: str):
         """
         Initialize the agent.
 
@@ -27,7 +31,11 @@ class DefaultAgent(object):
 
 class NEATAgent(DefaultAgent):
 
-    def __init__(self, model_genome, neat_config, description, action_handle):
+    def __init__(self,
+                 model_genome: DefaultGenome,
+                 neat_config: config.Config,
+                 description: str,
+                 action_handle):
         """
         Initialize the NEAT agent.
 
@@ -44,14 +52,15 @@ class NEATAgent(DefaultAgent):
         :type action_handle: function
         """
         if neat_config.genome_config.feed_forward:
-            trained_model = FeedForwardNetwork.create(model_genome, neat_config)
+            trained_model = nn.FeedForwardNetwork.create(model_genome, neat_config)
         else:
-            trained_model = RecurrentNetwork.create(model_genome, neat_config)
+            trained_model = nn.RecurrentNetwork.create(model_genome, neat_config)
         super().__init__(trained_model, description)
         self.model_genome, self.neat_config = model_genome, neat_config
         self.action_handle = action_handle
 
-    def work(self, inputs):
+    def work(self,
+             inputs: ndarray):
         """
         Run the agent through the inputted information.
 
@@ -67,7 +76,8 @@ class NEATAgent(DefaultAgent):
 
         return action, outputs
 
-    def get_fitness(self):
+    def get_fitness(self) \
+            -> float:
         """
         Get the fitness of agent.
 
@@ -76,7 +86,8 @@ class NEATAgent(DefaultAgent):
         """
         return deepcopy(self.model_genome.fitness)
 
-    def get_genome(self):
+    def get_genome(self) \
+            -> DefaultGenome:
         """
         Get the genome information.
 
@@ -85,7 +96,8 @@ class NEATAgent(DefaultAgent):
         """
         return deepcopy(self.model_genome)
 
-    def get_config(self):
+    def get_config(self) \
+            -> config.Config:
         """
         Get the genome config.
 
@@ -94,7 +106,8 @@ class NEATAgent(DefaultAgent):
         """
         return deepcopy(self.neat_config)
 
-    def get_adjacency_matrix(self):
+    def get_adjacency_matrix(self) \
+            -> ndarray:
         """
         Get the adjacency matrix from the agent.
 
@@ -103,7 +116,10 @@ class NEATAgent(DefaultAgent):
         """
         return create_adjacency_matrix(self.model_genome, self.neat_config.genome_config)
 
-    def get_motif_counts(self, search_size=3, reference_motifs=None):
+    def get_motif_counts(self,
+                         search_size: int = 3,
+                         reference_motifs: Union[ndarray, list, None] = None) \
+            -> ndarray:
         """
         Get motif counts from the agent.
 
@@ -111,10 +127,10 @@ class NEATAgent(DefaultAgent):
         :type search_size: int
 
         :param reference_motifs: reference motifs for order.
-        :type reference_motifs: numpy.ndarray or list
+        :type reference_motifs: numpy.ndarray, list, or None
 
         :return: motif counts.
-        :rtype numpy.ndarray
+        :rtype: numpy.ndarray
         """
         return count_motifs_from_adjacency_matrix(self.get_adjacency_matrix(), search_size, reference_motifs)
 
@@ -141,9 +157,14 @@ def create_agent_config(config_path):
         raise ValueError("No such evolutionary strategy!")
 
 
-def obtain_best(task, model_config, need_stdout=False, additional_reporters=None, initial_state=None):
+def obtain_best(task,
+                model_config: config.Config,
+                need_stdout: bool = False,
+                additional_reporters: list = None,
+                initial_state: tuple = None) \
+        -> Union[DefaultGenome, Tuple[DefaultGenome, list]]:
     """
-    Obtain best genome in the specific task.
+    Obtain the best genome in the specific task.
 
     :param task: used task.
     :type task: grace1.tasks.NEATGymTask
@@ -181,12 +202,18 @@ def obtain_best(task, model_config, need_stdout=False, additional_reporters=None
         return best_genome, additional_reporters
 
 
-def train_and_evaluate(task, agent_name, agent_config, repeats, train_noise_generator, test_noise_generators):
+def train_and_evaluate(task,
+                       agent_name: str,
+                       agent_config: config.Config,
+                       repeats: int,
+                       train_noise_generator: NormNoiseGenerator,
+                       test_noise_generators: dict) \
+        -> list:
     """
     Train and evaluate the agents in a given NEAT task.
 
     :param task: task to train agents.
-    :type task: practice.task.NEATCartPoleTask
+    :type task: practice.noise.NEATCartPoleTask
 
     :param agent_name: name of trained agent.
     :type agent_name: str
@@ -198,7 +225,7 @@ def train_and_evaluate(task, agent_name, agent_config, repeats, train_noise_gene
     :type repeats: int
 
     :param train_noise_generator: noise generator for training process.
-    :type train_noise_generator: practice.task.NormNoiseGenerator
+    :type train_noise_generator: practice.noise.NormNoiseGenerator
 
     :param test_noise_generators: noise generators for evaluating process.
     :type test_noise_generators: dict
@@ -217,7 +244,11 @@ def train_and_evaluate(task, agent_name, agent_config, repeats, train_noise_gene
     return records
 
 
-def train(task, agent_name, agent_config, train_noise_generator):
+def train(task,
+          agent_name: str,
+          agent_config: config.Config,
+          train_noise_generator) \
+        -> Tuple[NEATAgent, list]:
     """
     Train an agent in a given NEAT task.
 
@@ -247,7 +278,10 @@ def train(task, agent_name, agent_config, train_noise_generator):
     return best_agent, experience
 
 
-def evaluate(task, test_noise_generators, agent):
+def evaluate(task,
+             test_noise_generators: dict,
+             agent: NEATAgent) \
+        -> dict:
     """
     Evaluate an agent in a given NEAT task.
 
@@ -267,9 +301,7 @@ def evaluate(task, test_noise_generators, agent):
 
     for label, test_noise_generator in test_noise_generators.items():
         task.set_noise(test_noise_generator)
-
         rewards = task.run(agent)["rewards"]
-
         test_record[label] = task.calculate_fitness(rewards)
 
     return test_record

@@ -1,10 +1,18 @@
-from numpy import zeros, abs, min, mean, median, max, sqrt, vstack
+"""
+@Author      : Haoling Zhang
+@Description : Definition of robustness
+"""
+from numpy import ndarray, zeros, abs, min, mean, median, max, sqrt, vstack
 
+from effect.networks import NeuralMotif
 from effect.operations import calculate_landscape
 
 
-# noinspection PyArgumentList,PyTypeChecker
-def evaluate_propagation(value_range, points, motif, compute_type="max"):
+def evaluate_propagation(value_range: tuple,
+                         points: int,
+                         motif: NeuralMotif,
+                         compute_type: str = "max") \
+        -> ndarray:
     """
     Evaluate the error propagation through the selected motif.
 
@@ -48,7 +56,11 @@ def evaluate_propagation(value_range, points, motif, compute_type="max"):
     return propagation
 
 
-def estimate_lipschitz(value_range, points, output, norm_type="L-2"):
+def estimate_lipschitz(value_range: tuple,
+                       points: int,
+                       output: ndarray,
+                       norm_type: str = "L-2") \
+        -> float:
     """
     Estimate the Lipschitz constant of the output signals produced by selected motif.
 
@@ -94,7 +106,11 @@ def estimate_lipschitz(value_range, points, output, norm_type="L-2"):
     return constant
 
 
-def estimate_lipschitz_by_motif(value_range, points, motif, norm_type="L-2"):
+def estimate_lipschitz_by_motif(value_range: tuple,
+                                points: int,
+                                motif: NeuralMotif,
+                                norm_type: str = "L-2") \
+        -> float:
     """
     Estimate the Lipschitz constant of the selected motif.
 

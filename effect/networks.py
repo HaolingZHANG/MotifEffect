@@ -1,10 +1,18 @@
-from torch import tensor, unsqueeze, sum, min, max, mean, relu, tanh, sigmoid, cat, rand
-from torch.nn import Module, ModuleList, Parameter
+"""
+@Author      : Haoling Zhang
+@Description : Definition of neural motif
+"""
+from numpy import ndarray
+from torch import Tensor, tensor, nn, unsqueeze, sum, min, max, mean, relu, tanh, sigmoid, cat, rand
+from typing import Union
 
 
-class RestrictedWeight(Module):
+class RestrictedWeight(nn.Module):
 
-    def __init__(self, is_positive=True, value=None, bound=None):
+    def __init__(self,
+                 is_positive: bool = True,
+                 value: float = None,
+                 bound: tuple = (1e-3, 1e0)):
         """
         Initialize the restricted weight module.
 
@@ -18,14 +26,12 @@ class RestrictedWeight(Module):
         :type bound: tuple
         """
         super(RestrictedWeight, self).__init__()
-
-        if bound is None:
-            bound = (1e-2, 1e0)
-
         self.weight, self.is_positive, self.bound = None, is_positive, bound
         self.reset(value=value)
 
-    def forward(self, data):
+    def forward(self,
+                data: Tensor) \
+            -> Tensor:
         """
         Forward propagate through the restricted weight * data.
 
@@ -43,7 +49,7 @@ class RestrictedWeight(Module):
         Obtain the weight value.
 
         :return: weight value.
-        :rtype float
+        :rtype: float
         """
         return float(self.weight)
 
@@ -64,9 +70,10 @@ class RestrictedWeight(Module):
                 value = tensor(-self.bound[1])
 
         if value is not None:
-            self.weight = Parameter(data=value, requires_grad=True)
+            self.weight = nn.Parameter(data=value, requires_grad=True)
 
-    def reset(self, value=None):
+    def reset(self,
+              value: Union[float, None] = None):
         """
         Reset the weight value.
 
@@ -79,6 +86,7 @@ class RestrictedWeight(Module):
             elif not self.is_positive and -self.bound[1] <= value <= -self.bound[0]:
                 value = tensor(value)
             else:
+                print(value, self.is_positive, self.bound)
                 raise ValueError("the inputted value is wrong, it needs to meet the established constraints!")
 
         elif self.is_positive:
@@ -87,12 +95,13 @@ class RestrictedWeight(Module):
         else:
             value = -self.bound[1] + (self.bound[1] - self.bound[0]) * rand(1)
 
-        self.weight = Parameter(data=value, requires_grad=True)
+        self.weight = nn.Parameter(data=value, requires_grad=True)
 
 
-class RestrictedBias(Module):
+class RestrictedBias(nn.Module):
 
-    def __init__(self, value=None, bound=None):
+    def __init__(self, value: float = None,
+                 bound: tuple = (-1e0, +1e0)):
         """
         Initialize the restricted bias module.
 
@@ -103,13 +112,12 @@ class RestrictedBias(Module):
         :type bound: tuple
         """
         super(RestrictedBias, self).__init__()
-        if bound is None:
-            bound = (-1e0, +1e0)
-
         self.bias, self.bound = None, bound
         self.reset(value=value)
 
-    def forward(self, data):
+    def forward(self,
+                data: Tensor) \
+            -> Tensor:
         """
         Forward propagate through the restricted bias + data.
 
@@ -120,7 +128,6 @@ class RestrictedBias(Module):
         :rtype: torch.Tensor
         """
         self.restrict()
-
         return self.bias + data
 
     def value(self):
@@ -128,7 +135,7 @@ class RestrictedBias(Module):
         Obtain the bias value.
 
         :return: bias value.
-        :rtype float
+        :rtype: float
         """
         return float(self.bias)
 
@@ -137,15 +144,16 @@ class RestrictedBias(Module):
         Restrict the bias before the forward propagation.
         """
         value = None
-        if self.bias < self.bound[0]:
+        if self.bias <= self.bound[0]:
             value = tensor(self.bound[0])
-        elif self.bias > self.bound[1]:
+        elif self.bias >= self.bound[1]:
             value = tensor(self.bound[1])
 
         if value is not None:
-            self.bias = Parameter(data=value, requires_grad=True)
+            self.bias = nn.Parameter(data=value, requires_grad=True)
 
-    def reset(self, value=None):
+    def reset(self,
+              value: Union[float, None] = None):
         """
         Reset the bias value.
 
@@ -157,13 +165,20 @@ class RestrictedBias(Module):
         else:
             value = self.bound[0] + (self.bound[1] - self.bound[0]) * rand(1)
 
-        self.bias = Parameter(data=value, requires_grad=True)
+        self.bias = nn.Parameter(data=value, requires_grad=True)
 
 
-class NeuralMotif(Module):
+class NeuralMotif(nn.Module):
 
-    def __init__(self, motif_type, motif_index, activations, aggregations, weights=None, biases=None,
-                 weight_bound=None, bias_bound=None):
+    def __init__(self,
+                 motif_type: str,
+                 motif_index: int,
+                 activations: Union[tuple, list],
+                 aggregations: Union[tuple, list],
+                 weights: Union[tuple, list, None] = None,
+                 biases: Union[tuple, list, None] = None,
+                 weight_bound: tuple = (+1e-3, +1e0),
+                 bias_bound: tuple = (-1e0, +1e0)):
         """
         Initialize the neural network motif.
 
@@ -186,10 +201,10 @@ class NeuralMotif(Module):
         :type biases: tuple, list, or None
 
         :param weight_bound: bound of weight.
-        :type weight_bound: tuple, list, or None
+        :type weight_bound: tuple
 
         :param bias_bound: bound of bias.
-        :type bias_bound: tuple, list, or None
+        :type bias_bound: tuple
         """
         super(NeuralMotif, self).__init__()
 
@@ -211,11 +226,6 @@ class NeuralMotif(Module):
             raise ValueError("no such motif type, expect one in "
                              "[\"collider\", \"fork\", \"chain\", \"coherent-loop\", \"incoherent-loop\"].")
 
-        if weight_bound is None:
-            weight_bound = (1e-3, 1e0)
-        if bias_bound is None:
-            bias_bound = (-1e0, +1e0)
-
         if len(activations) != request_a:
             raise ValueError("wrong number of activation functions, "
                              "expect " + str(request_a) + ", got " + str(len(activations)))
@@ -234,7 +244,9 @@ class NeuralMotif(Module):
         self.weight_bound, self.bias_bound = weight_bound, bias_bound
         self.reset(weights, biases)
 
-    def forward(self, input_signals):
+    def forward(self,
+                input_signals: Tensor) \
+            -> Tensor:
         """
         Forward propagate through the neural network motif.
 
@@ -270,6 +282,7 @@ class NeuralMotif(Module):
 
         if self.t != "fork":
             if max(output_signals) - min(output_signals) < 1e-12:
+                # noinspection PyAugmentAssignment
                 output_signals = output_signals - max(output_signals)
             else:
                 output_signals = (output_signals - min(output_signals)) / (max(output_signals) - min(output_signals))
@@ -285,17 +298,20 @@ class NeuralMotif(Module):
 
         return output_signals
 
-    def activate(self, values, activate_index):
+    def activate(self,
+                 values: Tensor,
+                 activate_index: int) \
+            -> Tensor:
         """
         Forward propagate through activating.
 
-        :param values: input intersected_values.
+        :param values: input values.
         :type values: torch.Tensor
 
         :param activate_index: index of activations.
         :type activate_index: int
 
-        :return: output intersected_values.
+        :return: output values.
         :rtype: torch.Tensor
         """
         if self.a[activate_index] == "tanh":
@@ -307,17 +323,20 @@ class NeuralMotif(Module):
         else:
             raise ValueError("No such activation function type!")
 
-    def aggregate(self, values, aggregate_index):
+    def aggregate(self,
+                  values: Tensor,
+                  aggregate_index: int) \
+            -> Tensor:
         """
         Forward propagate through aggregating.
 
-        :param values: input intersected_values.
+        :param values: input values.
         :type values: torch.Tensor
 
         :param aggregate_index: index of aggregations.
         :type aggregate_index: int
 
-        :return: output intersected_values.
+        :return: output values.
         :rtype: torch.Tensor
         """
         if self.g[aggregate_index] == "sum":
@@ -327,17 +346,20 @@ class NeuralMotif(Module):
         else:
             raise ValueError("No such aggregation function type!")
 
-    def add_weight(self, values, weight_indices):
+    def add_weight(self,
+                   values: Tensor,
+                   weight_indices: Union[Tensor, ndarray, list]) \
+            -> Tensor:
         """
-        Add weight for the intersected_values.
+        Add weight for the values.
 
-        :param values: input intersected_values.
+        :param values: input values.
         :type values: torch.Tensor
 
         :param weight_indices: indices of weight parameter.
         :type weight_indices: torch.Tensor, numpy.ndarray, or list
 
-        :return: output intersected_values.
+        :return: output values.
         :rtype: torch.Tensor
         """
         if len(weight_indices) == 1 and values.size()[1] == 1:
@@ -349,17 +371,20 @@ class NeuralMotif(Module):
             return cat(tuple([self.w[weight_indices[index]](values)
                               for index in range(len(weight_indices))]), dim=1)
 
-    def add_bias(self, values, bias_index):
+    def add_bias(self,
+                 values: Tensor,
+                 bias_index: int) \
+            -> Tensor:
         """
-        Add bias for the intersected_values.
+        Add bias for the intersected values.
 
-        :param values: input intersected_values.
+        :param values: input values.
         :type values: torch.Tensor
 
         :param bias_index: index of bias parameter.
         :type bias_index: int
 
-        :return: output intersected_values.
+        :return: output values.
         :rtype: torch.Tensor
         """
         return self.b[bias_index](values)
@@ -373,14 +398,16 @@ class NeuralMotif(Module):
         for index in range(len(self.b)):
             self.b[index].restrict()
 
-    def reset(self, weights=None, biases=None):
+    def reset(self,
+              weights: Union[list, None] = None,
+              biases: Union[list, None] = None):
         """
-        Reset the weight and bias intersected_values.
+        Reset the weight and bias values.
 
-        :param weights: established weight intersected_values.
+        :param weights: established weight values.
         :type weights: list or None
 
-        :param biases: established bias intersected_values.
+        :param biases: established bias values.
         :type biases: list or None
         """
         if self.t == "collider":
@@ -396,21 +423,21 @@ class NeuralMotif(Module):
             if len(weights) != len(weight_flags):
                 raise ValueError("the number of weights should be "
                                  + str(len(weight_flags)) + " got " + str(len(weights)) + ".")
-            self.w = ModuleList([RestrictedWeight(flag, value, bound=self.weight_bound)
-                                 for flag, value in zip(weight_flags, weights)])
+            self.w = nn.ModuleList([RestrictedWeight(flag, value, bound=self.weight_bound)
+                                    for flag, value in zip(weight_flags, weights)])
         else:
-            self.w = ModuleList([RestrictedWeight(flag, bound=self.weight_bound)
-                                 for flag in weight_flags])
+            self.w = nn.ModuleList([RestrictedWeight(flag, bound=self.weight_bound)
+                                    for flag in weight_flags])
 
         if biases is not None:
             if len(biases) != bias_size:
                 raise ValueError("the number of weights should be "
                                  + str(bias_size) + " got " + str(len(biases)) + ".")
-            self.b = ModuleList([RestrictedBias(bias_value, bound=self.bias_bound)
-                                 for bias_value in biases])
+            self.b = nn.ModuleList([RestrictedBias(bias_value, bound=self.bias_bound)
+                                    for bias_value in biases])
         else:
-            self.b = ModuleList([RestrictedBias(bound=self.bias_bound)
-                                 for _ in range(bias_size)])
+            self.b = nn.ModuleList([RestrictedBias(bound=self.bias_bound)
+                                    for _ in range(bias_size)])
 
     def __str__(self):
         ws = [("+" if weight.value() >= 0 else "") + "%.2e" % weight.value() for weight in self.w]

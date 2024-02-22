@@ -1,12 +1,17 @@
 from copy import deepcopy
-from gym import make
+from gym import make, Env
 from itertools import product
+
+from gym.envs.classic_control import CartPoleEnv
 from matplotlib import pyplot
 from matplotlib.animation import FuncAnimation
-from numpy import array, arange, linspace, random, repeat, expand_dims, argmax, abs, min, max, sum, mean, clip
+from numpy import ndarray, array, linspace, argmax, abs, max, sum, mean
+from neat.config import Config
+from typing import Union
 from warnings import simplefilter
 
-from practice.agent import NEATAgent
+from practice.noise import NormNoiseGenerator
+from practice.agent import NEATAgent, DefaultAgent
 
 # ignore some warns in the step function of OpenAI gym environment.
 simplefilter("ignore", UserWarning)
@@ -15,7 +20,13 @@ simplefilter("ignore", DeprecationWarning)
 
 class GymTask(object):
 
-    def __init__(self, environment, description, maximum_generation, iterations, total_steps, need_frames=False):
+    def __init__(self,
+                 environment: Env,
+                 description: str,
+                 maximum_generation: int,
+                 iterations: int,
+                 total_steps: int,
+                 need_frames: bool = False):
         """
         Initialize the OpenAI gym task.
 
@@ -38,12 +49,13 @@ class GymTask(object):
         self.iterations, self.total_steps, self.maximum_generation = iterations, total_steps, maximum_generation
         self.action_handle, self.need_frames, self.experiences, self.record_handle = None, need_frames, [], None
 
-    def set_noise(self, noise_generator):
+    def set_noise(self,
+                  noise_generator: NormNoiseGenerator):
         """
         Set the noise generator.
 
         :param noise_generator: generator of noise.
-        :type noise_generator: grace.robust.NormNoiseGenerator
+        :type noise_generator: practice.noise.NormNoiseGenerator
         """
         self.noise_generator = noise_generator
 
@@ -55,7 +67,9 @@ class GymTask(object):
         """
         self.action_handle = action_handle
 
-    def run(self, agent, random_seeds=None):
+    def run(self,
+            agent: DefaultAgent,
+            random_seeds: Union[ndarray, list, None] = None):
         """
         Run the task.
 
@@ -90,12 +104,14 @@ class GymTask(object):
                 "rewards": array(reward_collector, dtype=object), "noises": array(noise_collector, dtype=object),
                 "frames": array(frame_collector, dtype=object)}
 
-    def run_1_iteration(self, agent, random_seed=None):
+    def run_1_iteration(self,
+                        agent: DefaultAgent,
+                        random_seed: Union[int, None] = None):
         """
         Run the task for one iteration.
 
         :param agent: available agent.
-        :type agent: grace.agent.DefaultAgent
+        :type agent: practice.agent.DefaultAgent
 
         :param random_seed: random seed for initializing the environment.
         :type random_seed: int or None
@@ -103,16 +119,15 @@ class GymTask(object):
         :return: result set.
         :rtype: dict
         """
-        self.environment.seed(random_seed)
 
         states, actions, rewards, noises, frames = [], [], [], [], []
-        state = self.environment.reset()
+        state = self.environment.reset(seed=random_seed)
 
         for one_step in range(self.total_steps):
             states.append(state)
 
             if self.need_frames:
-                frames.append(self.environment.render(mode="rgb_array"))
+                frames.append(self.environment.render())
 
             record = self.run_1_step(agent, state)
 
@@ -126,12 +141,14 @@ class GymTask(object):
                 state = record["state"]
 
         self.environment.close()
-        self.environment.seed(None)
 
         return {"states": array(states), "actions": array(actions), "rewards": array(rewards),
                 "noises": array(noises), "frames": array(frames)}
 
-    def run_1_step(self, agent, state, reset=False):
+    def run_1_step(self,
+                   agent: DefaultAgent,
+                   state: ndarray,
+                   reset: bool = False):
         """
         Run the task in one step.
 
@@ -159,7 +176,7 @@ class GymTask(object):
 
         action, action_values = agent.work(actual_state)
 
-        current_state, reward, done, _ = self.environment.step(action)
+        current_state, reward, done, _, _ = self.environment.step(action)
 
         return {"state": array(current_state), "action": array(action_values), "reward": reward,
                 "noise": array(actual_state - state), "done": done}
@@ -181,7 +198,11 @@ class GymTask(object):
         raise NotImplementedError("\"get_state_range\" interface needs to be implemented.")
 
     @staticmethod
-    def save_frames_in_gif(frames, path, dpi=200, interval=1, fps=10):
+    def save_frames_in_gif(frames: ndarray,
+                           path: str,
+                           dpi: int = 200,
+                           interval: int = 1,
+                           fps: int = 10):
         """
         Save frames in GIF file.
 
@@ -210,14 +231,17 @@ class GymTask(object):
             annotate.set_text("step = " + str(index + 1))
             return patch
 
-        gif = FuncAnimation(pyplot.gcf(), animate, frames=len(frames), interval=interval)
+        # noinspection PyTypeChecker
+        gif = FuncAnimation(fig=pyplot.gcf(), func=animate, frames=len(frames), interval=interval)
         gif.save(path, writer='pillow', fps=fps)
         pyplot.close()
 
 
 class NEATCartPoleTask(GymTask):
 
-    def __init__(self, maximum_generation, need_frames=False):
+    def __init__(self,
+                 maximum_generation: int,
+                 need_frames: bool = False):
         """
         Initialize the CartPole task for NEAT algorithm.
 
@@ -227,10 +251,12 @@ class NEATCartPoleTask(GymTask):
         :param need_frames: need to draw the frame in the environment.
         :type need_frames: bool
         """
-        super().__init__(make("CartPole-v0").unwrapped, "CartPole", maximum_generation, 100, 200, need_frames)
+        super().__init__(CartPoleEnv(render_mode="rgb_array"), "CartPole", maximum_generation, 100, 200, need_frames)
         self.set_action_handle(action_handle=argmax)
 
-    def genomes_fitness(self, genomes, neat_config):
+    def genomes_fitness(self,
+                        genomes: dict,
+                        neat_config: Config):
         """
         Calculate the fitness of the investigated genomes.
 
@@ -260,7 +286,8 @@ class NEATCartPoleTask(GymTask):
         self.experiences.append((best_agent, situation))
 
     @staticmethod
-    def calculate_fitness(reward_collector):
+    def calculate_fitness(reward_collector: Union[ndarray, list]) \
+            -> float:
         """
         Calculate the agent fitness from the reward collector.
 
@@ -301,7 +328,7 @@ class NEATCartPoleTask(GymTask):
                         task.reset()
                         task.state, final_state = array([position, velocity, angle, palstance]), None
                         for _ in range(200):  # replay to find the bound.
-                            final_state, reward, done, _ = task.step(1)
+                            final_state, reward, done, _, _ = task.step(1)
                             if done:
                                 break
 
@@ -309,79 +336,3 @@ class NEATCartPoleTask(GymTask):
                         maximum_palstance = max(maximum_velocity, abs(final_state[3]))
 
         return maximum_velocity, maximum_palstance
-
-
-class NormNoiseGenerator(object):
-
-    def __init__(self, norm_type, noise_level=1.0, noise_scale=1.0):
-        """
-        Initialize the noise iterator based on norm.
-
-        :param norm_type: perturbed norm type in the noise iterator.
-        :type norm_type: str
-
-        :param noise_level: proportion of samples with noise in all samples.
-        :type noise_level: float
-
-        :param noise_scale: degree of noise attenuation.
-        :type noise_scale: float
-        """
-        self.norm_type = norm_type
-        self.noise_level = noise_level
-        self.noise_scale = noise_scale
-
-    # noinspection PyArgumentList
-    def get_samples(self, sample, count, minimum_bounds, maximum_bounds):
-        """
-        Get noise samples based on the noise-free samples.
-
-        :param sample: one noise-free sample.
-        :type sample: numpy.ndarray
-
-        :param count: noise sample number.
-        :type count: int
-
-        :param minimum_bounds: minimum bounds of observations.
-        :type minimum_bounds: numpy.ndarray
-
-        :param maximum_bounds: maximum bounds of observations.
-        :type maximum_bounds: numpy.ndarray
-
-        :return: noise samples, one or more.
-        :rtype: numpy.ndarray
-        """
-        assert len(sample.shape) == 1
-
-        if self.noise_scale == 0.0 or self.noise_level == 0.0:
-            return sample
-
-        if self.norm_type == "L-1":  # using Laplacian distribution.
-            noises = random.laplace(size=(count, sample.shape[0]))
-            normalized_noises = ((noises - min(noises)) / (max(noises) - min(noises)) - 0.5) * 2.0
-        elif self.norm_type == "L-2":  # using Gaussian distribution.
-            noises = random.normal(size=(count, sample.shape[0]))
-            normalized_noises = ((noises - min(noises)) / (max(noises) - min(noises)) - 0.5) * 2.0
-        elif self.norm_type == "L-inf":  # using uniform distribution.
-            normalized_noises = random.uniform(low=-1.0, high=1.0, size=(count, sample.shape[0]))
-        else:
-            raise ValueError("No such norm type!")
-
-        actual_noises = normalized_noises * self.noise_scale
-
-        if self.noise_level < 1.0:
-            if (1.0 - self.noise_level) * count > 1:
-                noise_indices = arange(count)
-                random.shuffle(noise_indices)
-                ignored_indices = noise_indices[:int((1.0 - self.noise_level) * count)]
-                actual_noises[ignored_indices] = 0.0
-            else:
-                for index in range(count):
-                    if random.random() > self.noise_level:
-                        actual_noises[index] = 0.0
-
-        noise_samples = repeat(expand_dims(sample, axis=0), count, axis=0) + actual_noises
-
-        for variable_index, (minimum_bound, maximum_bound) in enumerate(zip(minimum_bounds, maximum_bounds)):
-            noise_samples[:, variable_index] = clip(noise_samples[:, variable_index], minimum_bound, maximum_bound)
-
-        return noise_samples if count > 1 else noise_samples[0]
