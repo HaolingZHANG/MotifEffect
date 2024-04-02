@@ -1,5 +1,7 @@
 from copy import deepcopy
+# noinspection PyPackageRequirements
 from neat import Population, reporting, statistics, DefaultGenome
+# noinspection PyPackageRequirements
 from neat import genome, stagnation, reproduction, species, config, nn
 from numpy import ndarray
 from typing import Tuple, Union

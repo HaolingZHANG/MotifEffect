@@ -1,9 +1,16 @@
+# noinspection PyPackageRequirements
 from neat import DefaultGenome, DefaultReproduction
+# noinspection PyPackageRequirements
 from neat.config import Config, ConfigParameter
+# noinspection PyPackageRequirements
 from neat.activations import ActivationFunctionSet
+# noinspection PyPackageRequirements
 from neat.aggregations import AggregationFunctionSet
+# noinspection PyPackageRequirements
 from neat.genome import DefaultGenomeConfig
+# noinspection PyPackageRequirements
 from neat.math_util import mean
+# noinspection PyPackageRequirements
 from neat.six_util import iteritems, itervalues
 from numpy import ndarray, zeros, array, min, max, ceil
 from random import choice

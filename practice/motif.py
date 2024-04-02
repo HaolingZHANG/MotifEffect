@@ -127,7 +127,8 @@ def is_same_motif(motif_1: ndarray,
 
 def obtain_motif(adjacency_matrix: ndarray,
                  combination: Union[list, tuple],
-                 search_size: int):
+                 search_size: int) \
+        -> ndarray:
     """
     Obtain a candidate motif of specific nodes in the adjacency matrix.
 

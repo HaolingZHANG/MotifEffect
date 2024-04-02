@@ -83,5 +83,6 @@ from effect.networks import RestrictedWeight, RestrictedBias, NeuralMotif  # noq
 from effect.operations import prepare_data, prepare_motifs, calculate_landscape, calculate_gradients  # noqa
 from effect.operations import generate_motifs, generate_outputs, calculate_differences  # noqa
 from effect.robustness import estimate_lipschitz_by_motif, estimate_lipschitz, evaluate_propagation  # noqa
-from effect.similarity import L2Loss, maximum_minimum_loss_search, minimum_loss_search # noqa
-from effect.similarity import execute_catch_processes, execute_escape_processes # noqa
+from effect.similarity import maximum_minimum_loss_search, minimum_loss_search  # noqa
+from effect.similarity import execute_catch_processes, execute_escape_processes  # noqa
+from effect.topography import find_ridge_line, find_valley_line  # noqa

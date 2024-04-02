@@ -19,9 +19,7 @@ class NormNoiseGenerator(object):
         :param noise_scale: degree of noise attenuation.
         :type noise_scale: float
         """
-        self.norm_type = norm_type
-        self.noise_level = noise_level
-        self.noise_scale = noise_scale
+        self.norm_type, self.noise_level, self.noise_scale = norm_type, noise_level, noise_scale
 
     # noinspection PyArgumentList
     def get_samples(self,

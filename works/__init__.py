@@ -31,6 +31,7 @@ def save_data(save_path, information):
         with open(save_path, "wb") as file:
             p_save(obj=information, file=file)
     elif ".npy" in save_path:
+        # noinspection PyTypeChecker
         n_save(file=save_path, arr=information)
     else:
         raise ValueError("No such type of file path.")

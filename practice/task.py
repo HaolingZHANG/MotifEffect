@@ -6,8 +6,9 @@ from gym.envs.classic_control import CartPoleEnv
 from matplotlib import pyplot
 from matplotlib.animation import FuncAnimation
 from numpy import ndarray, array, linspace, argmax, abs, max, sum, mean
+# noinspection PyPackageRequirements
 from neat.config import Config
-from typing import Union
+from typing import Union, Tuple
 from warnings import simplefilter
 
 from practice.noise import NormNoiseGenerator
@@ -69,7 +70,8 @@ class GymTask(object):
 
     def run(self,
             agent: DefaultAgent,
-            random_seeds: Union[ndarray, list, None] = None):
+            random_seeds: Union[ndarray, list, None] = None) \
+            -> dict:
         """
         Run the task.
 
@@ -106,7 +108,8 @@ class GymTask(object):
 
     def run_1_iteration(self,
                         agent: DefaultAgent,
-                        random_seed: Union[int, None] = None):
+                        random_seed: Union[int, None] = None) \
+            -> dict:
         """
         Run the task for one iteration.
 
@@ -121,7 +124,7 @@ class GymTask(object):
         """
 
         states, actions, rewards, noises, frames = [], [], [], [], []
-        state = self.environment.reset(seed=random_seed)
+        state, _ = self.environment.reset(seed=random_seed)
 
         for one_step in range(self.total_steps):
             states.append(state)
@@ -148,7 +151,8 @@ class GymTask(object):
     def run_1_step(self,
                    agent: DefaultAgent,
                    state: ndarray,
-                   reset: bool = False):
+                   reset: bool = False) \
+            -> dict:
         """
         Run the task in one step.
 
@@ -181,13 +185,16 @@ class GymTask(object):
         return {"state": array(current_state), "action": array(action_values), "reward": reward,
                 "noise": array(actual_state - state), "done": done}
 
-    def get_experiences(self):
+    def get_experiences(self) \
+            -> list:
         return self.experiences
 
     def reset_experiences(self):
         self.experiences = []
 
-    def sampling_states(self, sampling):
+    def sampling_states(self,
+                        sampling: int) \
+            -> ndarray:
         lower_bounds, upper_bounds = self.get_state_range()
         variable_set = [linspace(lower_bound, upper_bound, sampling + 2)[1: -1] for lower_bound, upper_bound
                         in zip(lower_bounds, upper_bounds)]
@@ -303,7 +310,8 @@ class NEATCartPoleTask(GymTask):
         return mean(accumulative_rewards)
 
     @staticmethod
-    def get_state_range():
+    def get_state_range() \
+            -> Tuple[ndarray, ndarray]:
         """
         Get the range of state.
 
@@ -318,7 +326,8 @@ class NEATCartPoleTask(GymTask):
         return lower_bound, upper_bound
 
     @staticmethod
-    def check_bounds():
+    def check_bounds() \
+            -> Tuple[float, float]:
         task, maximum_velocity, maximum_palstance = make("CartPole-v0").unwrapped, 0, 0
 
         for position in linspace(-0.05, 0.05, 20):

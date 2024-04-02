@@ -296,7 +296,7 @@ def calculate_differences(landscapes_1: ndarray,
                           verbose: bool = False) \
         -> ndarray:
     """
-    Calculate differences between motif landscapes.
+    Calculate norm differences between motif landscapes.
 
     :param landscapes_1: landscapes of given motifs.
     :type landscapes_1: numpy.ndarray
@@ -304,7 +304,7 @@ def calculate_differences(landscapes_1: ndarray,
     :param landscapes_2: other landscapes of given motifs.
     :type landscapes_2: numpy.ndarray or None
 
-    :param norm_type: norm type, including "L-1", "L-2", and "L-inf".
+    :param norm_type: norm type, including "L-1" and "L-2".
     :type norm_type: str
 
     :param verbose: need to show process log.
@@ -318,7 +318,7 @@ def calculate_differences(landscapes_1: ndarray,
     if landscapes_2 is None:
         if norm_type == "L-1":
             for current, landscape in enumerate(landscapes_1):
-                result = sum(abs(landscapes_1 - expand_dims(landscape, axis=0)), axis=1)
+                result = mean(abs(landscapes_1 - expand_dims(landscape, axis=0)), axis=1)
                 result[current] = max(result) + 1
                 differences[current] = min(result)
 
@@ -327,16 +327,7 @@ def calculate_differences(landscapes_1: ndarray,
 
         elif norm_type == "L-2":
             for current, landscape in enumerate(landscapes_1):
-                result = sqrt(sum(power(landscapes_1 - expand_dims(landscape, axis=0), 2), axis=1))
-                result[current] = max(result) + 1
-                differences[current] = min(result)
-
-                if verbose:
-                    monitor(current + 1, terminal)
-
-        elif norm_type == "L-inf":
-            for current, landscape in enumerate(landscapes_1):
-                result = max(abs(landscapes_1 - expand_dims(landscape, axis=0)), axis=1).astype(float)
+                result = mean(power(landscapes_1 - expand_dims(landscape, axis=0), 2), axis=1)
                 result[current] = max(result) + 1
                 differences[current] = min(result)
 
@@ -349,7 +340,7 @@ def calculate_differences(landscapes_1: ndarray,
     else:
         if norm_type == "L-1":
             for current, landscape in enumerate(landscapes_1):
-                result = sum(abs(landscapes_2 - expand_dims(landscape, axis=0)), axis=1)
+                result = mean(abs(landscapes_2 - expand_dims(landscape, axis=0)), axis=1)
                 differences[current] = min(result)
 
                 if verbose:
@@ -357,15 +348,7 @@ def calculate_differences(landscapes_1: ndarray,
 
         elif norm_type == "L-2":
             for current, landscape in enumerate(landscapes_1):
-                result = sqrt(sum(power(landscapes_2 - expand_dims(landscape, axis=0), 2), axis=1))
-                differences[current] = min(result)
-
-                if verbose:
-                    monitor(current + 1, terminal)
-
-        elif norm_type == "L-inf":
-            for current, landscape in enumerate(landscapes_1):
-                result = max(abs(landscapes_2 - expand_dims(landscape, axis=0)), axis=1).astype(float)
+                result = mean(power(landscapes_2 - expand_dims(landscape, axis=0), 2), axis=1)
                 differences[current] = min(result)
 
                 if verbose:

@@ -4,8 +4,8 @@
 """
 from copy import deepcopy
 
-from numpy import array, argmin, min
-from torch import optim, nn, pow, sum, sqrt
+from numpy import array, argmin
+from torch import optim, nn
 from typing import Tuple
 from warnings import filterwarnings
 
@@ -14,25 +14,6 @@ from effect.networks import NeuralMotif
 from effect.operations import prepare_data
 
 filterwarnings(action="ignore", category=UserWarning)
-
-
-class L2Loss(nn.Module):
-
-    # noinspection PyMethodMayBeStatic
-    def forward(self, x, y):
-        """
-        Calculate the L2 norm loss.
-
-        :param x: source results.
-        :type x: torch.Tensor
-
-        :param y: target results.
-        :type y: torch.Tensor
-
-        :return: L2 norm loss.
-        :rtype: torch.Tensor
-        """
-        return sqrt(sum(pow(x - y, 2)))
 
 
 def execute_escape_processes(motif_pairs: list,
@@ -45,7 +26,8 @@ def execute_escape_processes(motif_pairs: list,
     """
     Execute the escape process for multiple pairs of an escape motif and several catch motifs.
 
-    :param motif_pairs:
+    :param motif_pairs: list of pairs of source and target motifs.
+    :type motif_pairs: list
 
     :param value_range: definition field of two input signals.
     :type value_range: tuple
@@ -169,7 +151,7 @@ def maximum_minimum_loss_search(value_range: tuple,
     """
     record = {"motifs": [], "losses": []}
     input_signals = prepare_data(value_range=value_range, points=points)
-    optimizer, criterion = optim.Adam(escaper.parameters(), lr=learn_rate), L2Loss()
+    optimizer, criterion = optim.Adam(escaper.parameters(), lr=learn_rate), nn.MSELoss()
     source_iterations, target_iterations = thresholds
 
     for iteration in range(source_iterations):
@@ -179,16 +161,16 @@ def maximum_minimum_loss_search(value_range: tuple,
             print("-" * 80)
             print("We train the target motifs (to approach the source motif) using the gradient descent.")
 
-        target_loss_record = []
+        target_motifs, target_loss_record = [], []
         for target_index in range(len(catchers)):
             motifs, losses = minimum_loss_search(value_range=value_range, points=points, learn_rate=learn_rate,
                                                  escaper=escaper, catcher=catchers[target_index],
                                                  threshold=target_iterations)
-            catchers[target_index] = motifs[-1]
+            target_motifs.append(motifs[-1])
             target_loss_record.append(losses[-1])
 
         choice = argmin(target_loss_record)  # choose the most similar target motif.
-        target_motif, target_loss = catchers[choice], min(target_loss_record)
+        target_motif, target_loss = target_motifs[choice], target_loss_record[choice]
 
         if verbose:
             print("The loss of each trained target motif is")
@@ -248,7 +230,7 @@ def minimum_loss_search(value_range: tuple,
     :rtype: list, list
     """
     record = {"motifs": [], "losses": []}
-    optimizer, criterion = optim.Adam(catcher.parameters(), lr=learn_rate), L2Loss()
+    optimizer, criterion = optim.Adam(catcher.parameters(), lr=learn_rate), nn.MSELoss()
 
     input_signals = prepare_data(value_range=value_range, points=points)
     source_output_signals = escaper(input_signals)
