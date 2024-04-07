@@ -3,7 +3,7 @@
 @Description : Run all experiments for this work.
 """
 from itertools import product
-from numpy import array, linspace, min, argsort, where
+from numpy import array, linspace, arange, zeros, min, argsort, where
 from os import path, mkdir
 
 from effect import NeuralMotif, generate_outputs, estimate_lipschitz, estimate_lipschitz_by_motif
@@ -231,6 +231,26 @@ def task_3():
                                             test_noise_generators=noise_generators)
                 record[agent_name][train_radio] = result
         save_data(save_path=raw_path + "real-world/adjustments.1.pkl", information=record)
+
+    if not path.exists(path=raw_path + "real-world/iterations.pkl"):
+        record, train_radio, generations = {}, 0.3, arange(30, 151, 10)
+        for agent_name, agent_config in zip(agent_names, agent_configs):
+            record[agent_name] = []
+            for generation in generations:
+                result = train_and_evaluate(task=NEATCartPoleTask(maximum_generation=generation),
+                                            agent_name=agent_name, agent_config=agent_config, repeats=sample_number,
+                                            train_noise_generator=noise_generators[train_radio],
+                                            test_noise_generators=noise_generators)
+                values = []
+                for _, _, test_record in result:
+                    values.append(list(test_record.values()))
+                values, matrix = array(values), zeros(shape=(sample_number,), dtype=int)
+                for index in range(len(radios)):
+                    matrix[where(values[:, index] >= 195)] += 1
+                record[agent_name].append(len(where(matrix >= 4)[0]))
+            # noinspection PyUnresolvedReferences
+            record[agent_name] = array(record[agent_name])
+        save_data(save_path=raw_path + "real-world/iterations.pkl", information=record)
 
     if not path.exists(path=raw_path + "real-world/adjustments.2.pkl"):
         record, maximum_generation, train_radio = {}, 100, 0.3

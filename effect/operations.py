@@ -3,8 +3,8 @@
 @Description : Data processing related to neural motif
 """
 from itertools import product
-from numpy import ndarray, array, zeros, ones, expand_dims, vstack
-from numpy import min, mean, max, abs, sum, sqrt, power, cumproduct
+from numpy import ndarray, array, zeros, ones, expand_dims, vstack, all
+from numpy import min, mean, max, abs, sum, sqrt, power, cumproduct, gradient, linalg
 from torch import Tensor, cat, linspace, meshgrid, unsqueeze, squeeze
 from typing import Tuple, Union
 
@@ -31,6 +31,43 @@ def prepare_data(value_range: tuple,
     # noinspection PyTypeChecker
     x, y = meshgrid((x, y), indexing="ij")
     x, y = unsqueeze(x.reshape(-1), dim=1), unsqueeze(y.reshape(-1), dim=1)
+
+    data = cat((x, y), dim=1)
+
+    return data
+
+
+def prepare_data_flexible(value_range_x: tuple,
+                          value_range_y: tuple,
+                          points: int = 41,
+                          need_meshgrid: bool = True) \
+        -> Tensor:
+    """
+    Prepare database through the range of variable and sampling points.
+
+    :param value_range_x: range of x variable.
+    :type value_range_x: tuple
+
+    :param value_range_y: range of y variable.
+    :type value_range_y: tuple
+
+    :param points: sampling points.
+    :type points: int
+
+    :param need_meshgrid: whether to use meshgrid or not.
+    :type need_meshgrid: bool
+
+    :return: database.
+    :rtype: torch.Tensor
+    """
+    x, y = linspace(value_range_x[0], value_range_x[1], points), linspace(value_range_y[0], value_range_y[1], points)
+
+    if need_meshgrid:
+        # noinspection PyTypeChecker
+        x, y = meshgrid((x, y), indexing="ij")
+        x, y = unsqueeze(x.reshape(-1), dim=1), unsqueeze(y.reshape(-1), dim=1)
+    else:
+        x, y = unsqueeze(x, dim=1), unsqueeze(y, dim=1)
 
     data = cat((x, y), dim=1)
 
@@ -124,7 +161,45 @@ def calculate_landscape(value_range: tuple,
     :return: output landscape.
     :rtype: numpy.ndarray
     """
-    return motif(prepare_data(value_range=value_range, points=points)).reshape(points, points).detach().numpy()
+    if len(value_range) == 2:
+        input_data = prepare_data(value_range=value_range, points=points)
+    elif len(value_range) == 4:
+        input_data = prepare_data_flexible(value_range_x=value_range[:2], value_range_y=value_range[2:], points=points)
+    else:
+        raise ValueError("Input value range must be 2 or 4.")
+
+    return motif(input_data).reshape(points, points).detach().numpy()
+
+
+def calculate_values(value_range: tuple,
+                     points: int,
+                     motif: NeuralMotif) \
+        -> ndarray:
+    """
+    Calculate the output landscape of the selected motif.
+
+    :param value_range: definition field of two input signals.
+    :type value_range: tuple
+
+    :param points: number of equidistant sampling in the definition field.
+    :type points: int
+
+    :param motif: 3-node network motif in the artificial neural network.
+    :type motif: effect.networks.NeuralMotif
+
+    :return: output values.
+    :rtype: numpy.ndarray
+    """
+    if len(value_range) == 2:
+        input_data = prepare_data_flexible(value_range_x=value_range, value_range_y=value_range,
+                                           points=points, need_meshgrid=False)
+    elif len(value_range) == 4:
+        input_data = prepare_data_flexible(value_range_x=value_range[:2], value_range_y=value_range[2:],
+                                           points=points, need_meshgrid=False)
+    else:
+        raise ValueError("Input value range must be 2 or 4.")
+
+    return motif(input_data).reshape(-1).detach().numpy()
 
 
 def calculate_gradients(value_range: tuple,
@@ -158,6 +233,44 @@ def calculate_gradients(value_range: tuple,
         gradients[index] = sqrt(sum(values ** 2))
 
     return gradients.reshape(points, points)
+
+
+def detect_concavity(landscape: ndarray,
+                     interval: float) \
+        -> ndarray:
+    """
+    Checks the concavity of a given landscape.
+
+    :param landscape: output signal landscape.
+    :type landscape: numpy.ndarray
+
+    :param interval: interval between each cell in landscape.
+    :type interval: float
+
+    :return: concavity information.
+    :rtype: numpy.ndarray
+    """
+    # calculate hessian matrix.
+    gradient_x, gradient_y = gradient(landscape, interval)
+    gradient_xx, gradient_xy = gradient(gradient_x, interval)
+    gradient_yx, gradient_yy = gradient(gradient_y, interval)
+    hessian_xx = gradient_xx
+    hessian_xy = 0.5 * (gradient_xy + gradient_yx)
+    hessian_yy = gradient_yy
+
+    # detect concavity of the landscape.
+    concavity_matrix = zeros(shape=landscape.shape)
+    for index_1 in range(landscape.shape[0]):
+        for index_2 in range(landscape.shape[1]):
+            hessian_matrix = array([[hessian_xx[index_1, index_2], hessian_xy[index_1, index_2]],
+                                    [hessian_xy[index_1, index_2], hessian_yy[index_1, index_2]]])
+            eigenvalues = linalg.eigvals(hessian_matrix)
+            if all(eigenvalues <= 0):
+                concavity_matrix[index_1, index_2] = +1  # convex
+            elif all(eigenvalues >= 0):
+                concavity_matrix[index_1, index_2] = -1  # concave
+
+    return concavity_matrix
 
 
 def generate_motifs(motif_type: str,

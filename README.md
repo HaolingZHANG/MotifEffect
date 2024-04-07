@@ -1,6 +1,15 @@
-# What network motifs tell us about representational capacity, numerical stability, and their influence on overall neural networks
+# What network motifs tell us about the representational capacity, the numerical stability, and their influence on overall neural networks
 
-TODO abstract
+Noise resistance is an inescapable issue when implementing deep learning technologies in the real world. 
+Thus, efficient deep learning models should be able to adjust to or filter out noise. 
+Regarding the robust architecture design, early efforts entailed increasing the network complexity to different extents, 
+thereby rendering the overall model somewhat impervious to noise. Here, we examine the factors contributing to 
+the low numerical stability of the entire network from the perspective of 3-node network motifs. 
+Our systematic analysis of the representational capability and numerical stability of various motif types 
+and their constituted networks has revealed that avoiding the creation of coherent loops or replacing them 
+with colliders constitutes a fundamental approach to boosting robustness while maintaining representational capability. 
+These findings provide a network lightweight perspective for designing robust neural networks, 
+which could facilitate the more efficient implementation of deep learning technologies in the real world.
 
 ## Installation
 You may clone this code repository (using the following command line) or 
@@ -64,7 +73,7 @@ which means that there is no anthropogenic data filtering or adjusting in the pr
 │    │    ├── DefaultAgent                         // Default trained agent.
 │    │    ├── NEATAgent                            // Trained agent for the NEAT method and its variants.
 │    │    ├── create_agent_config                  // Create training configure of agent.
-│    │    ├── obtain_best                          // Obtain best genome in the specific task.
+│    │    ├── obtain_best                          // Obtain the best genome in the specific task.
 │    │    ├── train_and_evaluate                   // Train and evaluate agents in a given NEAT task.
 │    │    ├── train                                // Train an agent in a given NEAT task.
 │    │    ├── evaluate                             // Evaluate an agent in a given NEAT task.
@@ -110,7 +119,7 @@ Here is a Bibtex entry:
 
 ````
 @article{zhang2023what,
-  title={What network motifs tell us about representational capacity, numerical stability, and their influence on overall neural networks},
+  title={What network motifs tell us about the representational capacity, the numerical stability, and their influence on overall neural networks},
   author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Tegner, Jesper},
   journal={TODO},
   year={2023}

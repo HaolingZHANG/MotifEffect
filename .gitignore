@@ -149,6 +149,7 @@ works/raw/particular/*.pkl
 works/raw/particular/*.npy
 works/raw/trade-offs/*.pkl
 works/raw/trade-offs/*.npy
+works/raw/videos/*.avi
 works/data/*.pkl
 works/data/*.npy
 works/show/*.pdf

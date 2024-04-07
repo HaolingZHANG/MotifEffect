@@ -2,9 +2,10 @@
 @Author      : Haoling Zhang
 @Description : Plot all the figures in the main text.
 """
+from collections import Counter
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, patches, rcParams
-from numpy import array, arange, meshgrid, linspace, sum, min, max, abs, percentile, nan, where
+from numpy import array, arange, linspace, sum, min, max, abs, percentile, where, nan
 from scipy.stats import spearmanr
 from warnings import filterwarnings
 
@@ -93,12 +94,32 @@ def main_01():
 
     # noinspection PyTypeChecker
     ax = pyplot.subplot(grid[:2, 4:7])
+    for location, (motif_type, color) in enumerate(zip(motif_types[:-1], ["#C27C77", "#C2A976"])):
+        x = results[motif_type][0]
+        y = results[motif_type][1] / sum(results[motif_type][1])
+        pyplot.plot(x, y, color=draw_info[motif_type][0], lw=2, label=math_orders[location])
+    pyplot.legend(loc="upper right", fontsize=7)
+    pyplot.xlabel("best Lipschitz constant", fontsize=8)
+    pyplot.ylabel("proportion", fontsize=8)
+    pyplot.xticks(linspace(0.6, 2.4, 7),
+                  ["%.1f" % v for v in linspace(0.6, 2.4, 7)], fontsize=7)
+    pyplot.yticks(linspace(0.00, 0.08, 3),
+                  ["%d" % (v * 100) + "%" for v in linspace(0.00, 0.08, 3)], fontsize=7)
+    pyplot.xlim(0.6, 2.4)
+    pyplot.ylim(0, 0.08)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    results = task_data["c"]
+
+    # noinspection PyTypeChecker
+    ax = pyplot.subplot(grid[:2, 7:])
     for location, motif_type in enumerate(motif_types[:-1]):
         x = results[motif_type][0]
         y = results[motif_type][1] / sum(results[motif_type][1])
         pyplot.plot(x, y, color=draw_info[motif_type][0], lw=2, label=math_orders[location])
     pyplot.legend(loc="upper right", fontsize=7)
-    pyplot.xlabel(r"minimum L2 norm difference for $\mathcal{C}$", fontsize=8)
+    pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$", fontsize=8)
     pyplot.ylabel("proportion", fontsize=8)
     pyplot.xticks(linspace(0.00, 0.03, 7),
                   ["%.3f" % v for v in linspace(0.00, 0.03, 7)], fontsize=7)
@@ -109,115 +130,47 @@ def main_01():
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    results = task_data["c"]
-
     # noinspection PyTypeChecker
-    ax = pyplot.subplot(grid[:2, 7:])
-    for location, (motif_type, color) in enumerate(zip(motif_types[:-1], ["#C27C77", "#C2A976"])):
-        x = results[motif_type][0]
-        y = results[motif_type][1] / sum(results[motif_type][1])
-        pyplot.plot(x, y, color=draw_info[motif_type][0], lw=2, label=math_orders[location])
-    pyplot.legend(loc="upper right", fontsize=7)
-    pyplot.xlabel("best Lipschitz constant", fontsize=8)
-    pyplot.ylabel("proportion", fontsize=8)
-    pyplot.xticks(linspace(0.00, 4.00, 6),
-                  ["%.2f" % v for v in linspace(0.00, 4.00, 6)], fontsize=7)
-    pyplot.yticks(linspace(0.00, 0.08, 3),
-                  ["%d" % (v * 100) + "%" for v in linspace(0.00, 0.08, 3)], fontsize=7)
-    pyplot.xlim(0, 4.00)
-    pyplot.ylim(0, 0.08)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    results = task_data["d"]
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[2:5, 4:7])
-    matrix = results[motif_types[0]]
+    pyplot.subplot(grid[2:, 4:7])
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
-                      matrix.T, vmin=0, vmax=1, cmap="cool", shading="gouraud")
-    pyplot.text(0.0275, 1.65, "density", va="center", ha="center", fontsize=7)
-    colors, locations = pyplot.get_cmap("cool")(linspace(0, 1, 41)), linspace(0.7, 1.5, 41)
+                      task_data["d"].T, vmin=-0.1, vmax=1, cmap="pink_r", shading="gouraud")
+    pyplot.text(0.0278, 1.58, "density", va="center", ha="center", fontsize=7)
+    colors, locations = pyplot.get_cmap("pink_r")(linspace(0.1, 1, 41)), linspace(0.6, 1.5, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
-        pyplot.fill_between([0.0265, 0.0285], former, latter, fc=color, lw=0, zorder=1)
-    for location, info in zip(linspace(0.7, 1.5, 5), linspace(0, 1, 5)):
-        pyplot.hlines(location, 0.0260, 0.0265, lw=0.75, color="k", zorder=2)
-        pyplot.text(0.0255, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=6)
-    pyplot.plot([0.0265, 0.0265, 0.0285, 0.0285, 0.0265], [0.7, 1.5, 1.5, 0.7, 0.7], lw=0.75, color="k", zorder=2)
-    pyplot.text(0.0275, 2.30, math_orders[0], va="center", ha="center", fontsize=8)
-    pyplot.xlabel(r"minimum L2 norm difference for $\mathcal{C}$", fontsize=8)
+        pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
+    for location, info in zip(linspace(0.65, 1.5, 5), linspace(0, 1, 5)):
+        pyplot.hlines(location, 0.0270, 0.0275, lw=0.75, color="k", zorder=2)
+        pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=6)
+    pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.5, 1.5, 0.65], lw=0.75, color="k", zorder=3)
+    pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_i$", fontsize=8)
     pyplot.ylabel("best Lipschitz constant", fontsize=8)
     pyplot.xlim(0.00, 0.03)
-    pyplot.ylim(0.50, 2.50)
+    pyplot.ylim(0.60, 2.40)
     pyplot.xticks(linspace(0.00, 0.03, 7),
                   ["%.3f" % v for v in linspace(0.00, 0.03, 7)], fontsize=7)
-    pyplot.yticks(linspace(0.50, 2.50, 5),
-                  ["%.1f" % v for v in linspace(0.50, 2.50, 5)], fontsize=7)
+    pyplot.yticks(linspace(0.60, 2.40, 9),
+                  ["%.1f" % v for v in linspace(0.60, 2.40, 9)], fontsize=7)
 
     # noinspection PyTypeChecker
-    pyplot.subplot(grid[5:8, 4:7])
-    matrix = results[motif_types[1]]
+    pyplot.subplot(grid[2:, 7:])
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
-                      matrix.T, vmin=0, vmax=1, cmap="cool", shading="gouraud")
-    pyplot.text(0.0275, 1.65, "density", va="center", ha="center", fontsize=7)
-    colors, locations = pyplot.get_cmap("cool")(linspace(0, 1, 41)), linspace(0.7, 1.5, 41)
+                      task_data["e"].T, vmin=-0.1, vmax=1, cmap="pink_r", shading="gouraud")
+    pyplot.text(0.0278, 1.58, "density", va="center", ha="center", fontsize=7)
+    colors, locations = pyplot.get_cmap("pink_r")(linspace(0.1, 1, 41)), linspace(0.6, 1.5, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
-        pyplot.fill_between([0.0265, 0.0285], former, latter, fc=color, lw=0, zorder=1)
-    for location, info in zip(linspace(0.7, 1.5, 5), linspace(0, 1, 5)):
-        pyplot.hlines(location, 0.0260, 0.0265, lw=0.75, color="k", zorder=2)
-        pyplot.text(0.0255, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=6)
-    pyplot.plot([0.0265, 0.0265, 0.0285, 0.0285, 0.0265], [0.7, 1.5, 1.5, 0.7, 0.7], lw=0.75, color="k", zorder=2)
-    pyplot.text(0.0275, 2.30, math_orders[1], va="center", ha="center", fontsize=8)
-    pyplot.xlabel(r"minimum L2 norm difference for $\mathcal{C}$", fontsize=8)
+        pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
+    for location, info in zip(linspace(0.65, 1.5, 5), linspace(0, 1, 5)):
+        pyplot.hlines(location, 0.0270, 0.0275, lw=0.75, color="k", zorder=2)
+        pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=6)
+    pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.5, 1.5, 0.65], lw=0.75, color="k", zorder=3)
+    pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_c$", fontsize=8)
     pyplot.ylabel("best Lipschitz constant", fontsize=8)
     pyplot.xlim(0.00, 0.03)
-    pyplot.ylim(0.50, 2.50)
+    pyplot.ylim(0.60, 2.40)
     pyplot.xticks(linspace(0.00, 0.03, 7),
                   ["%.3f" % v for v in linspace(0.00, 0.03, 7)], fontsize=7)
-    pyplot.yticks(linspace(0.50, 2.50, 5),
-                  ["%.1f" % v for v in linspace(0.50, 2.50, 5)], fontsize=7)
-
-    results = task_data["e"]
-
-    # noinspection PyTypeChecker
-    ax = pyplot.subplot(grid[2:5, 7:])
-    matrix, count = results[motif_types[0]]
-    matrix[matrix == 0] = nan
-    pyplot.pcolormesh(linspace(0.00, 0.15, 50), linspace(0.00, 4.00, 50),
-                      matrix.T, vmin=0, vmax=3, cmap="Greys")
-    pyplot.text(0.015, 1.5, "%.2f" % (count * 100) + "%", va="center", ha="center", fontsize=7)
-    pyplot.plot([0.00, 0.03, 0.03, 0.00], [0.5, 0.5, 2.5, 2.5], lw=0.75, ls="--", color="k")
-    pyplot.text(0.165, 3.60, math_orders[0], va="center", ha="center", fontsize=8)
-    pyplot.xlabel(r"minimum L2 norm difference for $\mathcal{C}$", fontsize=8)
-    pyplot.ylabel("best Lipschitz constant", fontsize=8)
-    pyplot.xlim(0.00, 0.18)
-    pyplot.ylim(0.00, 4.00)
-    pyplot.xticks(linspace(0.00, 0.18, 7),
-                  ["%.2f" % v for v in linspace(0.00, 0.18, 7)], fontsize=7)
-    pyplot.yticks(linspace(0.00, 4.00, 5),
-                  ["%.1f" % v for v in linspace(0.00, 4.00, 5)], fontsize=7)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    # noinspection PyTypeChecker
-    ax = pyplot.subplot(grid[5:8, 7:])
-    matrix, count = results[motif_types[1]]
-    matrix[matrix == 0] = nan
-    pyplot.pcolormesh(linspace(0.00, 0.15, 50), linspace(0.00, 4.00, 50),
-                      matrix.T, vmin=0, vmax=3, cmap="Greys")
-    pyplot.text(0.015, 1.5, "%.2f" % (count * 100) + "%", va="center", ha="center", fontsize=7)
-    pyplot.plot([0.00, 0.03, 0.03, 0.00], [0.5, 0.5, 2.5, 2.5], lw=0.75, ls="--", color="k")
-    pyplot.text(0.165, 3.60, math_orders[1], va="center", ha="center", fontsize=8)
-    pyplot.xlabel(r"minimum L2 norm difference for $\mathcal{C}$", fontsize=8)
-    pyplot.ylabel("best Lipschitz constant", fontsize=8)
-    pyplot.xlim(0.00, 0.18)
-    pyplot.ylim(0.00, 4.00)
-    pyplot.xticks(linspace(0.00, 0.18, 7),
-                  ["%.2f" % v for v in linspace(0.00, 0.18, 7)], fontsize=7)
-    pyplot.yticks(linspace(0.00, 4.00, 5),
-                  ["%.1f" % v for v in linspace(0.00, 4.00, 5)], fontsize=7)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    pyplot.yticks(linspace(0.60, 2.40, 9),
+                  ["%.1f" % v for v in linspace(0.60, 2.40, 9)], fontsize=7)
 
     figure.align_labels()
     figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
@@ -347,29 +300,15 @@ def main_02():
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.annotate("", xy=(4.50, 1.15), xytext=(4.50, 0.95),
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
-    pyplot.text(0.60, 1.05, "change to\ncontour map", va="center", ha="left", fontsize=7)
-    pyplot.text(4.60, 1.05, "change to\ncontour map", va="center", ha="left", fontsize=7)
+    pyplot.text(0.60, 1.05, "detect its\nconcavity", va="center", ha="left", fontsize=7)
+    pyplot.text(4.60, 1.05, "detect its\nconcavity", va="center", ha="left", fontsize=7)
     pyplot.text(2.50, 0.40,
-                r"The escape method of $\mathcal{L}_i$ lies in" + "\n" +
-                "extending the \"ridge/valley\" line", color="red",
+                r"The escape mechanism of $\mathcal{L}_i$ lies in" + "\n" +
+                "extending the convex or concave area", color="red",
                 va="center", ha="center", fontsize=7)
-    # pyplot.text(2.50, 0.40,
-    #             r"The escape method of $\mathcal{L}_i$ lies in" + "\n" +
-    #             "symmetry of one diagonal plane and\n" +
-    #             "monotonicity of another diagonal plane",
-    #             va="center", ha="center", fontsize=7)
-    # pyplot.text(2.50, 0.60,
-    #             r"The escape method of $\mathcal{L}_i$ lies in" + "\n" +
-    #             "symmetry of one diagonal plane and\n" +
-    #             "monotonicity of another diagonal plane",
-    #             va="center", ha="center", fontsize=7)
-    # pyplot.text(2.50, 0.00,
-    #             "\"slope\" to \"ridge\" or \"valley\"", color="red",
-    #             va="center", ha="center", fontsize=7)
     for index, landscape, info in zip([0.0, 2.0, 4.0],
                                       [former, latter - former, latter],
                                       ["former\nlandscape", "change\nfor escape", "latter\nlandscape"]):
-
         pyplot.pcolormesh(x + index, y + 1.2, landscape, vmin=-1, vmax=1, cmap="PRGn", shading="gouraud")
         pyplot.plot([0.2 + index, 0.8 + index, 0.8 + index, 0.2 + index, 0.2 + index],
                     [1.4, 1.4, 2.0, 2.0, 1.4], lw=0.75, color="k", zorder=2)
@@ -377,62 +316,26 @@ def main_02():
         pyplot.text(index + 0.50, 1.30, "$x$", va="center", ha="center", fontsize=8)
         pyplot.text(index + 0.10, 1.70, "$y$", va="center", ha="center", fontsize=8)
 
-        xx, yy = meshgrid(linspace(0.2, 0.8, 41) + index, linspace(0.1, 0.7, 41))
-        if index in [0.0, 4.0]:
-            print(index, landscape.shape, max(landscape), where(landscape == 1.0))
-            ridge_path, previous_max_value = [(where(landscape == 1.0)[0][0], where(landscape == 1.0)[1][0])], 1.0
-            while True:
-                current_x, current_y = ridge_path[-1]
-                used_x, used_y, max_value = None, None, -1
-                for move_x in [-1, 0, +1]:
-                    for move_y in [-1, 0, +1]:
-                        if 0 <= current_x + move_x <= 40 and 0 <= current_y + move_y <= 40:
-                            if (current_x + move_x, current_y + move_y) not in ridge_path:
-                                if landscape[current_x + move_x, current_y + move_y] <= max_value:
-                                    continue
-                                if previous_max_value < max_value:
-                                    continue
-                                used_x, used_y = current_x + move_x, current_y + move_y
-                                max_value = landscape[current_x + move_x, current_y + move_y]
-                previous_max_value = max_value
-                if used_x is not None:
-                    ridge_path.append((used_x, used_y))
-                else:
-                    break
-            print(ridge_path)
-            pyplot.contour(xx, yy, landscape, linewidths=0.75, vmin=-1, vmax=1, cmap="PRGn")
-            pyplot.plot([0.2 + index, 0.8 + index, 0.8 + index, 0.2 + index, 0.2 + index],
-                        [0.1, 0.1, 0.7, 0.7, 0.1], lw=0.75, color="k", zorder=2)
-            # used_x, used_y = [], []
-            # for x_i, y_i in ridge_path:
-            #     used_x.append((linspace(0.2, 0.8, 41) + index)[x_i])
-            #     used_y.append((linspace(0.1, 0.7, 41))[y_i])
-            #
-            # pyplot.plot(used_x, used_y, color="k", lw=0.75)
-            pyplot.text(index + 0.50, 0.00, "$x$", va="center", ha="center", fontsize=8)
-            pyplot.text(index + 0.10, 0.40, "$y$", va="center", ha="center", fontsize=8)
+    new_x, new_y = linspace(0.2, 0.8, 101), linspace(0.2, 0.8, 101)
+    for index, landscape in zip([0.0, 4.0], [task_data["b"][2], task_data["b"][3]]):
+        pyplot.pcolormesh(new_x + index, new_y, landscape, vmin=-1, vmax=1, cmap="binary", shading="gouraud")
+        pyplot.plot([0.2 + index, 0.8 + index, 0.8 + index, 0.2 + index, 0.2 + index],
+                    [0.2, 0.2, 0.8, 0.8, 0.2], lw=0.75, color="k", zorder=2)
+        pyplot.text(index + 0.50, 0.10, "$x$", va="center", ha="center", fontsize=8)
+        pyplot.text(index + 0.10, 0.50, "$y$", va="center", ha="center", fontsize=8)
+        pyplot.text(index + 0.05, -0.10, "convex", va="center", ha="left", fontsize=7)
+        pyplot.text(index + 0.05, -0.30, "concave", va="center", ha="left", fontsize=7)
+        pyplot.text(index + 0.58, -0.10, "=", va="center", ha="center", fontsize=7)
+        pyplot.text(index + 0.58, -0.30, "=", va="center", ha="center", fontsize=7)
 
-    #     if index in [0.0, 4.0]:
-    #         pyplot.plot([index + 0.20, index + 0.20, index + 0.80], [0.9, 0.5, 0.5], lw=0.75, color="k", zorder=2)
-    #         pyplot.plot([index + 0.20, index + 0.20, index + 0.80], [0.2, -0.2, -0.2], lw=0.75, color="k", zorder=2)
-    #         values = []
-    #         for location in range(len(landscape)):
-    #             values.append(landscape[location, location])
-    #         values = (array(values) + 1.0) * 0.20 + 0.50
-    #         pyplot.fill_between(index + linspace(0.20, 0.80, len(values)), 0.5, values, fc="silver", lw=0)
-    #         pyplot.plot(index + linspace(0.20, 0.80, len(values)), values, lw=0.75, color="k")
-    #         pyplot.text(index + 1.05, 0.80, "$x=y$", va="center", ha="center", fontsize=7, zorder=2)
-    #         pyplot.text(index + 0.10, 0.70, "$z$", va="center", ha="center", fontsize=8)
-    #         pyplot.text(index + 0.50, 0.35, "tangent plane", va="center", ha="center", fontsize=7)
-    #         values = []
-    #         for location in range(len(landscape)):
-    #             values.append(landscape[location, len(landscape) - location - 1])
-    #         values = (array(values) + 1.0) * 0.20 - 0.20
-    #         pyplot.fill_between(index + linspace(0.20, 0.80, len(values)), -0.20, values, fc="silver", lw=0)
-    #         pyplot.plot(index + linspace(0.20, 0.80, len(values)), values, lw=0.75, color="k")
-    #         pyplot.text(index + 1.05, 0.10, "$x+y=1$", va="center", ha="center", fontsize=7, zorder=2)
-    #         pyplot.text(index + 0.10, 0.00, "$z$", va="center", ha="center", fontsize=8)
-    #         pyplot.text(index + 0.50, -0.35, "tangent plane", va="center", ha="center", fontsize=7)
+        counter = Counter(landscape.reshape(-1))
+        # noinspection PyTypeChecker
+        convex_rate, concave_rate = counter[1] / (101.0 * 101.0), counter[-1] / (101.0 * 101.0)
+        pyplot.text(index + 1.00, -0.10, ("%.1f" % (convex_rate * 100.0)) + "%", va="center", ha="right", fontsize=7)
+        pyplot.text(index + 1.00, -0.30, ("%.1f" % (concave_rate * 100.0)) + "%", va="center", ha="right", fontsize=7)
+        pyplot.scatter([index + 1.13], [-0.10], ec="k", fc="k", marker="s", lw=0.75)
+        pyplot.scatter([index + 1.13], [-0.30], ec="k", fc="w", marker="s", lw=0.75)
+
     locations, colors = linspace(0.0, 1.9, 51), pyplot.get_cmap("PRGn")(linspace(0, 1, 50))
     for former, latter, color in zip(locations[:-1], locations[1:], colors):
         pyplot.fill_between([5.7, 5.8], former, latter, fc=color, lw=0, zorder=1)
@@ -452,27 +355,21 @@ def main_02():
     pyplot.annotate("", xy=(1.50, 1.10), xytext=(1.50, 0.95),
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.text(4.20, 0.40,
-                r"The escape method of $\mathcal{L}_c$ lies in" + "\n" +
+                r"The escape mechanism of $\mathcal{L}_c$ lies in" + "\n" +
                 "adjusting the high gradient region", color="red",
                 va="center", ha="center", fontsize=7)
-    # pyplot.text(4.20, 0.60,
-    #             r"The escape method of $\mathcal{L}_c$ lies in" + "\n" +
-    #             "adjusting high gradient region",
-    #             va="center", ha="center", fontsize=7)
-    # pyplot.text(4.20, 0.00,
-    #             "seek steeper \"slope\"", color="red",
-    #             va="center", ha="center", fontsize=7)
     pyplot.text(1.50, 1.7, "+", va="center", ha="center", fontsize=12)
     pyplot.text(3.50, 1.7, "=", va="center", ha="center", fontsize=12)
     for index, landscape, info in zip([0.0, 2.0, 4.0],
                                       [former, latter - former, latter],
                                       ["former\nlandscape", "change\nfor escape", "latter\nlandscape"]):
-        pyplot.pcolormesh(x + index, y + 1.2, landscape, vmin=-1, vmax=1, cmap="PRGn")
+        pyplot.pcolormesh(x + index, y + 1.2, landscape, vmin=-1, vmax=1, cmap="PRGn", shading="gouraud")
         pyplot.plot([0.2 + index, 0.8 + index, 0.8 + index, 0.2 + index, 0.2 + index],
                     [1.4, 1.4, 2.0, 2.0, 1.4], lw=0.75, color="k", zorder=2)
         pyplot.text(index + 0.50, 2.15, info, va="center", ha="center", fontsize=7)
         pyplot.text(index + 0.50, 1.30, "$x$", va="center", ha="center", fontsize=8)
         pyplot.text(index + 0.10, 1.70, "$y$", va="center", ha="center", fontsize=8)
+
     values_x = task_data["c"][2].reshape(-1)
     values_y = abs(latter - former).reshape(-1)
     correlation, p_value = spearmanr(values_x, values_y)
@@ -509,26 +406,80 @@ def main_02():
         pyplot.hlines(location, 5.65, 5.70, lw=0.75, color="k")
         pyplot.text(5.60, location, info, va="center", ha="right", fontsize=7)
     pyplot.plot([0.2, 0.2, 2.8], [0.9, -0.2, -0.2], lw=0.75, color="k", zorder=2)
-    pyplot.text(0.12, 0.35, r"normalized $z$ change", rotation=90, va="center", ha="center", fontsize=7)
-    pyplot.text(1.5, -0.35, "normalized gradient in former landscape", va="center", ha="center", fontsize=7)
+    pyplot.text(0.12, 0.35, r"normalized $\Delta z$", rotation=90, va="center", ha="center", fontsize=7)
+    pyplot.text(1.5, -0.35, "normalized gradient in the former landscape", va="center", ha="center", fontsize=7)
     pyplot.xlim(0.10, 6.0)
     pyplot.ylim(-0.5, 2.3)
     pyplot.axis("off")
 
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2, 0])
-    pyplot.text(3.1, 0.05, "length of \"ridge/valley\" line", va="center", ha="center", fontsize=7)
+
+    formers, latters = task_data["d"][:, 0], task_data["d"][:, 1]
+
+    former_counts = array([
+        len(formers[where((formers >= 0.1) & (formers < 0.4))]),
+        len(formers[where((formers >= 0.4) & (formers < 0.5))]),
+        len(formers[where((formers >= 0.5) & (formers < 0.6))]),
+        len(formers[where((formers >= 0.6) & (formers < 0.7))]),
+        len(formers[where((formers >= 0.7) & (formers < 0.8))]),
+        len(formers[where((formers >= 0.8) & (formers < 0.9))])
+    ])
+
+    latter_counts = array([
+        len(latters[where((latters >= 0.1) & (latters < 0.4))]),
+        len(latters[where((latters >= 0.4) & (latters < 0.5))]),
+        len(latters[where((latters >= 0.5) & (latters < 0.6))]),
+        len(latters[where((latters >= 0.6) & (latters < 0.7))]),
+        len(latters[where((latters >= 0.7) & (latters < 0.8))]),
+        len(latters[where((latters >= 0.8) & (latters < 0.9))])
+    ])
+
+    labels = ["10% ~ 40%", "40% ~ 50%", "50% ~ 60%", "60% ~ 70%", "70% ~ 80%", "80% ~ 90%"]
+    for location, label in zip(linspace(0.4 + 0.45, 5.8 - 0.45, 6), labels):
+        pyplot.vlines(location, 0.25, 0.30, lw=0.75, color="k")
+        pyplot.text(location, 0.15, label, va="center", ha="center", fontsize=7)
+
+    line_record = [[], []]
+    for location, count_1 in zip(linspace(0.4 + 0.45, 5.8 - 0.45, 6), former_counts):
+        height_1 = count_1 / 400.0 * 2.4
+        if count_1 > 0:
+            pyplot.text(location, 0.4 + height_1, str(count_1), va="center", ha="center", fontsize=7, zorder=3)
+            pyplot.scatter([location], [0.4 + height_1], s=200, ec="k", fc="#FFF5F3", lw=0.75, zorder=2)
+            line_record[0].append(location)
+            line_record[1].append(0.4 + height_1)
+    pyplot.plot(line_record[0], line_record[1], lw=0.75, ls="--", color="k", zorder=1)
+
+    line_record = [[], []]
+    for location, count_2 in zip(linspace(0.4 + 0.45, 5.8 - 0.45, 6), latter_counts):
+        height_2 = count_2 / 400.0 * 2.4
+        if count_2 > 0:
+            pyplot.text(location, 0.4 + height_2, str(count_2), va="center", ha="center", fontsize=7, zorder=3)
+            pyplot.scatter([location], [0.4 + height_2], s=200, ec="k", fc="#F6D3CC", lw=0.75, zorder=2)
+            line_record[0].append(location)
+            line_record[1].append(0.4 + height_2)
+    pyplot.plot(line_record[0], line_record[1], lw=0.75, ls="--", color="k", zorder=1)
+
+    # pyplot.annotate("", xy=(line_record[0][1], line_record[1][1] + 0.23),
+    #                 xytext=(line_record[0][1], line_record[1][1] + 0.12),
+    #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    # pyplot.text(line_record[0][1], line_record[1][1] + 0.28, "a slight increase of 0.44",
+    #             va="center", ha="center", fontsize=7)
+
+    pyplot.scatter([0.3], [1.9], ec="k", fc="#FFF5F3", lw=0.75)
+    pyplot.scatter([0.3], [1.7], ec="k", fc="#F6D3CC", lw=0.75)
+    pyplot.text(0.4, 1.9, "former landscape", va="center", ha="left", fontsize=7)
+    pyplot.text(0.4, 1.7, "latter landscape", va="center", ha="left", fontsize=7)
+    pyplot.text(3.1, 0.0,
+                "max (convex area, concave area) / overall area", va="center", ha="center", fontsize=7)
     pyplot.hlines(0.3, 0.2, 6.0, lw=0.75, color="k")
     pyplot.xlim(0.1, 6.2)
     pyplot.ylim(0.0, 2.1)
-    # pyplot.axis("off")
-
-    pyplot.xticks([])
-    pyplot.yticks([])
+    pyplot.axis("off")
 
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2, 1])
-    pyplot.text(3.1, 0.05, "Spearman's rank correlation coefficient", va="center", ha="center", fontsize=7)
+    pyplot.text(3.1, 0.0, "Spearman's rank correlation coefficient", va="center", ha="center", fontsize=7)
     pyplot.hlines(0.3, 0.2, 6.0, lw=0.75, color="k")
 
     values = task_data["e"][:, 0]
@@ -548,19 +499,17 @@ def main_02():
     ]
 
     for index, (location, count) in enumerate(zip(linspace(0.4 + 0.45, 5.8 - 0.45, 6), counts)):
-        height = count / 400.0 * 3.5
-        if index > 0:
-            pyplot.fill_between([location - 0.35, location + 0.35], 0.3, 0.3 + height,
-                                ec="k", fc="#FA7F6F", lw=0.75)
-        else:
-            pyplot.fill_between([location - 0.35, location + 0.35], 0.3, 0.3 + height,
-                                ec="k", fc="#BEB8DC", lw=0.75)
+        height = count / 400.0 * 3.4
+        pyplot.fill_between([location - 0.35, location + 0.35], 0.3, 0.3 + height,
+                            ec="k", fc="#F2FEDC", lw=0.75)
 
-        if count >= 100:
-            pyplot.text(location, 0.32 + height, str(count) + " / 400", va="bottom", ha="center", fontsize=7)
-        else:
-            pyplot.text(location, 0.32 + height, " " + str(count) + " / 400", va="bottom", ha="center", fontsize=7)
+        pyplot.text(location, 0.32 + height, str(count), va="bottom", ha="center", fontsize=7)
 
+    # pyplot.text(0.12, 1.65, "80 samples are trapped in local optima", va="center", ha="left", fontsize=7)
+    # pyplot.text(0.12, 1.50, "24 samples are not suitable for Spearman", va="center", ha="left", fontsize=7)
+    # pyplot.annotate("", xy=(1.30, 1.40), xytext=(1.30, 1.27),
+    #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    # pyplot.plot([0.40, 0.40, 2.20, 2.20], [1.20, 1.27, 1.27, 1.20], lw=0.75, color="k")
     pyplot.xlim(0.1, 6.2)
     pyplot.ylim(0.0, 2.1)
     pyplot.axis("off")
@@ -568,8 +517,8 @@ def main_02():
     figure.text(0.02, 0.98, "a", va="center", ha="center", fontsize=12)
     figure.text(0.02, 0.67, "b", va="center", ha="center", fontsize=12)
     figure.text(0.51, 0.67, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.34, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.51, 0.34, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.33, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.51, 0.33, "e", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main02.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -614,17 +563,6 @@ def main_03():
     for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
         locations = arange(5) - 0.3 + 0.2 * index
         pyplot.bar(locations, task_data["b"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
-    flag = True
-    for index in range(4):
-        locations = arange(5) - 0.3 + 0.2 * index
-        for location, value in zip(locations, task_data["b"][index]):
-            if value >= 195:
-                if flag:
-                    pyplot.scatter([location], [value + 2.0], marker="v", s=15, fc="lawngreen", ec="k",
-                                   label="effective training")
-                    flag = False
-                else:
-                    pyplot.scatter([location], [value + 2.0], marker="v", s=15, fc="lawngreen", ec="k")
 
     pyplot.text(4.45, 196, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
     pyplot.hlines(195, -0.5, 4.5, lw=0.75, ls="--", zorder=2)
@@ -685,13 +623,39 @@ def main_04():
     """
     task_data = load_data(sort_path + "main04.pkl")
 
-    figure = pyplot.figure(figsize=(10, 4), tight_layout=True)
+    figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
+    grid = pyplot.GridSpec(3, 4)
+
+    # noinspection PyTypeChecker
+    ax = pyplot.subplot(grid[0, :])
+    labels = {"b": "default",
+              "i": r"$\mathcal{L}_c + \mathcal{C}$",
+              "c": r"$\mathcal{L}_i + \mathcal{C}$",
+              "a": r"$\mathcal{C}$"}
+    colors = pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4))
+    for (agent_name, values), bias, color in zip(task_data["a"].items(), [-3, -1, 1, 3], colors):
+        pyplot.bar(arange(20, 151, 10) + bias, values, width=2, fc=color, ec="k", lw=0.75, label=labels[agent_name])
+    pyplot.legend(loc="upper left", framealpha=1, fontsize=7)
+    pyplot.plot([95, 95, 105, 105], [85, 88, 88, 85], lw=0.75, color="k")
+    pyplot.vlines(100, 88, 91, lw=0.75, color="k")
+    pyplot.text(100, 97, "used for (b) - (e)", va="center", ha="center", fontsize=7)
+    pyplot.xlabel("maximum generation", fontsize=8)
+    pyplot.ylabel("qualified agent number", fontsize=8)
+    pyplot.xticks(arange(20, 151, 10), arange(20, 151, 10), fontsize=7)
+    pyplot.yticks(arange(0, 101, 20), arange(0, 101, 20), fontsize=7)
+    pyplot.xlim(15, 155)
+    pyplot.ylim(0, 100)
+    # noinspection PyUnresolvedReferences
+    ax.spines["top"].set_visible(False)
+    # noinspection PyUnresolvedReferences
+    ax.spines["right"].set_visible(False)
 
     labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
     colors = ["#BF33B5", "#845EC2", "#D73222"]
 
-    for index, (label, panel_index) in enumerate(zip(labels, ["a", "b", "c", "d"])):
-        ax = pyplot.subplot(1, 4, index + 1)
+    for index, (label, panel_index) in enumerate(zip(labels, ["b", "c", "d", "e"])):
+        # noinspection PyTypeChecker
+        ax = pyplot.subplot(grid[1:, index])
         pyplot.title(label, fontsize=9)
         pyplot.hlines(195, 0, 5, lw=0.75, ls="--", zorder=-1)
         pyplot.text(4.9, 196, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
@@ -702,14 +666,14 @@ def main_04():
                     info = "  " + info
                 pyplot.plot(arange(5) + 0.5, curve, color=colors[case_index],
                             lw=2.5, zorder=case_index, marker="o",
-                            label=str(case_index + 1) + ": " + info, alpha=0.75)
+                            label="T" + str(case_index + 1) + ": " + info, alpha=0.75)
             else:
                 info = "  0 / " + str(total)
                 pyplot.plot(arange(5) + 0.5, [0, 0, 0, 0, 0], color=colors[case_index],
                             lw=2.5, zorder=case_index, marker="o",
-                            label=str(case_index + 1) + ": " + info, alpha=0.75)
+                            label="T" + str(case_index + 1) + ": " + info, alpha=0.75)
 
-        pyplot.legend(loc="lower left", fontsize=8, title="failure type", title_fontsize=7)
+        pyplot.legend(loc="lower left", fontsize=7, title="failure type", title_fontsize=7)
         pyplot.xlabel("evaluating error scale", fontsize=8)
         pyplot.ylabel("evaluating performance", fontsize=8)
         pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
@@ -723,16 +687,17 @@ def main_04():
 
     figure.align_labels()
     figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.266, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.99, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.759, 0.99, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.67, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.266, 0.67, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.67, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.759, 0.67, "e", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
 if __name__ == "__main__":
-    main_01()
+    # main_01()
     main_02()
-    main_03()
-    main_04()
+    # main_03()
+    # main_04()

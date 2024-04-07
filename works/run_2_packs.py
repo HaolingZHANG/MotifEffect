@@ -2,11 +2,12 @@
 @Author      : Haoling Zhang
 @Description : Package all the presented data from the experimental results.
 """
-from numpy import array, zeros, linspace, diagonal, abs, mean, min, max, sum, argmax, argmin, all, where, arange
+from collections import Counter
+from numpy import array, zeros, linspace, abs, mean, min, max, argmax, argmin, all, where
 from os import path, mkdir
 from scipy.stats import spearmanr, gaussian_kde
 
-from effect import calculate_landscape, calculate_gradients
+from effect import calculate_landscape, calculate_gradients, detect_concavity
 from works import load_data, save_data
 
 motif_types, motif_indices = ["incoherent-loop", "coherent-loop", "collider"], [1, 2, 3, 4]
@@ -43,11 +44,11 @@ def main_01():
                 structure = motif_type + "." + str(motif_index)
                 robustness_data += load_data("./raw/robustness/" + structure + ".npy").tolist()
             robustness_data = array(robustness_data)
-            x = linspace(0.00, 4.00, 100)
+            x = linspace(0.60, 2.40, 100)
             y = gaussian_kde(robustness_data)(x)
             robustness_distributions[motif_type] = (x, y)
 
-        local_map, maximum_value, counts = {}, 0, []
+        density_map, maximum_value, counts = {}, 0, []
         for motif_type in motif_types[:-1]:
             trade_off, count = [], 0
             for motif_index in [1, 2, 3, 4]:
@@ -55,42 +56,26 @@ def main_01():
                 data_1 = load_data("./raw/robustness/" + structure + ".npy")
                 data_2 = load_data("./raw/trade-offs/" + structure + ".npy")
                 for index, (source_robust, values) in enumerate(zip(data_1, data_2)):
-                    if values[1] <= 0.03 and 0.5 <= source_robust <= 2.5:
+                    if values[1] <= 0.03 and 0.6 <= source_robust <= 2.4:
                         trade_off.append([values[1], source_robust])
                         count += 1
             trade_off, count = array(trade_off), count / (441000.0 * 4.0)
             x_data, y_data = trade_off[:, 0], trade_off[:, 1]
-            x_bins, y_bins = linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100)
+            x_bins, y_bins = linspace(0.00, 0.03, 100), linspace(0.60, 2.40, 100)
             matrix = zeros(shape=(100, 100))
             for x, y in zip(x_data, y_data):
                 matrix[max(where(x - x_bins > 0)[0]), max(where(y - y_bins > 0)[0])] += 1
 
             maximum_value = max([maximum_value, max(matrix)])
             counts.append(count)
-            local_map[motif_type] = matrix
+            density_map[motif_type] = matrix
+
         for motif_type in motif_types[:-1]:
-            local_map[motif_type] /= maximum_value
-            local_map[motif_type] = local_map[motif_type]
+            density_map[motif_type] = density_map[motif_type] / maximum_value
 
-        whole_map = {}
-        for motif_type, count in zip(motif_types[:-1], counts):
-            trade_off = []
-            for motif_index in [1, 2, 3, 4]:
-                structure = motif_type + "." + str(motif_index)
-                data_1 = load_data("./raw/robustness/" + structure + ".npy")
-                data_2 = load_data("./raw/trade-offs/" + structure + ".npy")
-                for index, (source_robust, values) in enumerate(zip(data_1, data_2)):
-                    trade_off.append([values[1], source_robust])
-            trade_off = array(trade_off)
-            x_data, y_data = trade_off[:, 0], trade_off[:, 1]
-            bin_x = linspace(0.00, 0.15, 50)
-            bin_y = linspace(0.00, 4.00, 50)
-            matrix = zeros(shape=(50, 50))
-            for x, y in zip(x_data, y_data):
-                matrix[max(where(x - bin_x > 0)[0]), max(where(y - bin_y > 0)[0])] = 1
-            whole_map[motif_type] = (matrix, count)
+        task_data = {"b": robustness_distributions, "c": difference_distributions,
+                     "d": density_map["incoherent-loop"], "e": density_map["coherent-loop"]}
 
-        task_data = {"b": difference_distributions, "c": robustness_distributions, "d": local_map, "e": whole_map}
         save_data(save_path=sort_path + "main01.pkl", information=task_data)
 
 
@@ -100,22 +85,50 @@ def main_02():
     """
     if not path.exists(sort_path + "main02.pkl"):
         task_data = {}
-        for panel_index, motif_type in zip(["b", "c"], motif_types[:-1]):
-            escape_data = load_data(load_path=raw_path + "particular/" + motif_type + ".1.escape-process.pkl")
-            maximum_index, maximum_loss = 0, -1
-            for index, (motifs, losses) in enumerate(escape_data):
-                start, stop = argmin(losses), argmax(losses)
-                if stop <= start:
-                    continue
-                if losses[stop] - losses[start] > maximum_loss:
-                    maximum_loss, maximum_index = losses[stop] - losses[start], index
-            motifs, losses = escape_data[maximum_index]
-            source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
 
-            task_data[panel_index] = tuple([calculate_landscape(value_range, points, source),
-                                            calculate_landscape(value_range, points, target),
-                                            calculate_gradients(value_range, points, source),
-                                            calculate_gradients(value_range, points, target)])
+        escape_data = load_data(load_path=raw_path + "particular/" + motif_types[0] + ".1.escape-process.pkl")
+        maximum_index, maximum_loss = 0, -1
+        for index, (motifs, losses) in enumerate(escape_data):
+            start, stop = argmin(losses), argmax(losses)
+            if stop <= start:
+                continue
+            if losses[stop] - losses[start] > maximum_loss:
+                maximum_loss, maximum_index = losses[stop] - losses[start], index
+        motifs, losses = escape_data[maximum_index]
+        source_motif, target_motif = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+        source_landscape = calculate_landscape(value_range, points, source_motif)
+        target_landscape = calculate_landscape(value_range, points, target_motif)
+
+        task_data["b"] = tuple([source_landscape, target_landscape,
+                                detect_concavity(calculate_landscape(value_range, 101, source_motif), 0.01),
+                                detect_concavity(calculate_landscape(value_range, 101, target_motif), 0.01)])
+
+        escape_data = load_data(load_path=raw_path + "particular/" + motif_types[1] + ".1.escape-process.pkl")
+        maximum_index, maximum_loss = 0, -1
+        for index, (motifs, losses) in enumerate(escape_data):
+            start, stop = argmin(losses), argmax(losses)
+            if stop <= start:
+                continue
+            if losses[stop] - losses[start] > maximum_loss:
+                maximum_loss, maximum_index = losses[stop] - losses[start], index
+        motifs, losses = escape_data[maximum_index]
+        source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+        task_data["c"] = tuple([calculate_landscape(value_range, points, source),
+                                calculate_landscape(value_range, points, target),
+                                calculate_gradients(value_range, points, source)])
+
+        records = []
+        for motif_index in motif_indices:
+            feature = motif_types[0] + "." + str(motif_index)
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+                source_concavity = detect_concavity(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_concavity(calculate_landscape(value_range, 101, target), 0.01)
+                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
+                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
+                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
+        task_data["d"] = array(records)
 
         records = []
         for motif_index in motif_indices:
@@ -123,51 +136,16 @@ def main_02():
             escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
             for index, (motifs, losses) in enumerate(escape_data):
                 start, stop = argmin(losses), argmax(losses)
-                if stop > start:
-                    source_landscape = calculate_landscape(value_range, points, motifs[start][0])
-                    target_landscape = calculate_landscape(value_range, points, motifs[stop][0])
-                    values_x = calculate_gradients(value_range, points, motifs[start][0]).reshape(-1)
-                    values_y = abs(target_landscape - source_landscape).reshape(-1)
-                    # noinspection PyTypeChecker
-                    correlation, p_value = spearmanr(values_x, values_y)
-                    records.append([correlation, p_value])
-
+                source_landscape = calculate_landscape(value_range, points, motifs[start][0])
+                target_landscape = calculate_landscape(value_range, points, motifs[stop][0])
+                values_x = calculate_gradients(value_range, points, motifs[start][0]).reshape(-1)
+                values_y = abs(target_landscape - source_landscape).reshape(-1)
+                # noinspection PyTypeChecker
+                correlation, p_value = spearmanr(values_x, values_y)
+                records.append([correlation, p_value])
         task_data["e"] = array(records)
 
         save_data(save_path=sort_path + "main02.pkl", information=task_data)
-
-    # for motif_index in motif_indices:
-    #     feature = motif_types[0] + "." + str(motif_index)
-    #     escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
-    #     for index, (motifs, losses) in enumerate(escape_data):
-    #         start, stop = argmin(losses), argmax(losses)
-    #         source_landscape = calculate_landscape(value_range, points, motifs[start][0])
-    #         target_landscape = calculate_landscape(value_range, points, motifs[stop][0])
-    #         source_lines = [diagonal(source_landscape), diagonal(source_landscape[::-1])]
-    #         target_lines = [diagonal(target_landscape), diagonal(target_landscape[::-1])]
-    #         if all(source_lines[0][:-1] >= source_lines[0][1:]) or all(source_lines[0][:-1] <= source_lines[0][1:]):
-    #             source_line = source_lines[1]
-    #         elif all(source_lines[1][:-1] >= source_lines[1][1:]) or all(source_lines[1][:-1] <= source_lines[1][1:]):
-    #             source_line = source_lines[0]
-    #         else:
-    #             raise ValueError("Not in line with assumptions!")
-    #
-    #         if all(target_lines[0][:-1] >= target_lines[0][1:]) or all(target_lines[0][:-1] <= target_lines[0][1:]):
-    #             target_line = target_lines[1]
-    #         elif all(target_lines[1][:-1] >= target_lines[1][1:]) or all(target_lines[1][:-1] <= target_lines[1][1:]):
-    #             target_line = target_lines[0]
-    #         else:
-    #             raise ValueError("Not in line with assumptions!")
-    #
-    #         print(motif_index, index + 1,
-    #               sum(abs(source_line[:points // 2 + 1] - source_line[points // 2:])),
-    #               sum(abs(target_line[:points // 2 + 1] - target_line[points // 2:])))
-
-            # print(motif_index, index + 1,
-            #       all(source_lines[0][:-1] >= source_lines[0][1:]) or all(source_lines[0][:-1] <= source_lines[0][1:]),
-            #       all(source_lines[1][:-1] >= source_lines[1][1:]) or all(source_lines[1][:-1] <= source_lines[1][1:]),
-            #       all(target_lines[0][:-1] >= target_lines[0][1:]) or all(target_lines[0][:-1] <= target_lines[0][1:]),
-            #       all(target_lines[1][:-1] >= target_lines[1][1:]) or all(target_lines[1][:-1] <= target_lines[1][1:]))
 
 
 def main_03():
@@ -201,11 +179,13 @@ def main_04():
     Collect plot data from Figure 4 in main text.
     """
     if not path.exists(sort_path + "main04.pkl"):
-        record = load_data(raw_path + "real-world/adjustments.2.pkl")
-
         task_data = {}
 
-        for strategy_index, (panel_index, strategy) in enumerate(zip(["a", "b", "c", "d"], agent_names)):
+        record = load_data(raw_path + "real-world/iterations.pkl")
+        task_data["a"] = record
+
+        record = load_data(raw_path + "real-world/adjustments.2.pkl")
+        for strategy_index, (panel_index, strategy) in enumerate(zip(["b", "c", "d", "e"], agent_names)):
             count, cases = 0, [[], [], []]
             for sample in record[strategy]:
                 evaluation = [sample[2][noise] for noise in radios]
@@ -241,7 +221,7 @@ if __name__ == "__main__":
     if not path.exists(raw_path):
         raise ValueError("Please run the tasks (run_1_tasks.py) first!")
 
-    # main_01()
+    main_01()
     main_02()
-    # main_03()
-    # main_04()
+    main_03()
+    main_04()

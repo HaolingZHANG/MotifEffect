@@ -7,11 +7,11 @@ from gc import collect
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams
 from numpy import linspace
-from os import path, remove
+from os import path, remove, mkdir
 from typing import Tuple
 from warnings import filterwarnings
 
-from effect import NeuralMotif, calculate_landscape, Monitor
+from effect import NeuralMotif, calculate_landscape
 from works import load_data
 
 filterwarnings("ignore")
@@ -26,7 +26,7 @@ rcParams["mathtext.it"] = "Linux Libertine:italic"
 rcParams["mathtext.bf"] = "Linux Libertine:bold"
 
 motif_types, motif_indices = ["incoherent-loop", "coherent-loop", "collider"], [1, 2, 3, 4]
-raw_path, temp_path, save_path, fps, figure_size = "./raw/", "./temp/", "./show/", 24, (1800, 1080)
+raw_path, temp_path, fps, figure_size = "./raw/", "./temp/", 24, (1800, 1080)
 
 
 def output_info_frame(info: str,
@@ -218,23 +218,24 @@ def generate_video():
     """
     Generate video of the escape process.
     """
-    monitor = Monitor()
-    for motif_type in motif_types[:2]:
-        for motif_index in motif_indices:
-            total_path = save_path + motif_type + "." + str(motif_index) + ".avi"
+    if not path.exists(raw_path + "videos/"):
+        mkdir(raw_path + "videos/")
+
+    for motif_index in motif_indices:
+        for motif_type in motif_types[:2]:
+            total_path = raw_path + "videos/" + motif_type + "." + str(motif_index) + ".avi"
 
             if path.exists(total_path):
                 continue
 
-            print(motif_type, motif_index)
             load_path = raw_path + "particular/" + motif_type + "." + str(motif_index) + ".escape-process.pkl"
             record, frame_links = load_data(load_path=load_path), []
 
             if motif_type == "incoherent-loop":
-                info = "train incoherent loop " + str(motif_index) + "" + "\n\nto escape from colliders"
+                info = "train incoherent loop " + str(motif_index) + "\n\nto escape from colliders"
                 link = output_info_frame(info, "#FCB1AB", 40, len(frame_links) + 1)
             elif motif_type == "coherent-loop":
-                info = "train coherent loop (" + str(motif_index) + ")" + "\n\nto escape from colliders"
+                info = "train coherent loop " + str(motif_index) + "\n\nto escape from colliders"
                 link = output_info_frame(info, "#FCE0AB", 40, len(frame_links) + 1)
             else:
                 raise ValueError("No such motif type!")
@@ -247,8 +248,6 @@ def generate_video():
                 for index, ((motif_1, motif_2), loss) in enumerate(zip(sample[0], sample[1])):
                     link = output_data_frame(motif_1, motif_2, loss, index + 1, len(frame_links) + 1)
                     frame_links.append(link)
-
-                monitor(sample_index + 1, len(record), extra={"frames": len(frame_links)})
 
             writer = VideoWriter(total_path, VideoWriter.fourcc(*"DIVX"), fps, figure_size)
             for frame_path, flag in frame_links:
