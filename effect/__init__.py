@@ -32,10 +32,7 @@ class Monitor(object):
         :param extra: extra vision information if required.
         :type extra: dict
         """
-        if self.last_time is None:
-            self.last_time = datetime.now()
-
-        if moment == 0:
+        if moment == 0 or self.last_time is None:
             self.last_time = datetime.now()
             return
 

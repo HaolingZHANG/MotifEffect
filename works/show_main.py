@@ -543,20 +543,26 @@ def main_03():
     pyplot.scatter([0.70], [0.15], s=170, fc="silver", ec="k", lw=0, zorder=3)
     pyplot.annotate("", xy=(0.60, 0.15), xytext=(0.50, 0.15),
                     arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
+    pyplot.annotate("", xy=(0.80, 0.15), xytext=(0.90, 0.15),
+                    arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75))
     pyplot.text(0.50, 0.15, "push", va="center", ha="right", fontsize=8)
+    pyplot.text(0.90, 0.15, "push", va="center", ha="left", fontsize=8)
     pyplot.plot([0.61, 0.70, 0.70], [0.52, 0.15, 0.60], color="k", lw=0.75, ls="--", zorder=4)
     pyplot.annotate("", xy=(0.61, 0.52), xytext=(0.70, 0.60),
                     arrowprops=dict(arrowstyle="-", color="k", lw=0.75,
                                     shrinkA=0, shrinkB=0, connectionstyle="arc3,rad=0.3"))
     pyplot.text(0.64, 0.67, "angle", va="center", ha="center", fontsize=8)
-    pyplot.annotate("", xy=(0.38, 0.75), xytext=(0.50, 0.95),
+    pyplot.annotate("", xy=(0.40, 0.75), xytext=(0.50, 0.95),
                     arrowprops=dict(arrowstyle="-|>", color="k", lw=0.75, shrinkA=0, shrinkB=0))
-    pyplot.text(0.32, 0.70, "angular\nvelocity", va="center", ha="center", fontsize=8)
+    pyplot.text(0.35, 0.72, "angular\nvelocity", va="center", ha="center", fontsize=8)
     pyplot.xlim(0, 1)
     pyplot.ylim(-0.1, 1.02)
     pyplot.axis("off")
 
-    labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
+    labels = ["baseline method",
+              r"[ $\mathcal{L}_c + \mathcal{C}$ ] - method",
+              r"[ $\mathcal{L}_i + \mathcal{C}$ ] - method",
+              r"$\mathcal{C}$ - method"]
 
     # noinspection PyTypeChecker
     ax = pyplot.subplot(grid[0, 2:])
@@ -581,22 +587,35 @@ def main_03():
     for index, (panel_index, label) in enumerate(zip(["c", "d", "e", "f"], labels)):
         # noinspection PyTypeChecker
         pyplot.subplot(grid[1, index])
-        pyplot.title(label, fontsize=9)
+        pyplot.title(label, fontsize=8)
         values = task_data[panel_index].copy()
         values[values >= 195] = nan
         pyplot.pcolormesh(arange(6), arange(6), values.T, vmin=100, vmax=195, cmap="inferno")
+        pyplot.plot([0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0],
+                    [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0], lw=0.75, color="k")
         for location_x in range(5):
             for location_y in range(5):
                 value = task_data[panel_index][location_x, location_y]
-                if value >= 195:
-                    pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "pass",
-                                va="center", ha="center", fontsize=8)
-                elif value > 140:
-                    pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value,
-                                va="center", ha="center", fontsize=8)
+                if location_x >= location_y:
+                    if value >= 195:
+                        pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "pass", weight="bold",
+                                    va="center", ha="center", fontsize=7)
+                    elif value > 140:
+                        pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value, weight="bold",
+                                    va="center", ha="center", fontsize=7)
+                    else:
+                        pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value, color="w", weight="bold",
+                                    va="center", ha="center", fontsize=7)
                 else:
-                    pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value, color="w",
-                                va="center", ha="center", fontsize=8)
+                    if value >= 195:
+                        pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "pass",
+                                    va="center", ha="center", fontsize=7)
+                    elif value > 140:
+                        pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value,
+                                    va="center", ha="center", fontsize=7)
+                    else:
+                        pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value, color="w",
+                                    va="center", ha="center", fontsize=7)
 
         pyplot.xlabel("training error scale", fontsize=8)
         pyplot.ylabel("evaluating error scale", fontsize=8)
@@ -628,10 +647,10 @@ def main_04():
 
     # noinspection PyTypeChecker
     ax = pyplot.subplot(grid[0, :])
-    labels = {"b": "default",
-              "i": r"$\mathcal{L}_c + \mathcal{C}$",
-              "c": r"$\mathcal{L}_i + \mathcal{C}$",
-              "a": r"$\mathcal{C}$"}
+    labels = {"b": "baseline method",
+              "i": r"[ $\mathcal{L}_c + \mathcal{C}$ ] - method",
+              "c": r"[ $\mathcal{L}_i + \mathcal{C}$ ] - method",
+              "a": r"$\mathcal{C}$ - method"}
     colors = pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4))
     for (agent_name, values), bias, color in zip(task_data["a"].items(), [-3, -1, 1, 3], colors):
         pyplot.bar(arange(20, 151, 10) + bias, values, width=2, fc=color, ec="k", lw=0.75, label=labels[agent_name])
@@ -650,13 +669,16 @@ def main_04():
     # noinspection PyUnresolvedReferences
     ax.spines["right"].set_visible(False)
 
-    labels = ["default", r"$\mathcal{L}_c + \mathcal{C}$", r"$\mathcal{L}_i + \mathcal{C}$", r"$\mathcal{C}$"]
+    labels = ["baseline method",
+              r"[ $\mathcal{L}_c + \mathcal{C}$ ] - method",
+              r"[ $\mathcal{L}_i + \mathcal{C}$ ] - method",
+              r"$\mathcal{C}$ - method"]
     colors = ["#BF33B5", "#845EC2", "#D73222"]
 
     for index, (label, panel_index) in enumerate(zip(labels, ["b", "c", "d", "e"])):
         # noinspection PyTypeChecker
         ax = pyplot.subplot(grid[1:, index])
-        pyplot.title(label, fontsize=9)
+        pyplot.title(label, fontsize=8)
         pyplot.hlines(195, 0, 5, lw=0.75, ls="--", zorder=-1)
         pyplot.text(4.9, 196, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
         for case_index, (curve, have, total) in enumerate(task_data[panel_index]):
@@ -697,7 +719,7 @@ def main_04():
 
 
 if __name__ == "__main__":
-    # main_01()
+    main_01()
     main_02()
-    # main_03()
-    # main_04()
+    main_03()
+    main_04()
