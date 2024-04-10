@@ -153,4 +153,4 @@ works/raw/videos/*.avi
 works/data/*.pkl
 works/data/*.npy
 works/show/*.pdf
-works/temp/
+works/temp/*.png
