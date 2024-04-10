@@ -1,3 +1,7 @@
+"""
+@Author      : Haoling Zhang
+@Description : Methods regarding the motif.
+"""
 from itertools import combinations, permutations
 from networkx import DiGraph
 from numpy import ndarray, zeros, array, all, sqrt

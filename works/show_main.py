@@ -300,8 +300,8 @@ def main_02():
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.annotate("", xy=(4.50, 1.15), xytext=(4.50, 0.95),
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
-    pyplot.text(0.60, 1.05, "detect its\nconcavity", va="center", ha="left", fontsize=7)
-    pyplot.text(4.60, 1.05, "detect its\nconcavity", va="center", ha="left", fontsize=7)
+    pyplot.text(0.60, 1.05, "check curvature\nfeature", va="center", ha="left", fontsize=7)
+    pyplot.text(4.60, 1.05, "check curvature\nfeature", va="center", ha="left", fontsize=7)
     pyplot.text(2.50, 0.40,
                 r"The escape mechanism of $\mathcal{L}_i$ lies in" + "\n" +
                 "extending the convex or concave area", color="red",
@@ -417,23 +417,19 @@ def main_02():
 
     formers, latters = task_data["d"][:, 0], task_data["d"][:, 1]
 
-    former_counts = array([
-        len(formers[where((formers >= 0.1) & (formers < 0.4))]),
-        len(formers[where((formers >= 0.4) & (formers < 0.5))]),
-        len(formers[where((formers >= 0.5) & (formers < 0.6))]),
-        len(formers[where((formers >= 0.6) & (formers < 0.7))]),
-        len(formers[where((formers >= 0.7) & (formers < 0.8))]),
-        len(formers[where((formers >= 0.8) & (formers < 0.9))])
-    ])
+    former_counts = array([len(formers[where((formers >= 0.1) & (formers < 0.4))]),
+                           len(formers[where((formers >= 0.4) & (formers < 0.5))]),
+                           len(formers[where((formers >= 0.5) & (formers < 0.6))]),
+                           len(formers[where((formers >= 0.6) & (formers < 0.7))]),
+                           len(formers[where((formers >= 0.7) & (formers < 0.8))]),
+                           len(formers[where((formers >= 0.8) & (formers < 0.9))])])
 
-    latter_counts = array([
-        len(latters[where((latters >= 0.1) & (latters < 0.4))]),
-        len(latters[where((latters >= 0.4) & (latters < 0.5))]),
-        len(latters[where((latters >= 0.5) & (latters < 0.6))]),
-        len(latters[where((latters >= 0.6) & (latters < 0.7))]),
-        len(latters[where((latters >= 0.7) & (latters < 0.8))]),
-        len(latters[where((latters >= 0.8) & (latters < 0.9))])
-    ])
+    latter_counts = array([len(latters[where((latters >= 0.1) & (latters < 0.4))]),
+                           len(latters[where((latters >= 0.4) & (latters < 0.5))]),
+                           len(latters[where((latters >= 0.5) & (latters < 0.6))]),
+                           len(latters[where((latters >= 0.6) & (latters < 0.7))]),
+                           len(latters[where((latters >= 0.7) & (latters < 0.8))]),
+                           len(latters[where((latters >= 0.8) & (latters < 0.9))])])
 
     labels = ["10% ~ 40%", "40% ~ 50%", "50% ~ 60%", "60% ~ 70%", "70% ~ 80%", "80% ~ 90%"]
     for location, label in zip(linspace(0.4 + 0.45, 5.8 - 0.45, 6), labels):
@@ -459,19 +455,11 @@ def main_02():
             line_record[0].append(location)
             line_record[1].append(0.4 + height_2)
     pyplot.plot(line_record[0], line_record[1], lw=0.75, ls="--", color="k", zorder=1)
-
-    # pyplot.annotate("", xy=(line_record[0][1], line_record[1][1] + 0.23),
-    #                 xytext=(line_record[0][1], line_record[1][1] + 0.12),
-    #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
-    # pyplot.text(line_record[0][1], line_record[1][1] + 0.28, "a slight increase of 0.44",
-    #             va="center", ha="center", fontsize=7)
-
     pyplot.scatter([0.3], [1.9], ec="k", fc="#FFF5F3", lw=0.75)
     pyplot.scatter([0.3], [1.7], ec="k", fc="#F6D3CC", lw=0.75)
     pyplot.text(0.4, 1.9, "former landscape", va="center", ha="left", fontsize=7)
     pyplot.text(0.4, 1.7, "latter landscape", va="center", ha="left", fontsize=7)
-    pyplot.text(3.1, 0.0,
-                "max (convex area, concave area) / overall area", va="center", ha="center", fontsize=7)
+    pyplot.text(3.1, 0.0, "max (convex area, concave area) / overall area", va="center", ha="center", fontsize=8)
     pyplot.hlines(0.3, 0.2, 6.0, lw=0.75, color="k")
     pyplot.xlim(0.1, 6.2)
     pyplot.ylim(0.0, 2.1)
@@ -479,7 +467,7 @@ def main_02():
 
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2, 1])
-    pyplot.text(3.1, 0.0, "Spearman's rank correlation coefficient", va="center", ha="center", fontsize=7)
+    pyplot.text(3.1, 0.0, "Spearman's rank correlation coefficient", va="center", ha="center", fontsize=8)
     pyplot.hlines(0.3, 0.2, 6.0, lw=0.75, color="k")
 
     values = task_data["e"][:, 0]
@@ -489,14 +477,12 @@ def main_02():
         pyplot.vlines(location, 0.25, 0.30, lw=0.75, color="k")
         pyplot.text(location, 0.15, label, va="center", ha="center", fontsize=7)
 
-    counts = [
-        len(values[values < 0.0]),
-        len(values[where((values >= 0.0) & (values < 0.2))]),
-        len(values[where((values >= 0.2) & (values < 0.4))]),
-        len(values[where((values >= 0.4) & (values < 0.6))]),
-        len(values[where((values >= 0.6) & (values < 0.8))]),
-        len(values[values >= 0.8])
-    ]
+    counts = [len(values[values < 0.0]),
+              len(values[where((values >= 0.0) & (values < 0.2))]),
+              len(values[where((values >= 0.2) & (values < 0.4))]),
+              len(values[where((values >= 0.4) & (values < 0.6))]),
+              len(values[where((values >= 0.6) & (values < 0.8))]),
+              len(values[values >= 0.8])]
 
     for index, (location, count) in enumerate(zip(linspace(0.4 + 0.45, 5.8 - 0.45, 6), counts)):
         height = count / 400.0 * 3.4
@@ -504,12 +490,6 @@ def main_02():
                             ec="k", fc="#F2FEDC", lw=0.75)
 
         pyplot.text(location, 0.32 + height, str(count), va="bottom", ha="center", fontsize=7)
-
-    # pyplot.text(0.12, 1.65, "80 samples are trapped in local optima", va="center", ha="left", fontsize=7)
-    # pyplot.text(0.12, 1.50, "24 samples are not suitable for Spearman", va="center", ha="left", fontsize=7)
-    # pyplot.annotate("", xy=(1.30, 1.40), xytext=(1.30, 1.27),
-    #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
-    # pyplot.plot([0.40, 0.40, 2.20, 2.20], [1.20, 1.27, 1.27, 1.20], lw=0.75, color="k")
     pyplot.xlim(0.1, 6.2)
     pyplot.ylim(0.0, 2.1)
     pyplot.axis("off")

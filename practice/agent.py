@@ -1,3 +1,7 @@
+"""
+@Author      : Haoling Zhang
+@Description : Definition of agent
+"""
 from copy import deepcopy
 # noinspection PyPackageRequirements
 from neat import Population, reporting, statistics, DefaultGenome

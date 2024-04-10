@@ -1,3 +1,7 @@
+"""
+@Author      : Haoling Zhang
+@Description : Definition of OpenAI Gym task.
+"""
 from copy import deepcopy
 from gym import make, Env
 from itertools import product

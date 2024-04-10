@@ -1,3 +1,7 @@
+"""
+@Author      : Haoling Zhang
+@Description : Definition of noise scale.
+"""
 from numpy import ndarray, arange, random, repeat, expand_dims, min, max, clip
 
 

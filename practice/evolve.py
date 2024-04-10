@@ -1,3 +1,7 @@
+"""
+@Author      : Haoling Zhang
+@Description : Construction of neuroevolution methods.
+"""
 # noinspection PyPackageRequirements
 from neat import DefaultGenome, DefaultReproduction
 # noinspection PyPackageRequirements

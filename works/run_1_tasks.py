@@ -2,9 +2,10 @@
 @Author      : Haoling Zhang
 @Description : Run all experiments for this work.
 """
+from hashlib import md5
 from itertools import product
-from numpy import array, linspace, arange, zeros, min, argsort, where
-from os import path, mkdir
+from numpy import array, linspace, arange, zeros, min, argsort, ceil, where
+from os import path, mkdir, listdir
 
 from effect import NeuralMotif, generate_outputs, estimate_lipschitz, estimate_lipschitz_by_motif
 from effect import calculate_differences, execute_catch_processes, execute_escape_processes
@@ -273,3 +274,16 @@ if __name__ == "__main__":
     task_1()
     task_2()
     task_3()
+
+    print("| parent path in the /raw/ folder | file name | MD5 | file size (KB) |")
+    print("| --- | --- | --- | --- |")
+    for fold_name in ["difference", "landscapes", "parameters", "particular",
+                      "real-world", "robustness", "trade-offs", "videos"]:
+        for child_path in listdir(raw_path + fold_name + "/"):
+            md5_hash = md5()
+            with open(raw_path + fold_name + "/" + child_path, "rb") as f:
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    md5_hash.update(byte_block)
+            md5_value = (md5_hash.hexdigest()).upper()
+            file_size = ceil(path.getsize(raw_path + fold_name + "/" + child_path) / 1024).astype(int)
+            print("| " + fold_name + " | " + child_path + " | " + md5_value + " | " + str(file_size) + " |")

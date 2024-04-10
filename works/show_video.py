@@ -1,6 +1,6 @@
 """
 @Author      : Haoling Zhang
-@Description : Generate videos of the escape process for this work.
+@Description : Generate videos of the adversarial escape process for this work.
 """
 from cv2 import imread, VideoWriter, resize
 from gc import collect

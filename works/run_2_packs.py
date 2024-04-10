@@ -3,7 +3,7 @@
 @Description : Package all the presented data from the experimental results.
 """
 from collections import Counter
-from numpy import array, zeros, linspace, abs, mean, min, max, argmax, argmin, all, where
+from numpy import array, zeros, linspace, abs, mean, min, max, sum, argmax, argmin, all, where
 from os import path, mkdir
 from scipy.stats import spearmanr, gaussian_kde
 
@@ -214,6 +214,214 @@ def main_04():
         save_data(save_path=sort_path + "main04.pkl", information=task_data)
 
 
+def supp_01():
+    """
+    Collect plot data from Figure S1 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp01.pkl"):
+        task_data = {}
+        index, labels = 0, ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+        for motif_type in motif_types[:-1]:
+            total_data = []
+            for motif_index in [1, 2, 3, 4]:
+                structure = motif_type + "." + str(motif_index)
+                total_data += load_data("./raw/robustness/" + structure + ".npy").tolist()
+            total_data = array(total_data)
+            x = linspace(0.60, 2.40, 100)
+            y = gaussian_kde(total_data)(x)
+            task_data[labels[index]] = (motif_type, 0, (x, y))
+            index += 1
+            for motif_index in [1, 2, 3, 4]:
+                structure = motif_type + "." + str(motif_index)
+                sub_data = load_data("./raw/robustness/" + structure + ".npy")
+                x = linspace(0.60, 2.40, 100)
+                y = gaussian_kde(sub_data)(x)
+                task_data[labels[index]] = (motif_type, motif_index, (x, y))
+                index += 1
+        save_data(save_path=sort_path + "supp01.pkl", information=task_data)
+
+
+def supp_02():
+    """
+    Collect plot data from Figure S2 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp02.pkl"):
+        task_data = {}
+        index, labels = 0, ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+        for motif_type in motif_types[:-1]:
+            total_data = []
+            for motif_index in [1, 2, 3, 4]:
+                structure = motif_type + "." + str(motif_index)
+                total_data += load_data("./raw/trade-offs/" + structure + ".npy")[:, 1].tolist()
+            total_data = array(total_data)
+            x = linspace(0.00, 0.03, 100)
+            y = gaussian_kde(total_data)(x)
+            task_data[labels[index]] = (motif_type, 0, (x, y))
+            index += 1
+            for motif_index in [1, 2, 3, 4]:
+                structure = motif_type + "." + str(motif_index)
+                sub_data = load_data("./raw/trade-offs/" + structure + ".npy")[:, 1]
+                y = gaussian_kde(sub_data)(x)
+                task_data[labels[index]] = (motif_type, motif_index, (x, y))
+                index += 1
+        save_data(save_path=sort_path + "supp02.pkl", information=task_data)
+
+
+def supp_03():
+    """
+    Collect plot data from Figure S3 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp03.pkl"):
+        task_data = {}
+        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
+            feature, records = motif_types[0] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+                source_concavity = detect_concavity(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_concavity(calculate_landscape(value_range, 101, target), 0.01)
+                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
+                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
+                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
+            task_data[panel_label] = array(records)
+        save_data(save_path=sort_path + "supp03.pkl", information=task_data)
+
+
+def supp_04():
+    """
+    Collect plot data from Figure S4 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp04.pkl"):
+        task_data, flag = {"b": []}, True
+        for motif_index in motif_indices:
+            feature = motif_types[0] + "." + str(motif_index)
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+                source_landscape = calculate_landscape(value_range, 101, source)
+                target_landscape = calculate_landscape(value_range, 101, target)
+                source_concavity = detect_concavity(source_landscape, 0.01)
+                target_concavity = detect_concavity(target_landscape, 0.01)
+                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
+                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
+                use_rate_1, use_rate_2 = used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)
+                if use_rate_2 <= 0.4:
+                    if 1 not in counter_1:
+                        source_region = where(source_landscape > 0, 1, 0)
+                        target_region = where(target_landscape > 0, 1, 0)
+                    else:
+                        source_region = where(source_landscape < 0, 1, 0)
+                        target_region = where(target_landscape < 0, 1, 0)
+                    if flag:
+                        task_data["a"] = (source_landscape, target_landscape, source_concavity, target_concavity,
+                                          source_region, target_region)
+                        flag = False
+                    task_data["b"].append([sum(source_region.reshape(-1)) / (101 ** 2),
+                                           sum(target_region.reshape(-1)) / (101 ** 2)])
+        task_data["b"] = array(task_data["b"])
+
+        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
+
+
+def supp_05():
+    """
+    Collect plot data from Figure S5 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp05.pkl"):
+        task_data = {}
+        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
+            feature, records = motif_types[1] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                start, stop = argmin(losses), argmax(losses)
+                source_landscape = calculate_landscape(value_range, points, motifs[start][0])
+                target_landscape = calculate_landscape(value_range, points, motifs[stop][0])
+                values_x = calculate_gradients(value_range, points, motifs[start][0]).reshape(-1)
+                values_y = abs(target_landscape - source_landscape).reshape(-1)
+                # noinspection PyTypeChecker
+                correlation, p_value = spearmanr(values_x, values_y)
+                records.append(correlation)
+            task_data[panel_label] = array(records)
+        save_data(save_path=sort_path + "supp05.pkl", information=task_data)
+
+
+def supp_06():
+    """
+    Collect plot data from Figure S6 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp06.pkl"):
+        task_data = {}
+        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
+            feature, records = motif_types[1] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                start, stop = argmin(losses), argmax(losses)
+                source_landscape = calculate_landscape(value_range, points, motifs[start][0])
+                target_landscape = calculate_landscape(value_range, points, motifs[stop][0])
+                values_x = calculate_gradients(value_range, points, motifs[start][0]).reshape(-1)
+                values_y = abs(target_landscape - source_landscape).reshape(-1)
+                # noinspection PyTypeChecker
+                correlation, p_value = spearmanr(values_x, values_y)
+                if correlation < 0.2 and losses[stop] < 0.013:
+                    records.append([losses[start], losses[stop]])
+            task_data[panel_label] = array(records)
+        save_data(save_path=sort_path + "supp06.pkl", information=task_data)
+
+
+def supp_07():
+    """
+    Collect plot data from Figure S7 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp07.pkl"):
+        task_data, flag, records = {}, True, []
+        for motif_index in motif_indices:
+            feature = motif_types[1] + "." + str(motif_index)
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                start, stop = argmin(losses), argmax(losses)
+                source_landscape = calculate_landscape(value_range, points, motifs[start][0])
+                target_landscape = calculate_landscape(value_range, points, motifs[stop][0])
+                values_x = calculate_gradients(value_range, points, motifs[start][0]).reshape(-1)
+                values_y = abs(target_landscape - source_landscape).reshape(-1)
+                # noinspection PyTypeChecker
+                correlation, _ = spearmanr(values_x, values_y)
+                if correlation < 0.2 and losses[stop] > 0.013:
+                    correlations = []
+                    for location in range(start, stop - 1):
+                        new_source_landscape = calculate_landscape(value_range, points, motifs[location][0])
+                        new_target_landscape = calculate_landscape(value_range, points, motifs[location + 1][0])
+                        new_values_x = calculate_gradients(value_range, points, motifs[location][0]).reshape(-1)
+                        new_values_y = abs(new_target_landscape - new_source_landscape).reshape(-1)
+                        # noinspection PyTypeChecker
+                        new_correlation, _ = spearmanr(new_values_x, new_values_y)
+                        correlations.append(new_correlation)
+                    if flag:
+                        task_data["a"] = (source_landscape, target_landscape, correlation, correlations)
+                        flag = False
+                    records.append([correlation, mean(correlations)])
+            task_data["b"] = array(records)
+        save_data(save_path=sort_path + "supp07.pkl", information=task_data)
+
+
+def supp_08():
+    """
+    Collect plot data from Figure S8 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp08.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "real-world/adjustments.2.pkl")
+        for strategy_index, strategy in enumerate(agent_names):
+            cases = []
+            for sample in record[strategy]:
+                evaluation = array([sample[2][noise] for noise in radios])
+                if all(evaluation < 195) and evaluation[0] > evaluation[-1] and evaluation[0] > evaluation[2]:
+                    pass
+                elif all(evaluation < 195):
+                    cases.append(evaluation)
+            task_data[chr(ord("a") + strategy_index)] = cases
+        save_data(save_path=sort_path + "supp08.pkl", information=task_data)
+
+
 if __name__ == "__main__":
     if not path.exists(sort_path):
         mkdir(sort_path)
@@ -225,3 +433,11 @@ if __name__ == "__main__":
     main_02()
     main_03()
     main_04()
+    supp_01()
+    supp_02()
+    supp_03()
+    supp_04()
+    supp_05()
+    supp_06()
+    supp_07()
+    supp_08()
