@@ -300,8 +300,8 @@ def main_02():
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.annotate("", xy=(4.50, 1.15), xytext=(4.50, 0.95),
                     arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
-    pyplot.text(0.60, 1.05, "check curvature\nfeature", va="center", ha="left", fontsize=7)
-    pyplot.text(4.60, 1.05, "check curvature\nfeature", va="center", ha="left", fontsize=7)
+    pyplot.text(0.60, 1.05, "curvature\nfeature", va="center", ha="left", fontsize=7)
+    pyplot.text(4.60, 1.05, "curvature\nfeature", va="center", ha="left", fontsize=7)
     pyplot.text(2.50, 0.40,
                 r"The escape mechanism of $\mathcal{L}_i$ lies in" + "\n" +
                 "extending the convex or concave area", color="red",

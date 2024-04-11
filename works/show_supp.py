@@ -33,7 +33,7 @@ def supp_01():
     """
     task_data = load_data(sort_path + "supp01.pkl")
 
-    figure = pyplot.figure(figsize=(10, 11.6), tight_layout=True)
+    figure = pyplot.figure(figsize=(10, 11), tight_layout=True)
 
     index_change = [1, 3, 5, 7, 9, 2, 4, 6, 8, 10]
     for index, (panel_label, (motif_type, motif_index, (x, y))) in enumerate(task_data.items()):
@@ -173,7 +173,7 @@ def supp_04():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[:2, 0])
     source_1, target_1, source_2, target_2, source_3, target_3 = task_data["a"]
-    pyplot.text(0.50, 2.03, "concavity", va="bottom", ha="center", fontsize=8)
+    pyplot.text(0.50, 2.03, "curvature feature", va="center", ha="center", fontsize=8)
     locations, colors = linspace(0.2, 0.8, 4), pyplot.get_cmap("binary")(linspace(0, 1, 3))
     for former, latter, color, label in zip(locations[:-1], locations[1:], colors, ["concave", "unknown", "convex"]):
         pyplot.fill_between([former, latter], 1.95, 2.00, fc=color, lw=0, zorder=1)
@@ -286,7 +286,7 @@ def supp_04():
     y /= sum(y)
     pyplot.fill_between(x, 0, y, ec="k", fc="#FA7F6F", lw=0.75, zorder=2, label="latter landscape")
     pyplot.legend(loc="upper right", ncol=2, fontsize=7)
-    pyplot.xlabel("proportion of ridge region", fontsize=8)
+    pyplot.xlabel("proportion of predominant ridge/valley region", fontsize=8)
     pyplot.xticks(linspace(0.2, 0.5, 7), ["%.2f" % v for v in linspace(0.2, 0.5, 7)], fontsize=7)
     pyplot.yticks([])
     pyplot.xlim(0.2, 0.5)
