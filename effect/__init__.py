@@ -78,7 +78,7 @@ class Monitor(object):
 
 from effect.networks import RestrictedWeight, RestrictedBias, NeuralMotif  # noqa
 from effect.operations import prepare_data, prepare_data_flexible, prepare_motifs  # noqa
-from effect.operations import calculate_landscape, calculate_values, calculate_gradients, detect_concavity  # noqa
+from effect.operations import calculate_landscape, calculate_values, calculate_gradients, detect_curvature_feature  # noqa
 from effect.operations import generate_motifs, generate_outputs, calculate_differences  # noqa
 from effect.robustness import estimate_lipschitz_by_motif, estimate_lipschitz, evaluate_propagation  # noqa
 from effect.similarity import maximum_minimum_loss_search, minimum_loss_search  # noqa

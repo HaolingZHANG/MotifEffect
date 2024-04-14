@@ -235,11 +235,11 @@ def calculate_gradients(value_range: tuple,
     return gradients.reshape(points, points)
 
 
-def detect_concavity(landscape: ndarray,
-                     interval: float) \
+def detect_curvature_feature(landscape: ndarray,
+                             interval: float) \
         -> ndarray:
     """
-    Checks the concavity of a given landscape.
+    Detect the curvature feature of a given landscape.
 
     :param landscape: output signal landscape.
     :type landscape: numpy.ndarray

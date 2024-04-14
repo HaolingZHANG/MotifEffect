@@ -7,7 +7,7 @@ from numpy import array, zeros, linspace, abs, mean, min, max, sum, argmax, argm
 from os import path, mkdir
 from scipy.stats import spearmanr, gaussian_kde
 
-from effect import calculate_landscape, calculate_gradients, detect_concavity
+from effect import calculate_landscape, calculate_gradients, detect_curvature_feature
 from works import load_data, save_data
 
 motif_types, motif_indices = ["incoherent-loop", "coherent-loop", "collider"], [1, 2, 3, 4]
@@ -100,8 +100,8 @@ def main_02():
         target_landscape = calculate_landscape(value_range, points, target_motif)
 
         task_data["b"] = tuple([source_landscape, target_landscape,
-                                detect_concavity(calculate_landscape(value_range, 101, source_motif), 0.01),
-                                detect_concavity(calculate_landscape(value_range, 101, target_motif), 0.01)])
+                                detect_curvature_feature(calculate_landscape(value_range, 101, source_motif), 0.01),
+                                detect_curvature_feature(calculate_landscape(value_range, 101, target_motif), 0.01)])
 
         escape_data = load_data(load_path=raw_path + "particular/" + motif_types[1] + ".1.escape-process.pkl")
         maximum_index, maximum_loss = 0, -1
@@ -123,8 +123,8 @@ def main_02():
             escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
             for index, (motifs, losses) in enumerate(escape_data):
                 source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
-                source_concavity = detect_concavity(calculate_landscape(value_range, 101, source), 0.01)
-                target_concavity = detect_concavity(calculate_landscape(value_range, 101, target), 0.01)
+                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
                 counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
                 used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
                 records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
@@ -278,8 +278,8 @@ def supp_03():
             escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
             for index, (motifs, losses) in enumerate(escape_data):
                 source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
-                source_concavity = detect_concavity(calculate_landscape(value_range, 101, source), 0.01)
-                target_concavity = detect_concavity(calculate_landscape(value_range, 101, target), 0.01)
+                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
                 counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
                 used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
                 records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
@@ -300,8 +300,8 @@ def supp_04():
                 source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
                 source_landscape = calculate_landscape(value_range, 101, source)
                 target_landscape = calculate_landscape(value_range, 101, target)
-                source_concavity = detect_concavity(source_landscape, 0.01)
-                target_concavity = detect_concavity(target_landscape, 0.01)
+                source_concavity = detect_curvature_feature(source_landscape, 0.01)
+                target_concavity = detect_curvature_feature(target_landscape, 0.01)
                 counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
                 used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
                 use_rate_1, use_rate_2 = used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)
