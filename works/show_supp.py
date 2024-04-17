@@ -4,7 +4,7 @@
 """
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams, markers
-from numpy import array, ones, arange, linspace, meshgrid, sin, abs, sum, min, max, mean, argmax, where, pi
+from numpy import array, ones, arange, linspace, meshgrid, sin, abs, sum, min, max, mean, argsort, argmax, where, pi
 from scipy.stats import gaussian_kde
 from warnings import filterwarnings
 
@@ -213,6 +213,7 @@ def supp_04():
     pyplot.plot([1.2, 1.8, 1.8, 1.2, 1.2], [1.2, 1.2, 1.8, 1.8, 1.2], lw=0.75, c="k", zorder=1)
     pyplot.annotate("", xy=(1.5, 0.9), xytext=(1.5, 1.1),
                     arrowprops=dict(arrowstyle="-|>", color="black", lw=1), zorder=2)
+    pyplot.text(1.52, 1.0, "escape", va="center", ha="left", fontsize=7)
     pyplot.text(1.50, 0.84, "latter landscape (mesh)", va="center", ha="center", fontsize=8)
     pyplot.text(1.50, 0.16, "$x$", va="center", ha="center", fontsize=8)
     pyplot.text(1.16, 0.50, "$y$", va="center", ha="center", fontsize=8)
@@ -352,21 +353,25 @@ def supp_06():
         pyplot.subplot(2, 2, index + 1)
         pyplot.title(str(len(values)) + " samples in coherent-loop " + str(index + 1), fontsize=8)
 
-        for location in linspace(0.011, 0.013, 11)[1:-1]:
-            pyplot.hlines(location, 0.00, 0.008, lw=0.75, ls="--", color="k", zorder=1)
-
-        for location in linspace(0.00, 0.008, 9)[1:-1]:
-            pyplot.vlines(location, 0.011, 0.013, lw=0.75, ls="--", color="k", zorder=1)
-
-        pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
-        pyplot.xlabel("L2-norm loss before escaping", fontsize=8)
-        pyplot.ylabel("L2-norm loss after escaping", fontsize=8)
-        pyplot.xticks(linspace(0, 0.008, 9),
-                      ["%.3f" % v for v in linspace(0, 0.008, 9)], fontsize=7)
-        pyplot.yticks(linspace(0.011, 0.013, 11),
-                      ["%.4f" % v for v in linspace(0.011, 0.013, 11)], fontsize=7)
-        pyplot.xlim(0.000, 0.008)
-        pyplot.ylim(0.011, 0.013)
+        for sample_index, sample_location in enumerate(argsort(values[:, 0])):
+            value = values[sample_location]
+            pyplot.vlines(sample_index, value[0], value[1], lw=0.75, color="k", zorder=1)
+            if sample_index > 0:
+                pyplot.scatter([sample_index], [value[0]], ec="k", fc="w", lw=0.75, zorder=2)
+                pyplot.scatter([sample_index], [value[1]], ec="k", fc="k", lw=0.75, zorder=2)
+            else:
+                pyplot.scatter([sample_index], [value[0]], ec="k", fc="w", lw=0.75, zorder=2,
+                               label="before escaping")
+                pyplot.scatter([sample_index], [value[1]], ec="k", fc="k", lw=0.75, zorder=2,
+                               label="after escaping")
+        pyplot.legend(loc="lower right", fontsize=7, framealpha=1.0)
+        pyplot.xlabel("sample index (order by the L2-norm loss before escaping)", fontsize=8)
+        pyplot.ylabel("L2-norm loss", fontsize=8)
+        pyplot.xticks(arange(20), arange(1, 21), fontsize=7)
+        pyplot.yticks(linspace(0.000, 0.013, 14),
+                      ["%.3f" % v for v in linspace(0.000, 0.013, 14)], fontsize=7)
+        pyplot.xlim(-0.5, 19.5)
+        pyplot.ylim(0.000, 0.013)
 
     figure.align_labels()
     figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
