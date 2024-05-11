@@ -28,6 +28,7 @@ class AdjustedGenome(DefaultGenome):
     @classmethod
     def parse_config(cls,
                      param_dict: dict):
+        # noinspection PyCompatibility
         super().parse_config(param_dict)
         return AdjustedGenomeConfig(param_dict)
 

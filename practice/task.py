@@ -262,6 +262,7 @@ class NEATCartPoleTask(GymTask):
         :param need_frames: need to draw the frame in the environment.
         :type need_frames: bool
         """
+        # noinspection PyCompatibility
         super().__init__(CartPoleEnv(render_mode="rgb_array"), "CartPole", maximum_generation, 100, 200, need_frames)
         self.set_action_handle(action_handle=argmax)
 
@@ -281,6 +282,7 @@ class NEATCartPoleTask(GymTask):
         for genome_id, model_genome in genomes:
             agent = NEATAgent(model_genome, neat_config, "temp", action_handle=self.action_handle)
 
+            # noinspection PyCompatibility
             collector = super().run(agent)
             model_genome.fitness = self.calculate_fitness(collector["rewards"])
             situation.append(model_genome.fitness)

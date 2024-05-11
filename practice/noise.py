@@ -62,6 +62,7 @@ class NormNoiseGenerator(object):
             noises = random.normal(size=(count, sample.shape[0]))
             normalized_noises = ((noises - min(noises)) / (max(noises) - min(noises)) - 0.5) * 2.0
         elif self.norm_type == "L-inf":  # using uniform distribution.
+            # noinspection PyArgumentEqualDefault
             normalized_noises = random.uniform(low=-1.0, high=1.0, size=(count, sample.shape[0]))
         else:
             raise ValueError("No such norm type!")
