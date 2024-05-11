@@ -229,12 +229,14 @@ def supp_04():
     pyplot.text(2.50, 1.84, "former landscape (contour)", va="center", ha="center", fontsize=8)
     pyplot.text(2.50, 1.16, "$x$", va="center", ha="center", fontsize=8)
     pyplot.text(2.16, 1.50, "$y$", va="center", ha="center", fontsize=8)
+    # noinspection PyCompatibility
     pyplot.contour(*meshgrid(linspace(2.2, 2.8, 101), linspace(1.2, 1.8, 101)),
                    source_1, vmin=-1, vmax=1, cmap="PRGn", lw=2, zorder=0)
     pyplot.plot([2.2, 2.8, 2.8, 2.2, 2.2], [1.2, 1.2, 1.8, 1.8, 1.2], lw=0.75, c="k", zorder=1)
     pyplot.text(2.50, 0.84, "latter landscape (contour)", va="center", ha="center", fontsize=8)
     pyplot.text(2.50, 0.16, "$x$", va="center", ha="center", fontsize=8)
     pyplot.text(2.16, 0.50, "$y$", va="center", ha="center", fontsize=8)
+    # noinspection PyCompatibility
     pyplot.contour(*meshgrid(linspace(2.2, 2.8, 101), linspace(0.2, 0.8, 101)),
                    target_1, vmin=-1, vmax=1, cmap="PRGn", lw=2, zorder=0)
     pyplot.plot([2.2, 2.8, 2.8, 2.2, 2.2], [0.2, 0.2, 0.8, 0.8, 0.2], lw=0.75, c="k", zorder=1)

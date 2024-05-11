@@ -5,7 +5,7 @@
 from collections import Counter
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, patches, rcParams
-from numpy import array, arange, linspace, sum, min, max, abs, percentile, where, nan
+from numpy import array, arange, linspace, sum, min, max, abs, percentile, argmax, where, nan
 from scipy.stats import spearmanr
 from warnings import filterwarnings
 
@@ -133,15 +133,26 @@ def main_01():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 4:7])
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
-                      task_data["d"].T, vmin=-0.1, vmax=1, cmap="pink_r", shading="gouraud")
-    pyplot.text(0.0278, 1.58, "density", va="center", ha="center", fontsize=7)
-    colors, locations = pyplot.get_cmap("pink_r")(linspace(0.1, 1, 41)), linspace(0.6, 1.5, 41)
+                      task_data["d"].T, vmin=0, vmax=1, cmap="Purples", shading="gouraud")
+    x_values, y_values = linspace(0.00, 0.03, 100), []
+    for values in task_data["d"]:
+        if max(values) < 0.02:
+            break
+        y_values.append(linspace(0.50, 2.50, 100)[argmax(values)])
+    pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=1, ls=":")
+    # location = x_values[argmax(y_values)]
+    # pyplot.text(location, max(y_values) + 0.2,
+    #             "maximum-density trend (≥ 2%)", va="center", ha="center", fontsize=7)
+    # pyplot.annotate("", xy=(location, max(y_values) + 0.2), xytext=(location, max(y_values)),
+    #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=4, shrinkB=6, lw=0.75))
+    pyplot.text(0.0278, 1.06, "density", va="center", ha="center", fontsize=7)
+    colors, locations = pyplot.get_cmap("Purples")(linspace(0, 1, 41)), linspace(0.6, 1.0, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
         pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
-    for location, info in zip(linspace(0.65, 1.5, 5), linspace(0, 1, 5)):
+    for location, info in zip(linspace(0.65, 1.0, 3), linspace(0, 1, 3)):
         pyplot.hlines(location, 0.0270, 0.0275, lw=0.75, color="k", zorder=2)
-        pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=6)
-    pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.5, 1.5, 0.65], lw=0.75, color="k", zorder=3)
+        pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=7)
+    pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.00, 1.00, 0.65], lw=0.75, color="k", zorder=3)
     pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_i$", fontsize=8)
     pyplot.ylabel("best Lipschitz constant", fontsize=8)
     pyplot.xlim(0.00, 0.03)
@@ -154,15 +165,26 @@ def main_01():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 7:])
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
-                      task_data["e"].T, vmin=-0.1, vmax=1, cmap="pink_r", shading="gouraud")
-    pyplot.text(0.0278, 1.58, "density", va="center", ha="center", fontsize=7)
-    colors, locations = pyplot.get_cmap("pink_r")(linspace(0.1, 1, 41)), linspace(0.6, 1.5, 41)
+                      task_data["e"].T, vmin=0, vmax=1, cmap="Purples", shading="gouraud")
+    x_values, y_values = linspace(0.00, 0.03, 100), []
+    for values in task_data["e"]:
+        if max(values) < 0.02:
+            break
+        y_values.append(linspace(0.50, 2.50, 100)[argmax(values)])
+    pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=1, ls=":")
+    # location = x_values[argmax(y_values)]
+    # pyplot.text(location, max(y_values) + 0.2,
+    #             "maximum-density trend (≥ 2%)", va="center", ha="center", fontsize=7)
+    # pyplot.annotate("", xy=(location, max(y_values) + 0.2), xytext=(location, max(y_values)),
+    #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=4, shrinkB=6, lw=0.75))
+    pyplot.text(0.0278, 1.06, "density", va="center", ha="center", fontsize=7)
+    colors, locations = pyplot.get_cmap("Purples")(linspace(0, 1, 41)), linspace(0.6, 1.0, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
         pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
-    for location, info in zip(linspace(0.65, 1.5, 5), linspace(0, 1, 5)):
+    for location, info in zip(linspace(0.65, 1.0, 3), linspace(0, 1, 3)):
         pyplot.hlines(location, 0.0270, 0.0275, lw=0.75, color="k", zorder=2)
-        pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=6)
-    pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.5, 1.5, 0.65], lw=0.75, color="k", zorder=3)
+        pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=7)
+    pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.00, 1.00, 0.65], lw=0.75, color="k", zorder=3)
     pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_c$", fontsize=8)
     pyplot.ylabel("best Lipschitz constant", fontsize=8)
     pyplot.xlim(0.00, 0.03)
@@ -305,7 +327,7 @@ def main_02():
     pyplot.text(2.50, 0.40,
                 r"The escape mechanism of $\mathcal{L}_i$ lies in" + "\n" +
                 "extending the convex or concave area", color="red",
-                va="center", ha="center", fontsize=7)
+                va="center", ha="center", fontsize=8)
     for index, landscape, info in zip([0.0, 2.0, 4.0],
                                       [former, latter - former, latter],
                                       ["former\nlandscape", "change\nfor escape", "latter\nlandscape"]):
@@ -336,6 +358,7 @@ def main_02():
         pyplot.scatter([index + 1.13], [-0.10], ec="k", fc="k", marker="s", lw=0.75)
         pyplot.scatter([index + 1.13], [-0.30], ec="k", fc="w", marker="s", lw=0.75)
 
+    # noinspection PyArgumentEqualDefault
     locations, colors = linspace(0.0, 1.9, 51), pyplot.get_cmap("PRGn")(linspace(0, 1, 50))
     for former, latter, color in zip(locations[:-1], locations[1:], colors):
         pyplot.fill_between([5.7, 5.8], former, latter, fc=color, lw=0, zorder=1)
@@ -357,7 +380,7 @@ def main_02():
     pyplot.text(4.20, 0.40,
                 r"The escape mechanism of $\mathcal{L}_c$ lies in" + "\n" +
                 "adjusting the high gradient region", color="red",
-                va="center", ha="center", fontsize=7)
+                va="center", ha="center", fontsize=8)
     pyplot.text(1.50, 1.7, "+", va="center", ha="center", fontsize=12)
     pyplot.text(3.50, 1.7, "=", va="center", ha="center", fontsize=12)
     for index, landscape, info in zip([0.0, 2.0, 4.0],
@@ -397,6 +420,7 @@ def main_02():
 
     pyplot.scatter(used_x, used_y, color="k", alpha=0.1)
 
+    # noinspection PyArgumentEqualDefault
     locations, colors = linspace(0.0, 1.9, 51), pyplot.get_cmap("PRGn")(linspace(0, 1, 50))
     for former, latter, color in zip(locations[:-1], locations[1:], colors):
         pyplot.fill_between([5.7, 5.8], former, latter, fc=color, lw=0, zorder=1)
@@ -700,6 +724,6 @@ def main_04():
 
 if __name__ == "__main__":
     main_01()
-    main_02()
-    main_03()
-    main_04()
+    # main_02()
+    # main_03()
+    # main_04()
