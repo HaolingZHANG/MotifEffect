@@ -133,20 +133,20 @@ def main_01():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 4:7])
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
-                      task_data["d"].T, vmin=0, vmax=1, cmap="Purples", shading="gouraud")
+                      task_data["d"].T, vmin=0.02, vmax=1, cmap="Purples", shading="gouraud")
     x_values, y_values = linspace(0.00, 0.03, 100), []
     for values in task_data["d"]:
         if max(values) < 0.02:
             break
         y_values.append(linspace(0.50, 2.50, 100)[argmax(values)])
-    pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=1, ls=":")
+    pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=0.75, ls=":")
     # location = x_values[argmax(y_values)]
     # pyplot.text(location, max(y_values) + 0.2,
     #             "maximum-density trend (≥ 2%)", va="center", ha="center", fontsize=7)
     # pyplot.annotate("", xy=(location, max(y_values) + 0.2), xytext=(location, max(y_values)),
     #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=4, shrinkB=6, lw=0.75))
     pyplot.text(0.0278, 1.06, "density", va="center", ha="center", fontsize=7)
-    colors, locations = pyplot.get_cmap("Purples")(linspace(0, 1, 41)), linspace(0.6, 1.0, 41)
+    colors, locations = pyplot.get_cmap("Purples")(linspace(0.02, 1, 41)), linspace(0.6, 1.0, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
         pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
     for location, info in zip(linspace(0.65, 1.0, 3), linspace(0, 1, 3)):
@@ -165,20 +165,20 @@ def main_01():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 7:])
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
-                      task_data["e"].T, vmin=0, vmax=1, cmap="Purples", shading="gouraud")
+                      task_data["e"].T, vmin=0.02, vmax=1, cmap="Purples", shading="gouraud")
     x_values, y_values = linspace(0.00, 0.03, 100), []
     for values in task_data["e"]:
         if max(values) < 0.02:
             break
         y_values.append(linspace(0.50, 2.50, 100)[argmax(values)])
-    pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=1, ls=":")
+    pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=0.75, ls=":")
     # location = x_values[argmax(y_values)]
     # pyplot.text(location, max(y_values) + 0.2,
     #             "maximum-density trend (≥ 2%)", va="center", ha="center", fontsize=7)
     # pyplot.annotate("", xy=(location, max(y_values) + 0.2), xytext=(location, max(y_values)),
     #                 arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=4, shrinkB=6, lw=0.75))
     pyplot.text(0.0278, 1.06, "density", va="center", ha="center", fontsize=7)
-    colors, locations = pyplot.get_cmap("Purples")(linspace(0, 1, 41)), linspace(0.6, 1.0, 41)
+    colors, locations = pyplot.get_cmap("Purples")(linspace(0.02, 1, 41)), linspace(0.6, 1.0, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
         pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
     for location, info in zip(linspace(0.65, 1.0, 3), linspace(0, 1, 3)):
@@ -577,7 +577,7 @@ def main_03():
     pyplot.text(4.45, 196, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
     pyplot.hlines(195, -0.5, 4.5, lw=0.75, ls="--", zorder=2)
     pyplot.legend(loc="lower left", framealpha=1, fontsize=7)
-    pyplot.xlabel("training error scale", fontsize=8)
+    pyplot.xlabel("training noise level", fontsize=8)
     pyplot.ylabel("average training performance", fontsize=8)
     pyplot.xticks(arange(5), ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
     pyplot.yticks(arange(150, 201, 10), arange(150, 201, 10), fontsize=7)
@@ -621,8 +621,8 @@ def main_03():
                         pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.1f" % value, color="w",
                                     va="center", ha="center", fontsize=7)
 
-        pyplot.xlabel("training error scale", fontsize=8)
-        pyplot.ylabel("evaluating error scale", fontsize=8)
+        pyplot.xlabel("training noise level", fontsize=8)
+        pyplot.ylabel("evaluating noise level", fontsize=8)
         pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
         pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
         pyplot.xlim(0, 5)
@@ -700,7 +700,7 @@ def main_04():
                             label="T" + str(case_index + 1) + ": " + info, alpha=0.75)
 
         pyplot.legend(loc="lower left", fontsize=7, title="failure type", title_fontsize=7)
-        pyplot.xlabel("evaluating error scale", fontsize=8)
+        pyplot.xlabel("evaluating noise level", fontsize=8)
         pyplot.ylabel("evaluating performance", fontsize=8)
         pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
         pyplot.yticks(arange(120, 201, 10), arange(120, 201, 10), fontsize=7)
@@ -724,6 +724,6 @@ def main_04():
 
 if __name__ == "__main__":
     main_01()
-    # main_02()
-    # main_03()
-    # main_04()
+    main_02()
+    main_03()
+    main_04()

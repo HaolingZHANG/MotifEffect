@@ -1,15 +1,20 @@
-# What network motifs tell us about the representational capacity, the numerical stability, and their influence on overall neural networks
+# Representational capacity and numerical stability of network motifs and their role in optimizing artificial neural networks
 
-Noise resistance is an inescapable issue when implementing deep learning technologies in the real world. 
-Thus, efficient deep learning models should be able to adjust to or filter out noise. 
-Regarding the robust architecture design, early efforts entailed increasing the network complexity to different extents, 
-thereby rendering the overall model somewhat impervious to noise. Here, we examine the factors contributing to 
-the low numerical stability of the entire network from the perspective of 3-node network motifs. 
-Our systematic analysis of the representational capability and numerical stability of various motif types 
-and their constituted networks has revealed that avoiding the creation of coherent loops or replacing them 
-with colliders constitutes a fundamental approach to boosting robustness while maintaining representational capability. 
-These findings provide a network lightweight perspective for designing robust neural networks, 
-which could facilitate the more efficient implementation of deep learning technologies in the real world.
+While network motifs are fully investigated in various networked systems, 
+early efforts fell short in recognizing the significance of network motifs to artificial neural networks, 
+therefore, motif-based structure optimization remain unexplored territory. 
+Hereof, we investigate the properties of incoherent loops, coherent loops, and colliders, 
+and extend them to network scale. 
+Using colliders as a benchmark, we develop static and dynamic strategies to analyze trade-off tendencies 
+between representational capacity and numerical stability of two types of loops, 
+finding that incoherent loops outperform coherent loops and 
+predicting that replacing coherent loops with colliders can enhance network performance. 
+To illustrate their network-scale applicability, we use baseline neuroevolution and 
+its finely-modified variants to produce motif-limited networks 
+for solving the cart-pole balance task in noisy environments. 
+As predicted, we derive consistent findings in network scale. 
+These findings suggest a methodology to improve noise resilience by 
+regularizing network structure design by biasing towards specific motif palettes.
 
 ## Installation
 You may clone this code repository (using the following command line) or 
@@ -26,9 +31,9 @@ It requires a python version at least 3.7, and some well-established libraries l
 ## Experiments
 In this work, three experiments are executed.
 Among them, we
-1. estimate the representational capability and the numerical stability of three motif populations (incoherent loops, coherent loops, and colliders) within a restricted parameter and definition domain.
-2. analyze the trade-off between representational capability and numerical stability based on the set theory and a customized method called maximum-minimum loss search.
-3. analyze training performance and robustness of neural networks produced by the default neuroevolution method (i.e. NEAT) and its three variants based on different motif generation tendency.
+1. analyze trade-off tendencies between representational capacity and numerical stability of two types of loops, using colliders as a benchmark, based on gradient descent strategy and motif-associated Lipschitz constant.
+2. analyze the origin of these trade-off tendencies using maximum-minimum loss search.
+3. analyze training efficiency and robustness of neural networks produced by the classical neuroevolution method (i.e. NEAT) and its three variants based on different motif generation tendency.
 
 In this code repository, all experimental designs and parameter settings are clear (see 
 [run_1_tasks.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_tasks.py)
@@ -126,8 +131,8 @@ If you think this repository helps or being used in your research, please consid
 Here is a Bibtex entry:
 
 ````
-@article{zhang2023what,
-  title={What network motifs tell us about the representational capacity, the numerical stability, and their influence on overall neural networks},
+@article{zhang2023representational,
+  title={Representational capacity and numerical stability of network motifs and their role in optimizing artificial neural networks},
   author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Tegner, Jesper},
   journal={TODO},
   year={2023}

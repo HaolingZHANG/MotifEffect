@@ -487,7 +487,7 @@ def supp_08():
             pyplot.plot(arange(5) + 0.5, case, color="silver", lw=2, marker="o", zorder=0)
             pyplot.scatter([argmax(case) + 0.5], [max(case)], color="k", zorder=1)
             pyplot.text(argmax(case) + 0.5, 220, "best", va="center", ha="center", fontsize=7)
-            pyplot.xlabel("evaluating error scale", fontsize=8)
+            pyplot.xlabel("evaluating noise level", fontsize=8)
             pyplot.ylabel("performance", fontsize=8)
             pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
             pyplot.yticks(arange(50, 201, 50), arange(50, 201, 50), fontsize=7)
