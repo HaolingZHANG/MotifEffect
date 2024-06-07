@@ -4,7 +4,7 @@
 """
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams, markers
-from numpy import array, ones, arange, linspace, meshgrid, sin, abs, sum, min, max, mean, argsort, argmax, where, pi
+from numpy import array, ones, arange, linspace, meshgrid, sin, abs, sum, min, median, max, mean, argmax, where, pi
 from scipy.stats import gaussian_kde
 from warnings import filterwarnings
 
@@ -312,33 +312,47 @@ def supp_05():
     """
     task_data = load_data(sort_path + "supp05.pkl")
 
-    labels = ["-0.3 ~ 0.0", "0.0 ~ 0.2", "0.2 ~ 0.4", "0.4 ~ 0.6", "0.6 ~ 0.8", "0.8 ~ 1.0"]
+    labels = {
+        "b": "baseline method",
+        "i": r"[ $\mathcal{L}_c + \mathcal{C}$ ] - method",
+        "c": r"[ $\mathcal{L}_i + \mathcal{C}$ ] - method",
+        "a": r"$\mathcal{C}$ - method"
+    }
 
-    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
-    for index, (panel_index, values) in enumerate(task_data.items()):
-        pyplot.subplot(2, 2, index + 1)
-        counts = [len(values[values < 0.0]),
-                  len(values[where((values >= 0.0) & (values < 0.2))]),
-                  len(values[where((values >= 0.2) & (values < 0.4))]),
-                  len(values[where((values >= 0.4) & (values < 0.6))]),
-                  len(values[where((values >= 0.6) & (values < 0.8))]),
-                  len(values[values >= 0.8])]
-        pyplot.title("samples in coherent-loop " + str(index + 1), fontsize=8)
-        pyplot.bar(arange(len(counts)), counts, ec="k", fc="#F2FEDC", lw=0.75)
-        for location, count in enumerate(counts):
-            pyplot.text(location, count, str(count), va="bottom", ha="center", fontsize=7)
-        pyplot.xlabel("Spearman's rank correlation coefficient", fontsize=8)
-        pyplot.ylabel("number of sample", fontsize=8)
-        pyplot.xticks(arange(len(labels)), labels, fontsize=7)
-        pyplot.yticks(arange(0, 61, 10), arange(0, 61, 10), fontsize=7)
-        pyplot.xlim(-0.6, 5.6)
-        pyplot.ylim(0, 60)
+    failure_types = ["failure type 1", "failure type 2", "failure type 3"]
+    colors = ["#DABCBB", "#B2859B", "#A39EC0"]
 
-    figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
+    pyplot.figure(figsize=(10, 9), tight_layout=True)
+    for index_1, (short_label, data) in enumerate(task_data.items()):
+        label = labels[short_label]
+        for index_2, (failure_type, values, color) in enumerate(zip(failure_types, data, colors)):
+            pyplot.subplot(3, 4, index_2 * 4 + index_1 + 1)
+            pyplot.title(label + "\n" + failure_type, fontsize=10)
+            pyplot.fill_between([0, 5], 95, 195, fc="#EEEEEE", lw=0, zorder=-1)
+            pyplot.hlines(195, 0, 5, lw=0.75, ls="--", color="silver", zorder=-1)
+            pyplot.text(4.9, 196, "pass (≥ 195)", va="bottom", ha="right", fontsize=8)
+            if values is not None:
+                for index, value in enumerate(values.T):
+                    pyplot.boxplot([value], positions=[index + 0.5], showfliers=False, showmeans=False,
+                                   patch_artist=True,
+                                   widths=0.3, boxprops=dict(lw=.75, ec="k", fc=color),
+                                   medianprops=dict(lw=1.5, color="k"))
+                links = median(values, axis=0)
+                pyplot.plot(arange(5) + 0.5, links, color="k", lw=0.75, ls="--")
+                pyplot.xlabel("evaluating noise level", fontsize=8)
+                pyplot.ylabel("evaluating performance", fontsize=8)
+                pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+                pyplot.yticks(arange(100, 201, 10), arange(100, 201, 10), fontsize=7)
+                pyplot.xlim(0, 5)
+                pyplot.ylim(95, 205)
+            else:
+                pyplot.text(2.5, 150, "no data", va="center", ha="center", fontsize=10)
+                pyplot.xlabel("evaluating noise level", fontsize=8)
+                pyplot.ylabel("evaluating performance", fontsize=8)
+                pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+                pyplot.yticks(arange(100, 201, 10), arange(100, 201, 10), fontsize=7)
+                pyplot.xlim(0, 5)
+                pyplot.ylim(95, 205)
 
     pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -350,133 +364,6 @@ def supp_06():
     """
     task_data = load_data(sort_path + "supp06.pkl")
 
-    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
-    for index, (panel_index, values) in enumerate(task_data.items()):
-        pyplot.subplot(2, 2, index + 1)
-        pyplot.title(str(len(values)) + " samples in coherent-loop " + str(index + 1), fontsize=8)
-
-        for sample_index, sample_location in enumerate(argsort(values[:, 0])):
-            value = values[sample_location]
-            pyplot.vlines(sample_index, value[0], value[1], lw=0.75, color="k", zorder=1)
-            if sample_index > 0:
-                pyplot.scatter([sample_index], [value[0]], ec="k", fc="w", lw=0.75, zorder=2)
-                pyplot.scatter([sample_index], [value[1]], ec="k", fc="k", lw=0.75, zorder=2)
-            else:
-                pyplot.scatter([sample_index], [value[0]], ec="k", fc="w", lw=0.75, zorder=2,
-                               label="before escaping")
-                pyplot.scatter([sample_index], [value[1]], ec="k", fc="k", lw=0.75, zorder=2,
-                               label="after escaping")
-        pyplot.legend(loc="lower right", fontsize=7, framealpha=1.0)
-        pyplot.xlabel("sample index (order by the L2-norm loss before escaping)", fontsize=8)
-        pyplot.ylabel("L2-norm loss", fontsize=8)
-        pyplot.xticks(arange(20), arange(1, 21), fontsize=7)
-        pyplot.yticks(linspace(0.000, 0.013, 14),
-                      ["%.3f" % v for v in linspace(0.000, 0.013, 14)], fontsize=7)
-        pyplot.xlim(-0.5, 19.5)
-        pyplot.ylim(0.000, 0.013)
-
-    figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
-
-    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_07():
-    """
-    Create Figure S7 in the supplementary file.
-    """
-    task_data = load_data(sort_path + "supp07.pkl")
-    figure = pyplot.figure(figsize=(10, 6), tight_layout=True)
-    pyplot.subplot(2, 1, 1)
-    source_landscape, target_landscape, correlation, correlations = task_data["a"]
-    pyplot.text(2.00, 1.03, "$z$", va="center", ha="center", fontsize=8)
-    locations, colors = linspace(0.20, 3.80, 100), pyplot.get_cmap("PRGn")(linspace(0, 1, 100))
-    for former, latter, color in zip(locations[:-1], locations[1:], colors):
-        pyplot.fill_between([former, latter], 0.97, 1.00, fc=color, lw=0, zorder=1)
-    for location, label in zip(linspace(0.20, 3.80, 6), linspace(0, 1, 6)):
-        pyplot.vlines(location, 0.95, 0.97, lw=0.75, color="k", zorder=1)
-        pyplot.text(location, 0.92, "%.1f" % label, va="center", ha="center", fontsize=7)
-    pyplot.plot([0.2, 3.8, 3.8, 0.2, 0.2], [0.97, 0.97, 1.0, 1.0, 0.97], lw=0.75, color="k", zorder=2)
-    pyplot.text(0.50, 0.83, "former landscape", va="center", ha="center", fontsize=7)
-    pyplot.text(0.50, 0.17, "$x$", va="center", ha="center", fontsize=8)
-    pyplot.text(0.17, 0.50, "$y$", va="center", ha="center", fontsize=8)
-    pyplot.pcolormesh(linspace(0.2, 0.8, 41), linspace(0.2, 0.8, 41), source_landscape,
-                      vmin=-1, vmax=1, cmap="PRGn", shading="gouraud")
-    pyplot.plot([0.2, 0.8, 0.8, 0.2, 0.2], [0.2, 0.2, 0.8, 0.8, 0.2], color="k", lw=0.75, zorder=2)
-    pyplot.text(3.50, 0.83, "latter landscape", va="center", ha="center", fontsize=7)
-    pyplot.text(3.50, 0.17, "$x$", va="center", ha="center", fontsize=8)
-    pyplot.text(3.17, 0.50, "$y$", va="center", ha="center", fontsize=8)
-    pyplot.pcolormesh(linspace(3.2, 3.8, 41), linspace(0.2, 0.8, 41), target_landscape,
-                      vmin=-1, vmax=1, cmap="PRGn", shading="gouraud")
-    pyplot.plot([3.2, 3.8, 3.8, 3.2, 3.2], [0.2, 0.2, 0.8, 0.8, 0.2], color="k", lw=0.75, zorder=2)
-    pyplot.plot([1.2, 1.2, 2.8, 2.8], [0.8, 0.2, 0.2, 0.8], lw=0.75, color="k", zorder=2)
-    for location, label in zip(linspace(1.20, 2.80, 11), arange(0, 101, 10)):
-        pyplot.vlines(location, 0.18, 0.20, lw=0.75, color="k", zorder=1)
-        pyplot.text(location, 0.15, label, va="center", ha="center", fontsize=7)
-    for location, label in zip(linspace(0.2, 0.8, 6), linspace(-1.0, 1.0, 6)):
-        pyplot.hlines(location, 1.18, 1.20, lw=0.75, color="k", zorder=1)
-        pyplot.text(1.16, location, "%.1f" % label, va="center", ha="right", fontsize=7)
-    pyplot.text(1.05, 0.5, "Spearman's rank correlation coefficient",
-                va="center", ha="center", rotation=90, fontsize=7)
-    for location, label in zip(linspace(0.2, 0.8, 6), linspace(-1.0, 1.0, 6)):
-        pyplot.hlines(location, 2.80, 2.82, lw=0.75, color="k", zorder=1)
-        pyplot.text(2.90, location, "%.1f" % label, va="center", ha="right", fontsize=7)
-    pyplot.text(2.96, 0.5, "Spearman's rank correlation coefficient",
-                va="center", ha="center", rotation=90, fontsize=7)
-    for location in linspace(0.2, 0.8, 6)[1:]:
-        pyplot.hlines(location, 1.2, 2.8, lw=0.75, ls="--", color="silver", zorder=0)
-    correlations = (array(correlations) + 1.0) / 2.0 * 0.6 + 0.2
-    pyplot.plot(linspace(1.21, 2.79, 100)[:len(correlations)],
-                correlations, lw=2, color="k", zorder=2)
-    location = linspace(1.21, 2.79, 100)[32]
-    pyplot.vlines(location, 0.2, 0.8, lw=0.75, ls="--", color="silver", zorder=1)
-    pyplot.plot([1.2, 1.2, location, location], [0.80, 0.83, 0.83, 0.80], lw=0.75, color="k", zorder=2)
-    pyplot.plot([2.8, 2.8, location, location], [0.80, 0.83, 0.83, 0.80], lw=0.75, color="k", zorder=2)
-    pyplot.text((1.2 + location) / 2, 0.86, "rotate", va="center", ha="center", fontsize=7)
-    pyplot.text((2.8 + location) / 2, 0.86, "adjust", va="center", ha="center", fontsize=7)
-    pyplot.text(2.00, 0.10, "round", va="center", ha="center", fontsize=8)
-    pyplot.xlim(0.19, 3.81)
-    pyplot.ylim(0.10, 1.05)
-    pyplot.axis("off")
-
-    ax = pyplot.subplot(2, 1, 2)
-    origin, changed = task_data["b"][:, 0], task_data["b"][:, 1]
-    x = linspace(min(origin), max(origin), 100)
-    y = gaussian_kde(origin)(x)
-    y /= sum(y)
-    pyplot.plot(x, y, lw=0.75, color="k", zorder=2)
-    pyplot.fill_between(x, 0, y, ec="k", fc="#BEB8DC", lw=0.75, zorder=2, label="calculation of entire process")
-    x = linspace(min(changed), max(changed), 100)
-    y = gaussian_kde(changed)(x)
-    y /= sum(y)
-    pyplot.fill_between(x, 0, y, ec="k", fc="#FA7F6F", lw=0.75, zorder=2, label="calculation per round")
-    pyplot.legend(loc="upper right", ncol=2, fontsize=7)
-    pyplot.xlabel("Spearman's rank correlation coefficient", fontsize=8)
-    pyplot.xticks(linspace(0.0, 0.6, 13), ["%.2f" % v for v in linspace(0.0, 0.6, 13)], fontsize=7)
-    pyplot.yticks([])
-    pyplot.xlim(0.0, 0.6)
-    pyplot.ylim(0.00, 0.015)
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-
-    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.50, "b", va="center", ha="center", fontsize=12)
-
-    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_08():
-    """
-    Create Figure S8 in the supplementary file.
-    """
-    task_data = load_data(sort_path + "supp08.pkl")
     figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
     location = 1
     for index in range(4):
@@ -506,13 +393,13 @@ def supp_08():
     figure.text(0.02, 0.43, "b", va="center", ha="center", fontsize=12)
     figure.text(0.02, 0.15, "c", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_09():
+def supp_07():
     """
-    Create Figure S9 in the supplementary file.
+    Create Figure S7 in the supplementary file.
     """
     pyplot.figure(figsize=(10, 4))
     grid = pyplot.GridSpec(4, 10)
@@ -694,7 +581,9 @@ def supp_09():
                          biases=[0.9734159708023071])
     matrix1 = calculate_landscape(value_range=(-1, +1), points=41, motif=motif1).T
     matrix2 = calculate_landscape(value_range=(-1, +1), points=41, motif=motif2).T
+    # noinspection PyArgumentEqualDefault
     lipschitz1 = estimate_lipschitz(value_range=(-1, +1), points=41, output=matrix1, norm_type="L-2")
+    # noinspection PyArgumentEqualDefault
     lipschitz2 = estimate_lipschitz(value_range=(-1, +1), points=41, output=matrix2, norm_type="L-2")
 
     # noinspection PyTypeChecker
@@ -757,13 +646,13 @@ def supp_09():
     pyplot.xlim(0, 1)
     pyplot.ylim(0, 1)
 
-    pyplot.savefig(save_path + "supp09.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_10():
+def supp_08():
     """
-    Create Figure S10 in the supplementary file.
+    Create Figure S8 in the supplementary file.
     """
     motif_1 = NeuralMotif(motif_type="incoherent-loop", motif_index=1,
                           activations=["relu", "tanh"], aggregations=["max", "sum"],
@@ -885,7 +774,7 @@ def supp_10():
     pyplot.ylim(0.00, 2.20)
     pyplot.axis("off")
 
-    pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
@@ -898,5 +787,3 @@ if __name__ == "__main__":
     supp_06()
     supp_07()
     supp_08()
-    supp_09()
-    supp_10()
