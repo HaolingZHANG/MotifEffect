@@ -3,13 +3,12 @@
 @Description : Plot all the figures in the supplementary file.
 """
 from logging import getLogger, CRITICAL
-from matplotlib import pyplot, rcParams, markers
-from numpy import array, ones, arange, linspace, meshgrid, sin, abs, sum, min, median, max, mean, argmax, where, pi
+from matplotlib import pyplot, rcParams
+from numpy import array, arange, linspace, meshgrid, abs, sum, min, median, max, mean, argmax, where
 from scipy.stats import gaussian_kde
 from warnings import filterwarnings
 
-from effect import calculate_landscape, NeuralMotif, estimate_lipschitz
-from practice import acyclic_motifs
+from effect import NeuralMotif, calculate_landscape
 
 from works import load_data, draw_info
 
@@ -145,8 +144,8 @@ def supp_03():
             pyplot.vlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
         pyplot.legend(loc="lower right", fontsize=7, title="proportion change", title_fontsize=7, framealpha=1)
         pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
-        pyplot.xlabel("predominant curvature proportion in the former landscape", fontsize=8)
-        pyplot.ylabel("predominant curvature proportion in the latter landscape", fontsize=8)
+        pyplot.xlabel("predominant curvature proportion of landscape before escaping", fontsize=8)
+        pyplot.ylabel("predominant curvature proportion of landscape after escaping", fontsize=8)
         pyplot.xticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
         pyplot.yticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
         pyplot.xlim(0.0, 1.0)
@@ -167,6 +166,251 @@ def supp_04():
     Create Figure S4 in the supplementary file.
     """
     task_data = load_data(sort_path + "supp04.pkl")
+
+    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
+    for index, (panel_index, values) in enumerate(task_data.items()):
+        pyplot.subplot(2, 2, index + 1)
+        count = sum((values[:, 1] - values[:, 0]) > 0)
+        pyplot.title("samples in coherent-loop " + str(index + 1), fontsize=8)
+        pyplot.fill_between([0, 1], [0, 1], [1, 1], lw=0, fc="#FEB2B4", alpha=0.5, zorder=0,
+                            label="increase (" + str(count) + " samples)")
+        pyplot.fill_between([0, 1], [0, 0], [0, 1], lw=0, fc="#A5B6C5", alpha=0.5, zorder=0,
+                            label="decrease (" + str(100 - count) + " samples)")
+        for location in linspace(0.1, 0.9, 9):
+            pyplot.hlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
+            pyplot.vlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
+        pyplot.legend(loc="lower right", fontsize=7, title="proportion change", title_fontsize=7, framealpha=1)
+        pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
+        pyplot.xlabel("predominant curvature proportion of landscape before escaping", fontsize=8)
+        pyplot.ylabel("predominant curvature proportion of landscape after escaping", fontsize=8)
+        pyplot.xticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+        pyplot.yticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+        pyplot.xlim(0.0, 1.0)
+        pyplot.ylim(0.0, 1.0)
+
+    figure.align_labels()
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_05():
+    """
+    Create Figure S5 in the supplementary file.
+    """
+    pyplot.figure(figsize=(10, 2), tight_layout=True)
+    pyplot.subplot(1, 2, 1)
+    pyplot.scatter([0.2, 0.5, 0.8, 1.8, 2.1, 2.4], [0.2, 0.8, 0.2, 0.2, 0.8, 0.2],
+                   ec="k", fc="w", s=40, lw=0.75)
+
+    for location in [0.20, 0.80, 1.80, 2.40]:
+        pyplot.annotate("", xy=(location, 0.00), xytext=(location, 0.10),
+                        arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="k",
+                                        shrinkA=3.2, shrinkB=0.0, lw=0.75), zorder=0)
+    for location in [0.50, 2.10]:
+        pyplot.annotate("", xy=(location, 0.90), xytext=(location, 1.00),
+                        arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="k",
+                                        shrinkA=0.0, shrinkB=3.0, lw=0.75), zorder=0)
+    pyplot.text(0.20, 0.13, r"$x$", va="center", ha="center", fontsize=9)
+    pyplot.text(1.80, 0.13, r"$x$", va="center", ha="center", fontsize=9)
+    pyplot.text(0.80, 0.13, r"$y$", va="center", ha="center", fontsize=9)
+    pyplot.text(2.40, 0.13, r"$y$", va="center", ha="center", fontsize=9)
+    pyplot.text(0.50, 0.87, r"$z$", va="center", ha="center", fontsize=9)
+    pyplot.text(2.10, 0.87, r"$z$", va="center", ha="center", fontsize=9)
+    for former_point, latter_point in zip([(0.2, 0.2), (0.2, 0.2), (1.8, 0.2), (0.8, 0.2), (2.4, 0.2)],
+                                          [(0.8, 0.2), (0.5, 0.8), (2.1, 0.8), (0.5, 0.8), (2.1, 0.8)]):
+        pyplot.annotate("", xy=former_point, xytext=latter_point,
+                        arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="k",
+                                        shrinkA=3.2, shrinkB=3.2, lw=0.75), zorder=0)
+    pyplot.hlines(0.51, 0.9, 1.7, lw=0.5, color="k", zorder=1)
+    pyplot.hlines(0.49, 0.9, 1.7, lw=0.5, color="k", zorder=1)
+    pyplot.text(1.300, 0.570, r"$w \rightarrow 0$", va="center", ha="center", fontsize=9)
+    pyplot.fill_between([0.370, 0.635], 0.15, 0.25, fc="w", lw=0, zorder=1)
+    pyplot.text(0.500, 0.195, r"$w \cdot x + b$", va="center", ha="center", fontsize=9, zorder=2)
+    pyplot.text(2.450, 0.195, r"$+\ b$", va="center", ha="left", fontsize=9)
+    pyplot.xlim(0.15, 2.55)
+    pyplot.ylim(0.00, 1.00)
+    pyplot.axis("off")
+
+    pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_06():
+    """
+    Create Figure S6 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp06.pkl")
+
+    x, y = linspace(0.0, 0.6, 41), linspace(0.0, 0.6, 41)
+
+    figure = pyplot.figure(figsize=(10, 5.5), tight_layout=True)
+    pyplot.subplot(2, 1, 1)
+    pyplot.title("case 43 of coherent loop 1", fontsize=8)
+    points = array([[0.0, 1.5], [2.0, 1.5], [4.0, 1.5], [6.0, 1.5], [8.0, 1.5], [10.0, 1.5],
+                    [2.0, 0.0], [4.0, 0.0], [6.0, 0.0], [8.0, 0.0], [10.0, 0.0]])
+    for index, (x_location, y_location) in enumerate(points):
+        pyplot.text(0.5 + x_location, 1.2 + y_location, "iteration\n" + str(index * 10),
+                    va="center", ha="center", fontsize=7)
+        pyplot.plot([0.2 + x_location, 0.8 + x_location, 0.8 + x_location, 0.2 + x_location, 0.2 + x_location],
+                    [0.4 + y_location, 0.4 + y_location, 1.0 + y_location, 1.0 + y_location, 0.4 + y_location],
+                    lw=0.75, color="k", zorder=2)
+        if index != 0:
+            pyplot.hlines(0.7 + y_location, 0.2 + x_location, 0.8 + x_location, lw=0.5, ls=":", color="k", zorder=1)
+            pyplot.vlines(0.5 + x_location, 0.4 + y_location, 1.0 + y_location, lw=0.5, ls=":", color="k", zorder=1)
+        if 2.0 < x_location <= 10:
+            pyplot.annotate("", xy=(x_location - 1.0, 0.7 + y_location), xytext=(x_location - 0.1, 0.7 + y_location),
+                            arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+        if x_location == 2.0 and y_location > 0.0:
+            pyplot.annotate("", xy=(x_location - 1.0, 0.7 + y_location), xytext=(x_location - 0.1, 0.7 + y_location),
+                            arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+        pyplot.text(0.50 + x_location, 0.30 + y_location, "$x$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.10 + x_location, 0.70 + y_location, "$y$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.10 + x_location, 0.30 + y_location, "$-1$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.10 + x_location, 1.05 + y_location, "$+1$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.90 + x_location, 0.30 + y_location, "$+1$", va="center", ha="center", fontsize=8)
+        pyplot.hlines(0.30 + y_location, 0.21 + x_location, 0.39 + x_location, color="k", lw=0.75, ls="--")
+        pyplot.hlines(0.30 + y_location, 0.79 + x_location, 0.61 + x_location, color="k", lw=0.75, ls="--")
+        pyplot.vlines(0.10 + x_location, 0.41 + y_location, 0.59 + y_location, color="k", lw=0.75, ls="--")
+        pyplot.vlines(0.10 + x_location, 0.81 + y_location, 0.99 + y_location, color="k", lw=0.75, ls="--")
+    for index, ((x_location, y_location), landscape) in enumerate(zip(points, task_data["a"])):
+        x_bias, y_bias = x_location + 0.2, y_location + 0.4
+        pyplot.pcolormesh(x + x_bias, y + y_bias, landscape, vmin=-1, vmax=1, cmap="PRGn", shading="gouraud", zorder=0)
+
+    pyplot.plot([10.5, 10.5, 1.5, 1.5], [1.7, 1.55, 1.55, 0.7], lw=0.75, color="k", zorder=2)
+    pyplot.annotate("", xy=(1.5, 0.7), xytext=(1.9, 0.7),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    pyplot.text(0.5, 1.4, r"$z$", va="center", ha="center", fontsize=8)
+    pyplot.plot([0.4, 0.6, 0.6, 0.4, 0.4], [0.5, 0.5, 1.3, 1.3, 0.5], lw=0.75, color="k", zorder=2)
+    locations, colors = linspace(0.5, 1.3, 41), pyplot.get_cmap("PRGn")(linspace(0, 1, 40))
+    for former, latter, color in zip(locations[:-1], locations[1:], colors):
+        pyplot.fill_between([0.4, 0.6], former, latter, fc=color, lw=0, zorder=1)
+    for location, info in zip([0.5, 0.9, 1.3], ["$-1$", "$0$", "$+1$"]):
+        pyplot.hlines(location, 0.35, 0.40, lw=0.75, color="k", zorder=2)
+        pyplot.text(0.33, location, info, va="center", ha="right", fontsize=8)
+    pyplot.xlim(0.0, 11.0)
+    pyplot.ylim(0.2, 2.9)
+    pyplot.axis("off")
+
+    pyplot.subplot(2, 1, 2)
+    pyplot.title("case 61 of coherent loop 1", fontsize=8)
+    points = array([[0.0, 1.5], [2.0, 1.5], [4.0, 1.5], [6.0, 1.5], [8.0, 1.5], [10.0, 1.5],
+                    [2.0, 0.0], [4.0, 0.0], [6.0, 0.0], [8.0, 0.0], [10.0, 0.0]])
+    for index, (x_location, y_location) in enumerate(points):
+        pyplot.text(0.5 + x_location, 1.2 + y_location, "iteration\n" + str(index * 10),
+                    va="center", ha="center", fontsize=7)
+        pyplot.plot([0.2 + x_location, 0.8 + x_location, 0.8 + x_location, 0.2 + x_location, 0.2 + x_location],
+                    [0.4 + y_location, 0.4 + y_location, 1.0 + y_location, 1.0 + y_location, 0.4 + y_location],
+                    lw=0.75, color="k", zorder=2)
+        if index != 0:
+            pyplot.hlines(0.7 + y_location, 0.2 + x_location, 0.8 + x_location, lw=0.5, ls=":", color="k", zorder=1)
+            pyplot.vlines(0.5 + x_location, 0.4 + y_location, 1.0 + y_location, lw=0.5, ls=":", color="k", zorder=1)
+        if 2.0 < x_location <= 10:
+            pyplot.annotate("", xy=(x_location - 1.0, 0.7 + y_location), xytext=(x_location - 0.1, 0.7 + y_location),
+                            arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+        if x_location == 2.0 and y_location > 0.0:
+            pyplot.annotate("", xy=(x_location - 1.0, 0.7 + y_location), xytext=(x_location - 0.1, 0.7 + y_location),
+                            arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+        pyplot.text(0.50 + x_location, 0.30 + y_location, "$x$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.10 + x_location, 0.70 + y_location, "$y$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.10 + x_location, 0.30 + y_location, "$-1$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.10 + x_location, 1.05 + y_location, "$+1$", va="center", ha="center", fontsize=8)
+        pyplot.text(0.90 + x_location, 0.30 + y_location, "$+1$", va="center", ha="center", fontsize=8)
+        pyplot.hlines(0.30 + y_location, 0.21 + x_location, 0.39 + x_location, color="k", lw=0.75, ls="--")
+        pyplot.hlines(0.30 + y_location, 0.79 + x_location, 0.61 + x_location, color="k", lw=0.75, ls="--")
+        pyplot.vlines(0.10 + x_location, 0.41 + y_location, 0.59 + y_location, color="k", lw=0.75, ls="--")
+        pyplot.vlines(0.10 + x_location, 0.81 + y_location, 0.99 + y_location, color="k", lw=0.75, ls="--")
+    for index, ((x_location, y_location), landscape) in enumerate(zip(points, task_data["b"])):
+        x_bias, y_bias = x_location + 0.2, y_location + 0.4
+        pyplot.pcolormesh(x + x_bias, y + y_bias, landscape, vmin=-1, vmax=1, cmap="PRGn", shading="gouraud", zorder=0)
+
+    pyplot.plot([10.5, 10.5, 1.5, 1.5], [1.7, 1.55, 1.55, 0.7], lw=0.75, color="k", zorder=2)
+    pyplot.annotate("", xy=(1.5, 0.7), xytext=(1.9, 0.7),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    pyplot.text(0.5, 1.4, r"$z$", va="center", ha="center", fontsize=8)
+    pyplot.plot([0.4, 0.6, 0.6, 0.4, 0.4], [0.5, 0.5, 1.3, 1.3, 0.5], lw=0.75, color="k", zorder=2)
+    locations, colors = linspace(0.5, 1.3, 41), pyplot.get_cmap("PRGn")(linspace(0, 1, 40))
+    for former, latter, color in zip(locations[:-1], locations[1:], colors):
+        pyplot.fill_between([0.4, 0.6], former, latter, fc=color, lw=0, zorder=1)
+    for location, info in zip([0.5, 0.9, 1.3], ["$-1$", "$0$", "$+1$"]):
+        pyplot.hlines(location, 0.35, 0.40, lw=0.75, color="k", zorder=2)
+        pyplot.text(0.33, location, info, va="center", ha="right", fontsize=8)
+    pyplot.xlim(0.0, 11.0)
+    pyplot.ylim(0.2, 2.9)
+    pyplot.axis("off")
+
+    figure.align_labels()
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.49, "b", va="center", ha="center", fontsize=12)
+    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_07():
+    """
+    Create Figure S7 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp07.pkl")
+
+    figure, mesh, all_ax = pyplot.figure(figsize=(10, 10)), None, []
+    grid = pyplot.GridSpec(2, 2)
+    for index, (_, matrix) in enumerate(task_data.items()):
+        # noinspection PyTypeChecker
+        ax = pyplot.subplot(grid[index // 2, index % 2])
+        all_ax.append(ax)
+        pyplot.title("100 samples in coherent-loop " + str(index + 1), fontsize=8)
+        for sample_index in range(len(matrix)):
+            matrix[sample_index] /= max(matrix[sample_index])
+        sorted_matrix = array(sorted(matrix, key=lambda row: argmax(row)))
+        mesh = pyplot.pcolormesh(linspace(0, 100, 102), linspace(0, 100, 101),
+                                 sorted_matrix, cmap="rainbow", zorder=0)
+        points = []
+        for distribution in sorted_matrix:
+            points.append(argmax(distribution))
+        for location, (former_point, latter_point) in enumerate(zip(points[:-1], points[1:])):
+            if former_point < 50 < latter_point:
+                pyplot.hlines(location + 1, 0, 100, lw=0.75, ls="--", color="k", zorder=2)
+                break
+        pyplot.plot(points, linspace(0, 100, 100), lw=1, color="k", zorder=2)
+        pyplot.vlines(50, 0, 100, lw=0.75, ls="--", color="k", zorder=2)
+        pyplot.xlabel("proportion of Spearman's rank correlation coefficient (per round)", fontsize=8)
+        pyplot.ylabel("sample index ordered by the peak position", fontsize=8)
+        pyplot.xticks(linspace(0, 100, 11),
+                      ["-1.0", "-0.8", "-0.6", "-0.4", "-0.2", "0.0", "+0.2", "+0.4", "+0.6", "+0.8", "+1.0"],
+                      fontsize=7)
+        pyplot.yticks([])
+        pyplot.xlim(0, 100)
+        pyplot.ylim(0, 100)
+
+    # noinspection PyTypeChecker
+    cbar = figure.colorbar(mesh, ax=all_ax, cax=figure.add_axes([0.1, 0.05, 0.8, 0.015]), orientation="horizontal")
+    cbar.set_label("normalized proportion density", fontsize=8)
+    cbar.set_ticks(linspace(0, 1, 21))
+    cbar.set_ticklabels(["%.2f" % v for v in linspace(0, 1, 21)])
+    cbar.ax.xaxis.set_tick_params(labelsize=7)
+
+    figure.align_labels()
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.53, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.53, "d", va="center", ha="center", fontsize=12)
+
+    # noinspection PyTypeChecker
+    pyplot.tight_layout(rect=[0.00, 0.07, 1.00, 1.00])
+    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_08():
+    """
+    Create Figure S8 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp08.pkl")
+
     figure = pyplot.figure(figsize=(10, 8), tight_layout=True)
     grid = pyplot.GridSpec(3, 1)
 
@@ -213,7 +457,7 @@ def supp_04():
     pyplot.plot([1.2, 1.8, 1.8, 1.2, 1.2], [1.2, 1.2, 1.8, 1.8, 1.2], lw=0.75, c="k", zorder=1)
     pyplot.annotate("", xy=(1.5, 0.9), xytext=(1.5, 1.1),
                     arrowprops=dict(arrowstyle="-|>", color="black", lw=1), zorder=2)
-    pyplot.text(1.52, 1.0, "escape", va="center", ha="left", fontsize=7)
+    pyplot.text(1.52, 1.00, "escape", va="center", ha="left", fontsize=7)
     pyplot.text(1.50, 0.84, "latter landscape (mesh)", va="center", ha="center", fontsize=8)
     pyplot.text(1.50, 0.16, "$x$", va="center", ha="center", fontsize=8)
     pyplot.text(1.16, 0.50, "$y$", va="center", ha="center", fontsize=8)
@@ -302,15 +546,15 @@ def supp_04():
     figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
     figure.text(0.02, 0.35, "b", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_05():
+def supp_09():
     """
-    Create Figure S5 in the supplementary file.
+    Create Figure S9 in the supplementary file.
     """
-    task_data = load_data(sort_path + "supp05.pkl")
+    task_data = load_data(sort_path + "supp09.pkl")
 
     labels = {
         "b": "baseline method",
@@ -354,15 +598,15 @@ def supp_05():
                 pyplot.xlim(0, 5)
                 pyplot.ylim(95, 205)
 
-    pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp09.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_06():
+def supp_10():
     """
-    Create Figure S6 in the supplementary file.
+    Create Figure S10 in the supplementary file.
     """
-    task_data = load_data(sort_path + "supp06.pkl")
+    task_data = load_data(sort_path + "supp10.pkl")
 
     figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
     location = 1
@@ -393,266 +637,13 @@ def supp_06():
     figure.text(0.02, 0.43, "b", va="center", ha="center", fontsize=12)
     figure.text(0.02, 0.15, "c", va="center", ha="center", fontsize=12)
 
-    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_07():
+def supp_11():
     """
-    Create Figure S7 in the supplementary file.
-    """
-    pyplot.figure(figsize=(10, 4))
-    grid = pyplot.GridSpec(4, 10)
-    pyplot.subplots_adjust(wspace=0, hspace=0)
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[:2, :2])
-    motif, info = acyclic_motifs["incoherent-loop"][1], draw_info["incoherent-loop"]
-    for index, (px, py) in enumerate(zip(info[1], info[2])):
-        if index + 1 in info[3]:
-            pyplot.scatter(px, py, color="white", edgecolor="black", lw=1, s=80, zorder=2)
-        elif index + 1 in info[4]:
-            pyplot.scatter(px, py, color="black", edgecolor="black", lw=1, s=80, zorder=2)
-        elif index + 1 in info[5]:
-            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="right"),
-                           color="white", edgecolor="black", lw=1, s=80, zorder=2)
-            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="left"),
-                           color="gray", edgecolor="black", lw=1, s=80, zorder=2)
-        else:
-            pyplot.scatter(px, py, color="gray", edgecolor="black", lw=1, s=80, zorder=2)
-    x, y = info[1], info[2]
-    for former, latter in [(1, 2), (1, 3), (2, 3)]:
-        if motif.get_edge_data(former, latter)["weight"] == 1:
-            pyplot.annotate("", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
-                            arrowprops=dict(arrowstyle="-|>", color="black",
-                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
-        elif motif.get_edge_data(former, latter)["weight"] == -1:
-            pyplot.annotate("", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
-                            arrowprops=dict(arrowstyle="-|>", color="black", linestyle="dotted",
-                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
-    pyplot.text(x=info[1][0], y=info[2][0] - 0.06, s="x", fontsize=10, va="top", ha="center")
-    pyplot.text(x=info[1][1], y=info[2][1] - 0.06, s="y", fontsize=10, va="top", ha="center")
-    pyplot.text(x=info[1][2], y=info[2][2] + 0.06, s="z", fontsize=10, va="bottom", ha="center")
-    pyplot.text(-0.05, 0.45, "incoherent loop", va="center", ha="center", fontsize=10, rotation=90)
-    pyplot.xlim(-0.10, 1.0)
-    pyplot.ylim(-0.05, 1.0)
-    pyplot.axis("off")
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[2:4, :2])
-    motif, info = acyclic_motifs["collider"][1], draw_info["collider"]
-    for index, (px, py) in enumerate(zip(info[1], info[2])):
-        if index + 1 in info[3]:
-            pyplot.scatter(px, py, color="white", edgecolor="black", lw=1, s=80, zorder=2)
-        elif index + 1 in info[4]:
-            pyplot.scatter(px, py, color="black", edgecolor="black", lw=1, s=80, zorder=2)
-        elif index + 1 in info[5]:
-            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="right"),
-                           color="white", edgecolor="black", lw=1, s=80, zorder=2)
-            pyplot.scatter(px, py, marker=markers.MarkerStyle("o", fillstyle="left"),
-                           color="gray", edgecolor="black", lw=1, s=80, zorder=2)
-        else:
-            pyplot.scatter(px, py, color="gray", edgecolor="black", lw=1, s=80, zorder=2)
-    x, y = info[1], info[2]
-    for former, latter in [(1, 3), (2, 3)]:
-        if motif.get_edge_data(former, latter)["weight"] == 1:
-            pyplot.annotate("", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
-                            arrowprops=dict(arrowstyle="-|>", color="black",
-                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
-        elif motif.get_edge_data(former, latter)["weight"] == -1:
-            pyplot.annotate("", xy=(x[latter - 1], y[latter - 1]), xytext=(x[former - 1], y[former - 1]),
-                            arrowprops=dict(arrowstyle="-|>", color="black", linestyle="dotted",
-                                            shrinkA=6, shrinkB=6, lw=1), zorder=2)
-    pyplot.text(x=info[1][0], y=info[2][0] - 0.06, s="x", fontsize=10, va="top", ha="center")
-    pyplot.text(x=info[1][1], y=info[2][1] - 0.06, s="y", fontsize=10, va="top", ha="center")
-    pyplot.text(x=info[1][2], y=info[2][2] + 0.06, s="z", fontsize=10, va="bottom", ha="center")
-    pyplot.text(-0.05, 0.45, "collider", va="center", ha="center", fontsize=10, rotation=90)
-    pyplot.xlim(-0.10, 1.0)
-    pyplot.ylim(-0.05, 1.0)
-    pyplot.axis("off")
-
-    def get_x():
-        v1 = ones(shape=(10,)) * 0.5
-        v2 = (sin(linspace(-0.5 * pi, 1.5 * pi, 40)) + 1.0) * 0.25 + 0.5
-        v3 = ones(shape=(50,)) * 0.5
-        return array(v1.tolist() + v2.tolist() + v3.tolist())
-
-    def get_yi():
-        v1 = ones(shape=(20,)) * 0.5
-        v2 = (sin(linspace(-0.5 * pi, 1.5 * pi, 40)) + 1.0) * 0.25 + 0.5
-        v3 = ones(shape=(40,)) * 0.5
-        return array(v1.tolist() + v2.tolist() + v3.tolist())
-
-    def get_yc():
-        return ones(shape=(len(inputs_x),)) * 0.5
-
-    def get_zi():
-        v1 = ones(shape=(20,)) * 0.5
-        v2 = (sin(linspace(-0.5 * pi, 1.5 * pi, 60)) + 1.0) * 0.15 + 0.5
-        v3 = ones(shape=(20,)) * 0.5
-        return array(v1.tolist() + v2.tolist() + v3.tolist())
-
-    def get_zc():
-        v1 = ones(shape=(20,)) * 0.5
-        v2 = (sin(linspace(-0.5 * pi, 0.5 * pi, 30)) + 1.0) * 0.25 + 0.5
-        v3 = ones(shape=(50,))
-        return array(v1.tolist() + v2.tolist() + v3.tolist())
-
-    inputs_x = get_x()
-    inputs_yi = get_yi()
-    inputs_yc = get_yc()
-    outputs_zi = get_zi()
-    outputs_zc = get_zc()
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[:2, 2:6])
-    pyplot.title("biological network", fontsize=10)
-    pyplot.text(0.09, 0.675, "x molecule", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.09, 0.325, "y molecule", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.20, 0.18, "time", fontsize=7, va="top", ha="center")
-    pyplot.text(0.20, 0.53, "time", fontsize=7, va="top", ha="center")
-    pyplot.plot([0.1, 0.1, 0.3], [0.45, 0.20, 0.20], color="black", linewidth=0.75)
-    pyplot.plot([0.1, 0.1, 0.3], [0.80, 0.55, 0.55], color="black", linewidth=0.75)
-    values = 0.55 + inputs_x * 0.15
-    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
-    values = 0.20 + inputs_yc * 0.15
-    pyplot.plot(linspace(0.1, 0.3, len(values))[20: 60], values[20: 60], color="k", linewidth=0.75, linestyle=":")
-    values = 0.20 + inputs_yi * 0.15
-    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
-    pyplot.text(0.4, 0.53, "reaction", fontsize=7, va="bottom", ha="center")
-    pyplot.annotate("", xy=(0.45, 0.5), xytext=(0.35, 0.5),
-                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
-                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
-    pyplot.plot([0.55, 0.55, 0.9], [0.8, 0.2, 0.2], color="black", linewidth=0.75)
-    pyplot.text(0.54, 0.50, "z molecule", fontsize=7, va="center", ha="right", rotation=90)
-    values = 0.15 + outputs_zc * 0.5
-    pyplot.plot(linspace(0.55, 0.90, len(values))[20:], values[20:], color="k", linewidth=0.75, linestyle=":")
-    values = 0.15 + outputs_zi * 0.5
-    pyplot.plot(linspace(0.55, 0.90, len(values)), values, color="k", linewidth=0.75)
-    pyplot.fill_between(linspace(0.55, 0.90, len(values)), 0.4, values, color="silver")
-    pyplot.text(0.725, 0.18, "time", fontsize=7, va="top", ha="center")
-    pyplot.text(0.725, 0.81, "more robust", fontsize=10, color="red", va="bottom", ha="center")
-    pyplot.xticks([])
-    pyplot.yticks([])
-    pyplot.xlim(0, 1)
-    pyplot.ylim(0, 1)
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[2:4, 2:6])
-    pyplot.text(0.09, 0.675, "x molecule", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.09, 0.325, "y molecule", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.20, 0.18, "time", fontsize=7, va="top", ha="center")
-    pyplot.text(0.20, 0.53, "time", fontsize=7, va="top", ha="center")
-    pyplot.plot([0.1, 0.1, 0.3], [0.45, 0.20, 0.20], color="black", linewidth=0.75)
-    pyplot.plot([0.1, 0.1, 0.3], [0.80, 0.55, 0.55], color="black", linewidth=0.75)
-    values = 0.60 + inputs_x * 0.15
-    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
-    values = 0.25 + inputs_yi * 0.15
-    pyplot.plot(linspace(0.1, 0.3, len(values))[20: 60], values[20: 60], color="k", linewidth=0.75, linestyle=":")
-    values = 0.25 + inputs_yc * 0.15
-    pyplot.plot(linspace(0.1, 0.3, len(values)), values, color="k", linewidth=0.75)
-    pyplot.text(0.4, 0.53, "reaction", fontsize=7, va="bottom", ha="center")
-    pyplot.annotate("", xy=(0.45, 0.5), xytext=(0.35, 0.5),
-                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
-                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
-    pyplot.plot([0.55, 0.55, 0.9], [0.8, 0.2, 0.2], color="black", linewidth=0.75)
-    pyplot.text(0.54, 0.50, "z molecule", fontsize=7, va="center", ha="right", rotation=90)
-    values = 0.15 + outputs_zi * 0.5
-    pyplot.plot(linspace(0.55, 0.90, len(values))[20:], values[20:], color="k", linewidth=0.75, linestyle=":")
-    values = 0.15 + outputs_zc * 0.5
-    pyplot.plot(linspace(0.55, 0.90, len(values)), values, color="k", linewidth=0.75)
-    pyplot.fill_between(linspace(0.55, 0.90, len(values)), 0.4, values, color="silver")
-    pyplot.text(0.725, 0.18, "time", fontsize=7, va="top", ha="center")
-
-    pyplot.text(0.725, 0.81, "less robust", fontsize=10, color="red", va="bottom", ha="center")
-    pyplot.xticks([])
-    pyplot.yticks([])
-    pyplot.xlim(0, 1)
-    pyplot.ylim(0, 1)
-
-    gradient_colors = pyplot.get_cmap(name="rainbow")(linspace(0, 1, 41))
-    motif1 = NeuralMotif(motif_type="incoherent-loop", motif_index=2,
-                         activations=("relu", "relu"), aggregations=("max", "max"),
-                         weights=[0.90827476978302, 0.5210987329483032, -0.8107407093048096],
-                         biases=[0.9697856903076172, 0.9693939685821533])
-    motif2 = NeuralMotif(motif_type="collider", motif_index=2,
-                         activations=("relu",), aggregations=("sum",),
-                         weights=[0.4955233335494995, -0.04083000123500824],
-                         biases=[0.9734159708023071])
-    matrix1 = calculate_landscape(value_range=(-1, +1), points=41, motif=motif1).T
-    matrix2 = calculate_landscape(value_range=(-1, +1), points=41, motif=motif2).T
-    # noinspection PyArgumentEqualDefault
-    lipschitz1 = estimate_lipschitz(value_range=(-1, +1), points=41, output=matrix1, norm_type="L-2")
-    # noinspection PyArgumentEqualDefault
-    lipschitz2 = estimate_lipschitz(value_range=(-1, +1), points=41, output=matrix2, norm_type="L-2")
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[:2, 6:10])
-    pyplot.title("artificial neural network", fontsize=10)
-    c_interval = 0.6 / 41
-    r_interval = c_interval * 0.5
-    for r in range(41):
-        for c in range(41):
-            pyplot.fill_between([r * r_interval + 0.1, (r + 1) * r_interval + 0.1],
-                                c * c_interval + 0.2, (c + 1) * c_interval + 0.2,
-                                color=gradient_colors[int(matrix1[r, c] * 20 + 20.5)])
-    pyplot.text(0.25, 0.18, "x signal", fontsize=7, va="top", ha="center")
-    pyplot.text(0.09, 0.50, "y signal", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.25, 0.81, "z signal", fontsize=7, va="bottom", ha="center")
-    pyplot.plot([0.4, 0.1, 0.1], [0.2, 0.2, 0.8], color="black", linewidth=0.75)
-    pyplot.annotate("", xy=(0.55, 0.5), xytext=(0.45, 0.5),
-                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
-                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
-    pyplot.plot([0.65, 0.95, 0.65, 0.65], [0.2, 0.2, 0.8, 0.2], color="black", lw=0.75)
-    pyplot.text(0.5, 0.53, "Lipschitz\nconstant", fontsize=7, va="bottom", ha="center")
-    pyplot.plot([0.65, 0.95], [0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.2],
-                color="black", linestyle=":", linewidth=0.75, zorder=2)
-    pyplot.fill_between([0.65, 0.95], [0.2, 0.2], [0.8, 0.2], color="silver")
-    pyplot.text(0.8, 0.18, "input (x,y) change", fontsize=7, va="top", ha="center")
-    pyplot.text(0.64, 0.5, "output (z) change", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.8, 0.81, "less robust", fontsize=10, color="red", va="bottom", ha="center")
-    pyplot.xticks([])
-    pyplot.yticks([])
-    pyplot.xlim(0, 1)
-    pyplot.ylim(0, 1)
-
-    # noinspection PyTypeChecker
-    pyplot.subplot(grid[2:4, 6:10])
-    c_interval = 0.6 / 41
-    r_interval = c_interval * 0.5
-    for r in range(41):
-        for c in range(41):
-            pyplot.fill_between([r * r_interval + 0.1, (r + 1) * r_interval + 0.1],
-                                c * c_interval + 0.2, (c + 1) * c_interval + 0.2,
-                                color=gradient_colors[int(matrix2[r, c] * 20 + 20.5)])
-    pyplot.text(0.25, 0.18, "x signal", fontsize=7, va="top", ha="center")
-    pyplot.text(0.09, 0.50, "y signal", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.25, 0.81, "z signal", fontsize=7, va="bottom", ha="center")
-    pyplot.plot([0.4, 0.1, 0.1], [0.2, 0.2, 0.8], color="black", linewidth=0.75)
-    pyplot.annotate("", xy=(0.55, 0.5), xytext=(0.45, 0.5),
-                    arrowprops=dict(arrowstyle="simple", edgecolor="black", facecolor="white",
-                                    shrinkA=0, shrinkB=0, lw=0.75), zorder=2)
-    pyplot.plot([0.65, 0.95, 0.65, 0.65], [0.2, 0.2, 0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.2],
-                color="black", lw=0.75)
-    pyplot.text(0.5, 0.53, "Lipschitz\nconstant", fontsize=7, va="bottom", ha="center")
-    pyplot.text(0.8, 0.18, "input (x,y) change", fontsize=7, va="top", ha="center")
-    pyplot.text(0.64, 0.5, "output (z) change", fontsize=7, va="center", ha="right", rotation=90)
-    pyplot.text(0.8, 0.81, "more robust", fontsize=10, color="red", va="bottom", ha="center")
-    pyplot.plot([0.65, 0.65, 0.95], [0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.8, 0.2],
-                color="black", linestyle=":", linewidth=0.75)
-    pyplot.fill_between([0.65, 0.95], [0.2, 0.2], [0.2 + 0.6 * (lipschitz2 / lipschitz1), 0.2], color="silver")
-    pyplot.xticks([])
-    pyplot.yticks([])
-    pyplot.xlim(0, 1)
-    pyplot.ylim(0, 1)
-
-    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_08():
-    """
-    Create Figure S8 in the supplementary file.
+    Create Figure S11 in the supplementary file.
     """
     motif_1 = NeuralMotif(motif_type="incoherent-loop", motif_index=1,
                           activations=["relu", "tanh"], aggregations=["max", "sum"],
@@ -774,7 +765,7 @@ def supp_08():
     pyplot.ylim(0.00, 2.20)
     pyplot.axis("off")
 
-    pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp11.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
@@ -787,3 +778,6 @@ if __name__ == "__main__":
     supp_06()
     supp_07()
     supp_08()
+    supp_09()
+    supp_10()
+    supp_11()

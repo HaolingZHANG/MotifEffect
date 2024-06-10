@@ -8,11 +8,11 @@ from itertools import product
 from numpy import array, zeros, linspace, expand_dims, abs, mean, min, max, sum, power, argmax, argmin, all, where
 from os import path, mkdir, environ
 environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-from scipy.stats import gaussian_kde  # noqa
+from scipy.stats import gaussian_kde, spearmanr  # noqa
 from umap import UMAP  # noqa
 from warnings import filterwarnings # noqa
 
-from effect import NeuralMotif, calculate_landscape, detect_curvature_feature, minimum_loss_search  # noqa
+from effect import NeuralMotif, calculate_landscape, calculate_gradients, detect_curvature_feature, minimum_loss_search  # noqa
 from practice import acyclic_motifs  # noqa
 from works import load_data, save_data  # noqa
 
@@ -365,6 +365,98 @@ def supp_04():
     Collect plot data from Figure S4 in supplementary file.
     """
     if not path.exists(sort_path + "supp04.pkl"):
+        task_data = {}
+        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
+            feature, records = motif_types[1] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
+                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
+                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
+                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
+            task_data[panel_label] = array(records)
+        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
+
+
+def supp_06():
+    """
+    Collect plot data from Figure S6 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp07.pkl"):
+        task_data = {}
+
+        origin_data = load_data(load_path=raw_path + "particular/coherent-loop.1.initialization.pkl")
+        escape_data = load_data(load_path=raw_path + "particular/coherent-loop.1.escape-process.pkl")
+        # case 43
+        case_o_1 = origin_data[42][0]
+        case_e_1 = escape_data[42][0]
+        task_data["a"] = [
+            calculate_landscape(value_range, points, case_o_1),
+            calculate_landscape(value_range, points, case_e_1[9][0]),
+            calculate_landscape(value_range, points, case_e_1[19][0]),
+            calculate_landscape(value_range, points, case_e_1[29][0]),
+            calculate_landscape(value_range, points, case_e_1[39][0]),
+            calculate_landscape(value_range, points, case_e_1[49][0]),
+            calculate_landscape(value_range, points, case_e_1[59][0]),
+            calculate_landscape(value_range, points, case_e_1[69][0]),
+            calculate_landscape(value_range, points, case_e_1[79][0]),
+            calculate_landscape(value_range, points, case_e_1[89][0]),
+            calculate_landscape(value_range, points, case_e_1[99][0]),
+        ]
+
+        # case 61
+        case_o_2 = origin_data[60][0]
+        case_e_2 = escape_data[60][0]
+        task_data["b"] = [
+            calculate_landscape(value_range, points, case_o_2),
+            calculate_landscape(value_range, points, case_e_2[9][0]),
+            calculate_landscape(value_range, points, case_e_2[19][0]),
+            calculate_landscape(value_range, points, case_e_2[29][0]),
+            calculate_landscape(value_range, points, case_e_2[39][0]),
+            calculate_landscape(value_range, points, case_e_2[49][0]),
+            calculate_landscape(value_range, points, case_e_2[59][0]),
+            calculate_landscape(value_range, points, case_e_2[69][0]),
+            calculate_landscape(value_range, points, case_e_2[79][0]),
+            calculate_landscape(value_range, points, case_e_2[89][0]),
+            calculate_landscape(value_range, points, case_e_2[99][0]),
+        ]
+        save_data(save_path=sort_path + "supp06.pkl", information=task_data)
+
+
+def supp_07():
+    """
+    Collect plot data from Figure S7 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp07.pkl"):
+        task_data = {}
+        for motif_index, panel_index in zip(motif_indices, ["a", "b", "c", "d"]):
+            feature, records = motif_types[1] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                start, stop, correlations = argmin(losses), argmax(losses), []
+                for location in range(start, stop - 1):
+                    source_landscape = calculate_landscape(value_range, points, motifs[location + 0][0])
+                    target_landscape = calculate_landscape(value_range, points, motifs[location + 1][0])
+                    values_x = calculate_gradients(value_range, points, motifs[location + 0][0]).reshape(-1)
+                    values_y = abs(target_landscape - source_landscape).reshape(-1)
+                    # noinspection PyTypeChecker
+                    correlation, _ = spearmanr(values_x, values_y)
+                    correlations.append(correlation)
+                x = linspace(-1, +1, 100)
+                y = gaussian_kde(correlations)(x)
+                y /= sum(y)
+                records.append(y.tolist())
+            task_data[panel_index] = array(records)
+        save_data(save_path=sort_path + "supp07.pkl", information=task_data)
+
+
+def supp_08():
+    """
+    Collect plot data from Figure S8 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp08.pkl"):
         task_data, flag = {"b": []}, True
         for motif_index in motif_indices:
             feature = motif_types[0] + "." + str(motif_index)
@@ -378,7 +470,7 @@ def supp_04():
                 counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
                 used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
                 use_rate_1, use_rate_2 = used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)
-                if use_rate_2 <= 0.4:
+                if use_rate_2 < use_rate_1:
                     if 1 not in counter_1:
                         source_region = where(source_landscape > 0, 1, 0)
                         target_region = where(target_landscape > 0, 1, 0)
@@ -394,14 +486,14 @@ def supp_04():
         # noinspection PyUnresolvedReferences
         task_data["b"] = array(task_data["b"])
 
-        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp08.pkl", information=task_data)
 
 
-def supp_05():
+def supp_09():
     """
-    Collect plot data from Figure S5 in supplementary file.
+    Collect plot data from Figure S9 in supplementary file.
     """
-    if not path.exists(sort_path + "supp05.pkl"):
+    if not path.exists(sort_path + "supp09.pkl"):
         task_data = {}
         record = load_data(raw_path + "real-world/adjustments.2.pkl")
         for strategy_index, (panel_index, strategy) in enumerate(zip(["b", "i", "c", "a"], agent_names)):
@@ -430,14 +522,14 @@ def supp_05():
 
             task_data[panel_index] = [a, b, c]
 
-        save_data(save_path=sort_path + "supp05.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp09.pkl", information=task_data)
 
 
-def supp_06():
+def supp_10():
     """
-    Collect plot data from Figure S6 in supplementary file.
+    Collect plot data from Figure S10 in supplementary file.
     """
-    if not path.exists(sort_path + "supp06.pkl"):
+    if not path.exists(sort_path + "supp10.pkl"):
         task_data = {}
         record = load_data(raw_path + "real-world/adjustments.2.pkl")
         for strategy_index, strategy in enumerate(agent_names):
@@ -449,7 +541,7 @@ def supp_06():
                 elif all(evaluation < 195):
                     cases.append(evaluation)
             task_data[chr(ord("a") + strategy_index)] = cases
-        save_data(save_path=sort_path + "supp06.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp10.pkl", information=task_data)
 
 
 if __name__ == "__main__":
@@ -459,14 +551,17 @@ if __name__ == "__main__":
     if not path.exists(raw_path):
         raise ValueError("Please run the tasks (run_1_tasks.py) first!")
 
-    main_02()
-    main_03()
-    main_04()
-    main_05()
-    main_06()
-    supp_01()
-    supp_02()
-    supp_03()
-    supp_04()
-    supp_05()
+    # main_02()
+    # main_03()
+    # main_04()
+    # main_05()
+    # main_06()
+    # supp_01()
+    # supp_02()
+    # supp_03()
+    # supp_04()
     supp_06()
+    # supp_07()
+    # supp_08()
+    # supp_09()
+    # supp_10()

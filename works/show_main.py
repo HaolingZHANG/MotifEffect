@@ -35,7 +35,7 @@ def main_01():
     pyplot.text(0.10, 1.93, "a", va="center", ha="left", fontsize=12)
     pyplot.text(2.10, 1.93, "b", va="center", ha="left", fontsize=12)
     pyplot.text(0.90, 2.00,
-                "local network properties of 3-node coherent and incoherent motif classes",
+                "local network properties of 3-node coherent and incoherent loop types",
                 va="bottom", ha="center", fontsize=8)
     pyplot.text(2.50, 2.00, "noise resilience in a neural network solving a control task",
                 va="bottom", ha="center", fontsize=8)
@@ -1251,8 +1251,8 @@ def main_06():
 
 if __name__ == "__main__":
     main_01()
-    # main_02()
-    # main_03()
-    # main_04()
-    # main_05()
-    # main_06()
+    main_02()
+    main_03()
+    main_04()
+    main_05()
+    main_06()

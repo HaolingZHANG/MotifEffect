@@ -24,7 +24,6 @@ just download this code repository with the ZIP format.
 git clone https://github.com/HaolingZHANG/MotifEffect.git
 ```
 
-
 It requires a python version at least 3.7, and some well-established libraries listed in 
 [requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
 
@@ -48,6 +47,15 @@ Meanwhile, all the figures and videos are created by
 [show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py) and
 [show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py) 
 which means that there is no anthropogenic data filtering or adjusting in the presentation.
+
+Notably, if you want to repeat the entire experiment, you can run the script in the following order:
+1. [run_1_tasks.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_tasks.py);
+2. [run_2_packs.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_packs.py);
+3. [show_main.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_main.py);
+4. [show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py);
+5. [show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py).
+
+Additionally, the raw data amounts to approximately 46.6 GB and will be made available upon reasonable request.
 
 ## Repository Structure
 ```html
