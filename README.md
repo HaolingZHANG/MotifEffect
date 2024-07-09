@@ -132,15 +132,25 @@ Additionally, the raw data amounts to approximately 46.6 GB and will be made ava
 ├── requirements.txt                               // Basic library requirements of this library.
 ```
 
-## Citation
-If you think this repository helps or being used in your research, please consider refer this work.
-Here is a Bibtex entry:
+[//]: # (## Citation)
 
-````
-@article{zhang2023representational,
-  title={Representational capacity and numerical stability of network motifs and their role in optimizing artificial neural networks},
-  author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Tegner, Jesper},
-  journal={TODO},
-  year={2023}
-}
-````
+[//]: # (If you think this repository helps or being used in your research, please consider refer this work.)
+
+[//]: # (Here is a Bibtex entry:)
+
+[//]: # ()
+[//]: # (````)
+
+[//]: # (@article{zhang2023representational,)
+
+[//]: # (  title={Noise resilient learning of a reinforcement control task using incoherent structural network motifs},)
+
+[//]: # (  author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Kiani, Narsis A. and Tegner, Jesper},)
+
+[//]: # (  journal={TODO},)
+
+[//]: # (  year={2023})
+
+[//]: # (})
+
+[//]: # (````)
