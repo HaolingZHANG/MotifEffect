@@ -1,5 +1,5 @@
 # Raw data of this work
-Here, we have 188 ".npy", 19 ".pkl", 8 ".avi" files, occupying approximately 46.6 GB of space.
+Here, we have 188 ".npy", 19 ".pkl", and 8 ".avi" files, occupying approximately 46.6 GB of space.
 These files are created by three experiments 
 (see [run_1_tasks.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_tasks.py) for detailed).
 
