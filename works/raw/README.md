@@ -1,5 +1,5 @@
 # Raw data of this work
-Here, we have 188 ".npy" and 19 ".pkl" files, occupying approximately 46.6 GB of space.
+Here, we have 188 ".npy", 19 ".pkl", 8 ".avi" files, occupying approximately 46.6 GB of space.
 These files are created by three experiments 
 (see [run_1_tasks.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_tasks.py) for detailed).
 
@@ -220,10 +220,6 @@ Alternatively, you may directly access the raw data via the
 | trade-offs                      | incoherent-loop.2.npy                       | 9A9DE4D91C09D5D2AAB002EBD8EDF49B | 6891           |
 | trade-offs                      | incoherent-loop.3.npy                       | 4FB958E5FC27B27BE8252EF34DE0BC44 | 6891           |
 | trade-offs                      | incoherent-loop.4.npy                       | A830234C432901010BAFC4A65D77F9EE | 6891           |
-| videos                          | c.1.avi                                     | 34E47E2207D3F27E3AFCE3DE65F757C9 | 8674           |
-| videos                          | c.2.avi                                     | 31F6A7F86F8A695CDCAA6897757F0843 | 8722           |
-| videos                          | c.3.avi                                     | 346E7C8B070B4045AE19D7B5F699884C | 8746           |
-| videos                          | c.4.avi                                     | 74FDCA6D99CAF053AE0FCD049588FC67 | 8705           |
 | videos                          | coherent-loop.1.avi                         | 56B35E81B213B9D4242F03CC23D67B1C | 149504         |
 | videos                          | coherent-loop.2.avi                         | 39DF43A3BA9AD3AC4DC62C2451551D3E | 150261         |
 | videos                          | coherent-loop.3.avi                         | C4343DCCCC6E262839013AFBF41D492E | 150645         |
