@@ -8,8 +8,6 @@ In just a few months, you can definitely obtain our following consistent or simi
 
 Should you require these files for further investigation or simply wish to confirm the findings, 
 do not hesitate to get in touch with us. 
-Alternatively, you may directly access the raw data via the 
-[provided link](https://drive.google.com/drive/folders/1_OxHk8YDB0C398AYsJc84Ybbpn2SjKmb?usp=drive_link).
 
 | parent path in the /raw/ folder | file name                                   | MD5                              | file size (KB) |
 |---------------------------------|---------------------------------------------|----------------------------------|----------------|
