@@ -1,20 +1,18 @@
-# Representational capacity and numerical stability of network motifs and their role in optimizing artificial neural networks
+# Noise resilient learning of a reinforcement control task using incoherent structural network motifs
 
-While network motifs are fully investigated in various networked systems, 
-early efforts fell short in recognizing the significance of network motifs to artificial neural networks, 
-therefore, motif-based structure optimization remain unexplored territory. 
-Hereof, we investigate the properties of incoherent loops, coherent loops, and colliders, 
-and extend them to network scale. 
-Using colliders as a benchmark, we develop static and dynamic strategies to analyze trade-off tendencies 
-between representational capacity and numerical stability of two types of loops, 
-finding that incoherent loops outperform coherent loops and 
-predicting that replacing coherent loops with colliders can enhance network performance. 
-To illustrate their network-scale applicability, we use baseline neuroevolution and 
-its finely-modified variants to produce motif-limited networks 
-for solving the cart-pole balance task in noisy environments. 
-As predicted, we derive consistent findings in network scale. 
-These findings suggest a methodology to improve noise resilience by 
-regularizing network structure design by biasing towards specific motif palettes.
+Network motifs are abundant in biological and social networks but play no fundamental role in machine learning. 
+To close the gap between current artificial intelligence systems and 
+their historical roots in natural computing systems, 
+we analyze structural three-node network motifs and their significance in task learning. 
+To this end, we determine and compare the representational capacity, numerical stability, 
+and dynamical properties of 441000 three-node motifs. 
+From our finding of the superiority of incoherent motifs, 
+we predict that enriching networks with incoherent but not coherent motifs will improve systems performance. 
+To this end, we evolved neural networks to solve the cart-pole balance task. 
+As predicted, neural agents enriched with incoherent motifs are more noise-resilient during training 
+and cope better in a noisy environment than networks with coherent motifs. 
+Our findings suggest a computational advantage of incoherent network motifs in the evolution 
+and training of natural and artificial networked systems. 
 
 ## Installation
 You may clone this code repository (using the following command line) or 
