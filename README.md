@@ -53,7 +53,8 @@ Notably, if you want to repeat the entire experiment, you can run the script in 
 4. [show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py);
 5. [show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py).
 
-Additionally, the raw data amounts to approximately 46.6 GB and will be made available upon reasonable request.
+Additionally, the raw data amounts to approximately 46.6 GB, 
+will be made available after the publication of the corresponding article (currently accessible only to reviewers).
 
 ## Repository Structure
 ```html
