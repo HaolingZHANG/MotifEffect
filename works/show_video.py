@@ -2,6 +2,7 @@
 @Author      : Haoling Zhang
 @Description : Generate videos of the adversarial escape process for this work.
 """
+# noinspection PyProtectedMember
 from cv2 import imread, VideoWriter, resize
 from gc import collect
 from logging import getLogger, CRITICAL

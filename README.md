@@ -1,18 +1,22 @@
-# Noise resilient learning of a reinforcement control task using incoherent structural network motifs
+# Leveraging network motifs to improve artificial neural networks
 
-Network motifs are abundant in biological and social networks but play no fundamental role in machine learning. 
-To close the gap between current artificial intelligence systems and 
-their historical roots in natural computing systems, 
-we analyze structural three-node network motifs and their significance in task learning. 
-To this end, we determine and compare the representational capacity, numerical stability, 
-and dynamical properties of 441000 three-node motifs. 
-From our finding of the superiority of incoherent motifs, 
-we predict that enriching networks with incoherent but not coherent motifs will improve systems performance. 
-To this end, we evolved neural networks to solve the cart-pole balance task. 
-As predicted, neural agents enriched with incoherent motifs are more noise-resilient during training 
-and cope better in a noisy environment than networks with coherent motifs. 
-Our findings suggest a computational advantage of incoherent network motifs in the evolution 
-and training of natural and artificial networked systems. 
+As the scale of artificial neural networks continues to expand to tackle increasingly complex tasks or 
+improve the prediction accuracy of specific tasks, the challenges associated with computational demand, 
+hyper-parameter tuning, model interpretability, and deployment costs intensify. 
+Addressing these challenges requires a deeper understanding of how network structures influence 
+global network attributes such as learning accuracy and resilience. 
+In this study, we investigate the role of local network motifs 
+— specifically incoherent and coherent 3-node motifs — 
+in shaping overall network performance. 
+Through motif-scale static and dynamic analyses, we quantify and interpret the representational capacity, 
+numerical stability, and flexibility of these motifs. 
+Our findings reveal that incoherent motifs exhibit superior representational capacity and numerical stability. 
+Extending these insights to the network scale, based on the network-scale noise-resilience analysis, 
+we demonstrate that incoherent neural networks exhibit greater resilience to noise both during training 
+and in the presence of environmental perturbations. 
+This work fills the research void by systematically evaluating the impact of subtle structural differences 
+on the performance of artificial neural networks, 
+offering foundational insights for the design of more resilient and accurate networks.
 
 ## Installation
 You may clone this code repository (using the following command line) or 
@@ -142,9 +146,9 @@ will be made available after the publication of the corresponding article (curre
 [//]: # ()
 [//]: # (````)
 
-[//]: # (@article{zhang2023representational,)
+[//]: # (@article{zhang2023leveraging,)
 
-[//]: # (  title={Noise resilient learning of a reinforcement control task using incoherent structural network motifs},)
+[//]: # (  title={Leveraging network motifs to improve artificial neural networks},)
 
 [//]: # (  author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Kiani, Narsis A. and Tegner, Jesper},)
 
