@@ -1,4 +1,4 @@
-# Leveraging network motifs to improve artificial neural networks
+## Leveraging network motifs to improve artificial neural networks
 
 As the scale of artificial neural networks continues to expand to tackle increasingly complex tasks or 
 improve the prediction accuracy of specific tasks, the challenges associated with computational demand, 
@@ -18,7 +18,7 @@ This work fills the research void by systematically evaluating the impact of sub
 on the performance of artificial neural networks, 
 offering foundational insights for the design of more resilient and accurate networks.
 
-## Installation
+### Installation
 You may clone this code repository (using the following command line) or 
 just download this code repository with the ZIP format.  
 
@@ -29,7 +29,7 @@ git clone https://github.com/HaolingZHANG/MotifEffect.git
 It requires a python version at least 3.7, and some well-established libraries listed in 
 [requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
 
-## Experiments
+### Experiments
 In this work, three experiments are executed.
 Among them, we
 1. analyze trade-off tendencies between representational capacity and numerical stability of two types of loops, using colliders as a benchmark, based on gradient descent strategy and motif-associated Lipschitz constant.
@@ -60,7 +60,7 @@ Notably, if you want to repeat the entire experiment, you can run the script in 
 Additionally, the raw data amounts to approximately 46.6 GB, 
 will be made available after the publication of the corresponding article (currently accessible only to reviewers).
 
-## Repository Structure
+### Repository Structure
 ```html
 ├── effect                                         // Source codes of 3-node motif effect experiments.
 │    ├── __init__.py                               // Exhibition of class and method calls and implementation of monitor class.
