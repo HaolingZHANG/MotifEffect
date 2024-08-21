@@ -1,22 +1,22 @@
 ## Leveraging network motifs to improve artificial neural networks
 
-As the scale of artificial neural networks continues to expand to tackle increasingly complex tasks or 
-improve the prediction accuracy of specific tasks, the challenges associated with computational demand, 
-hyper-parameter tuning, model interpretability, and deployment costs intensify. 
-Addressing these challenges requires a deeper understanding of how network structures influence 
-global network attributes such as learning accuracy and resilience. 
-In this study, we investigate the role of local network motifs 
-— specifically incoherent and coherent 3-node motifs — 
-in shaping overall network performance. 
-Through motif-scale static and dynamic analyses, we quantify and interpret the representational capacity, 
-numerical stability, and flexibility of these motifs. 
+As the scale of artificial neural networks continues to expand 
+to tackle increasingly complex tasks or improve the prediction accuracy of specific tasks, 
+the challenges associated with computational demand, hyper-parameter tuning, model interpretability, 
+and deployment costs intensify. 
+Addressing these challenges requires a deeper understanding of how network structures influence network performance 
+such as learning accuracy and resilience. 
+This study investigates the functional role of local network motifs 
+— specifically incoherent and coherent 3-node motifs — in shaping overall network performance. 
+Through motif-scale static and dynamic analyses, 
+we quantify and interpret the representational capacity, numerical stability, and flexibility of these motifs. 
 Our findings reveal that incoherent motifs exhibit superior representational capacity and numerical stability. 
-Extending these insights to the network scale, based on the network-scale noise-resilience analysis, 
-we demonstrate that incoherent neural networks exhibit greater resilience to noise both during training 
-and in the presence of environmental perturbations. 
+Extending these insights to the network scale, based on the noise-resilience analysis, 
+we demonstrate that incoherent neural networks exhibit greater resilience to noise 
+both during training and in the presence of environmental perturbations. 
 This work fills the research void by systematically evaluating the impact of subtle structural differences 
-on the performance of artificial neural networks, 
-offering foundational insights for the design of more resilient and accurate networks.
+on the performance of artificial neural networks, offering foundational insights for designing more resilient 
+and accurate networks.
 
 ### Installation
 You may clone this code repository (using the following command line) or 
