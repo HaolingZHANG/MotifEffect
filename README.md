@@ -28,6 +28,8 @@ git clone https://github.com/HaolingZHANG/MotifEffect.git
 
 It requires a python version at least 3.7, and some well-established libraries listed in 
 [requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
+When all supporting libraries are correctly installed, installing this library does not take time.
+In addition, this library does not have non-standard hardware requirements.
 
 ### Experiments
 In this work, three experiments are executed.
@@ -57,8 +59,12 @@ Notably, if you want to repeat the entire experiment, you can run the script in 
 4. [show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py);
 5. [show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py).
 
-Additionally, the raw data amounts to approximately 46.6 GB, 
+The raw data amounts to approximately 46.6 GB, 
 will be made available after the publication of the corresponding article (currently accessible only to reviewers).
+To repeat all the experiments, 
+using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30GHz, 
+you may need several months.
+
 
 ### Repository Structure
 ```html
