@@ -60,16 +60,16 @@ def supp_01():
         pyplot.ylim(0, 0.04)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.80, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.60, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.40, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.20, "e", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "f", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.80, "g", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.60, "h", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.40, "i", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.20, "j", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.80, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.60, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.40, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.20, "E", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "F", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.80, "G", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.60, "H", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.40, "I", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.20, "J", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp01.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -109,16 +109,16 @@ def supp_02():
         pyplot.ylim(0, 0.06)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.80, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.60, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.40, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.20, "e", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "f", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.80, "g", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.60, "h", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.40, "i", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.20, "j", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.80, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.60, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.40, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.20, "E", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "F", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.80, "G", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.60, "H", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.40, "I", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.20, "J", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp02.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -152,10 +152,10 @@ def supp_03():
         pyplot.ylim(0.0, 1.0)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -189,10 +189,10 @@ def supp_04():
         pyplot.ylim(0.0, 1.0)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -344,8 +344,8 @@ def supp_06():
     pyplot.axis("off")
 
     figure.align_labels()
-    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.49, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.49, "B", va="center", ha="center", fontsize=12)
     pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
@@ -394,10 +394,10 @@ def supp_07():
     cbar.ax.xaxis.set_tick_params(labelsize=7)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.53, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.53, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.53, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.53, "D", va="center", ha="center", fontsize=12)
 
     # noinspection PyTypeChecker
     pyplot.tight_layout(rect=[0.00, 0.07, 1.00, 1.00])
@@ -543,8 +543,8 @@ def supp_08():
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_visible(False)
 
-    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.35, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.35, "B", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -633,139 +633,11 @@ def supp_10():
             location += 1
 
     figure.align_labels()
-    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.43, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.15, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.43, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.15, "C", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_11():
-    """
-    Create Figure S11 in the supplementary file.
-    """
-    motif_1 = NeuralMotif(motif_type="incoherent-loop", motif_index=1,
-                          activations=["relu", "tanh"], aggregations=["max", "sum"],
-                          weights=[-1.0, +0.7, +1.0], biases=[0.0, 0.0])
-    motif_2 = NeuralMotif(motif_type="collider", motif_index=1,
-                          activations=["tanh"], aggregations=["sum"],
-                          weights=[+0.3, +0.5], biases=[0.0])
-    value_range, points = (-1, +1), 101
-
-    pyplot.figure(figsize=(10, 5.5), tight_layout=True)
-    pyplot.text(0.925, 2.10, "motif information", va="center", ha="center", fontsize=12)
-    pyplot.fill_between([0.05, 1.80], 1.98, 2.02, color="#DDDDDD", zorder=0)
-    for matrix_index in range(2):
-        pyplot.scatter([0.05], [matrix_index + 0.20], fc="w", ec="k", lw=1.5, s=80, zorder=2)
-        pyplot.scatter([0.45], [matrix_index + 0.20], fc="silver", ec="k", lw=1.5, s=80, zorder=2)
-        pyplot.scatter([0.25], [matrix_index + 0.80], fc="k", ec="k", lw=1.5, s=80, zorder=2)
-        pyplot.text(0.05, matrix_index + 0.15, "$x$", va="top", ha="center", fontsize=12)
-        pyplot.text(0.45, matrix_index + 0.15, "$y$", va="top", ha="center", fontsize=12)
-        pyplot.text(0.25, matrix_index + 0.85, "$z$", va="bottom", ha="center", fontsize=12)
-    pyplot.annotate("", xy=(0.05, 0.20), xytext=(0.25, 0.80),
-                    arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="black",
-                                    shrinkA=6, shrinkB=6, lw=1.5,
-                                    ls=("-" if motif_2.w[0].value() > 0 else ":")))
-    pyplot.annotate("", xy=(0.45, 0.20), xytext=(0.25, 0.80),
-                    arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="black",
-                                    shrinkA=6, shrinkB=6, lw=1.5,
-                                    ls=("-" if motif_2.w[1].value() > 0 else ":")))
-    pyplot.annotate("", xy=(0.05, 1.20), xytext=(0.45, 1.20),
-                    arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="black",
-                                    shrinkA=6, shrinkB=6, lw=1.5,
-                                    ls=("-" if motif_1.w[0].value() > 0 else ":")))
-    pyplot.annotate("", xy=(0.05, 1.20), xytext=(0.25, 1.80),
-                    arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="black",
-                                    shrinkA=6, shrinkB=6, lw=1.5,
-                                    ls=("-" if motif_1.w[1].value() > 0 else ":")))
-    pyplot.annotate("", xy=(0.45, 1.20), xytext=(0.25, 1.80),
-                    arrowprops=dict(arrowstyle="<|-, head_length=0.2, head_width=0.15", color="black",
-                                    shrinkA=6, shrinkB=6, lw=1.5,
-                                    ls=("-" if motif_1.w[2].value() > 0 else ":")))
-    pyplot.text(0.25, 0.60, motif_2.a[0] + " / " + motif_2.g[0], va="center", ha="center",
-                bbox=dict(facecolor="#FFCCCC", edgecolor="#FF8787", boxstyle="round"), fontsize=12, zorder=3)
-    pyplot.text(0.25, 1.20, " " + motif_1.a[0] + " / " + motif_1.g[0] + " ", va="center", ha="center",
-                bbox=dict(facecolor="#FFCCCC", edgecolor="#FF8787", boxstyle="round"), fontsize=12, zorder=3)
-    pyplot.text(0.25, 1.60, motif_1.a[1] + " / " + motif_1.g[1], va="center", ha="center",
-                bbox=dict(facecolor="#FFCCCC", edgecolor="#FF8787", boxstyle="round"), fontsize=12, zorder=3)
-    for location, info_1, info_2, value in zip([0.65, 0.50, 0.35],
-                                               ["weight", "weight", "bias"],
-                                               [r"$x \rightarrow z$", r"$y \rightarrow z$",
-                                                r"$x,y \rightarrow z$"],
-                                               [motif_2.w[0].value(), motif_2.w[1].value(),
-                                                motif_2.b[0].value()]):
-        pyplot.text(0.65, location, info_1, va="center", ha="left", fontsize=10)
-        pyplot.text(0.85, location, info_2, va="center", ha="left", fontsize=12)
-        pyplot.plot([1.10, 1.10, 1.70, 1.70],
-                    [location - 0.03, location, location, location - 0.03], color="k", lw=1)
-        pyplot.vlines(1.40, location - 0.03, location, lw=1, color="k")
-        color = pyplot.get_cmap("binary")([abs(value)])
-        pyplot.scatter([(value + 1.0) / 2.0 * 0.6 + 1.10], location + 0.05,
-                       marker="v", color=color, ec="k", s=30, lw=1)
-    pyplot.text(1.10, 0.25, "\N{MINUS SIGN}1", va="center", ha="center", fontsize=9)
-    pyplot.text(1.40, 0.25, "0", va="center", ha="center", fontsize=9)
-    pyplot.text(1.70, 0.25, "+1", va="center", ha="center", fontsize=9)
-    for location, info_1, info_2, value in zip([1.80, 1.65, 1.50, 1.35, 1.20],
-                                               ["weight", "weight", "weight", "bias", "bias"],
-                                               [r"$x \rightarrow y$", r"$x \rightarrow z$",
-                                                r"$y \rightarrow z$", r"$x \rightarrow y$",
-                                                r"$x,y \rightarrow z$"],
-                                               [motif_1.w[0].value(), motif_1.w[1].value(),
-                                                motif_1.w[2].value(), motif_1.b[0].value(),
-                                                motif_1.b[1].value()]):
-        pyplot.text(0.65, location, info_1, va="center", ha="left", fontsize=10)
-        pyplot.text(0.85, location, info_2, va="center", ha="left", fontsize=12)
-        pyplot.plot([1.10, 1.10, 1.70, 1.70],
-                    [location - 0.03, location, location, location - 0.03],
-                    color="k", lw=1)
-        pyplot.vlines(1.40, location - 0.03, location, lw=1, color="k")
-        color = pyplot.get_cmap("binary")([abs(value)])
-        pyplot.scatter([(value + 1.0) / 2.0 * 0.6 + 1.10], location + 0.05, marker="v",
-                       color=color, ec="k", s=24, lw=1)
-    pyplot.text(1.10, 1.10, "\N{MINUS SIGN}1", va="center", ha="center", fontsize=9)
-    pyplot.text(1.40, 1.10, "0", va="center", ha="center", fontsize=9)
-    pyplot.text(1.70, 1.10, "+1", va="center", ha="center", fontsize=9)
-    pyplot.text(2.325, 2.10, "output landscape", va="center", ha="center", fontsize=12)
-    pyplot.fill_between([1.95, 2.70], 1.98, 2.02, color="#DDDDDD", zorder=0)
-    for matrix_index, matrix in enumerate([calculate_landscape(value_range, points, motif_2),
-                                           calculate_landscape(value_range, points, motif_1)]):
-        pyplot.pcolormesh(linspace(2.10, 2.50, 101), linspace(matrix_index + 0.2, matrix_index + 0.8, 101), matrix,
-                          cmap="PRGn", vmin=-1, vmax=1, shading="gouraud", zorder=1)
-        pyplot.plot([2.10, 2.50, 2.50, 2.10, 2.10],
-                    [matrix_index + 0.20, matrix_index + 0.20,
-                     matrix_index + 0.80, matrix_index + 0.80, matrix_index + 0.20],
-                    color="k", lw=1, zorder=2)
-        pyplot.text(2.10, matrix_index + 0.10, "\N{MINUS SIGN}1", va="center", ha="center", fontsize=9)
-        pyplot.text(2.30, matrix_index + 0.10, "0", va="center", ha="center", fontsize=9)
-        pyplot.text(2.50, matrix_index + 0.10, "+1", va="center", ha="center", fontsize=9)
-        for value in [2.10, 2.30, 2.50]:
-            pyplot.vlines(value, matrix_index + 0.17, matrix_index + 0.20, lw=1, color="k")
-        pyplot.text(2.04, matrix_index + 0.20, "\N{MINUS SIGN}1", va="center", ha="center", fontsize=9)
-        pyplot.text(2.04, matrix_index + 0.50, "0", va="center", ha="center", fontsize=9)
-        pyplot.text(2.04, matrix_index + 0.80, "+1", va="center", ha="center", fontsize=9)
-        for value in [matrix_index + 0.20, matrix_index + 0.50, matrix_index + 0.80]:
-            pyplot.hlines(value, 2.08, 2.10, lw=1, color="k")
-        pyplot.text(2.30, matrix_index + 0.02, "$x$", va="center", ha="center", fontsize=12)
-        pyplot.text(1.98, matrix_index + 0.50, "$y$", va="center", ha="center", fontsize=12)
-        for former, latter, color in zip(linspace(matrix_index + 0.2, matrix_index + 0.8, 41)[:-1],
-                                         linspace(matrix_index + 0.2, matrix_index + 0.8, 41)[1:],
-                                         pyplot.get_cmap("PRGn")(linspace(0, 1, 40))):
-            pyplot.fill_between([2.55, 2.58], former, latter, fc=color, lw=0, zorder=1)
-        for location, value in zip(linspace(matrix_index + 0.2, matrix_index + 0.8, 3),
-                                   ["\N{MINUS SIGN}1", "0", "+1"]):
-            pyplot.hlines(location, 2.58, 2.60, lw=1, color="k")
-            pyplot.text(2.65, location, value, va="center", ha="center", fontsize=9)
-        pyplot.plot([2.55, 2.58, 2.58, 2.55, 2.55],
-                    [matrix_index + 0.20, matrix_index + 0.20,
-                     matrix_index + 0.80, matrix_index + 0.80, matrix_index + 0.20],
-                    color="k", lw=1, zorder=2)
-        pyplot.text(2.565, matrix_index + 0.88, "$z$", va="center", ha="center", fontsize=12)
-    pyplot.xlim(0.00, 2.70)
-    pyplot.ylim(0.00, 2.20)
-    pyplot.axis("off")
-
-    pyplot.savefig(save_path + "supp11.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
@@ -780,4 +652,3 @@ if __name__ == "__main__":
     supp_08()
     supp_09()
     supp_10()
-    supp_11()

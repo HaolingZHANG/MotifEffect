@@ -32,8 +32,8 @@ def main_01():
     """
     pyplot.figure(figsize=(10, 5), tight_layout=True)
     panel = pyplot.subplot(111)
-    pyplot.text(0.10, 1.93, "a", va="center", ha="left", fontsize=12)
-    pyplot.text(2.10, 1.93, "b", va="center", ha="left", fontsize=12)
+    pyplot.text(0.10, 1.93, "A", va="center", ha="left", fontsize=12)
+    pyplot.text(2.10, 1.93, "B", va="center", ha="left", fontsize=12)
     pyplot.text(0.90, 2.00,
                 "local network properties of 3-node coherent and incoherent loop types",
                 va="bottom", ha="center", fontsize=8)
@@ -124,7 +124,7 @@ def main_01():
     pyplot.plot([0.55, 0.55, 0.70, 0.70], [0.87, 0.85, 0.85, 0.82], lw=0.75, color="k")
     pyplot.text(0.30, 0.78, "minimum L2-norm difference of " + r"$\mathcal{C}$",
                 va="center", ha="center", fontsize=7)
-    pyplot.text(0.30, 0.73, "(detailed in Figure 2a)", va="center", ha="center", fontsize=6)
+    pyplot.text(0.30, 0.73, "(detailed in Fig. 2A)", va="center", ha="center", fontsize=6)
     pyplot.text(0.70, 0.78, "best Lipschitz constant", va="center", ha="center", fontsize=7)
     pyplot.annotate("", xy=(0.30, 0.63), xytext=(0.30, 0.69),
                     arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
@@ -154,7 +154,7 @@ def main_01():
     pyplot.plot([1.30, 1.50, 1.50], [0.85, 0.85, 0.87], lw=0.75, color="k")
     pyplot.text(1.30, 0.78, "apply the adversarial escape process for each loop sample",
                 va="center", ha="center", color="#C0504D", fontsize=7)
-    pyplot.text(1.30, 0.73, "(detailed in Figure 3a)", va="center", ha="center", fontsize=6)
+    pyplot.text(1.30, 0.73, "(detailed in Fig. 3A)", va="center", ha="center", fontsize=6)
     pyplot.plot([1.10, 1.25, 1.25], [0.66, 0.66, 0.69], lw=0.75, color="k")
     pyplot.plot([1.35, 1.35, 1.50], [0.69, 0.66, 0.66], lw=0.75, color="k")
     pyplot.annotate("", xy=(1.10, 0.43), xytext=(1.10, 0.66),
@@ -162,7 +162,7 @@ def main_01():
     pyplot.annotate("", xy=(1.50, 0.60), xytext=(1.50, 0.66),
                     arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.text(1.50, 0.57, "predominant curvature proportion", va="center", ha="center", fontsize=7)
-    pyplot.text(1.50, 0.52, "(detailed in Figure 4a,4b)", va="center", ha="center", fontsize=6)
+    pyplot.text(1.50, 0.52, "(detailed in Fig. 4A,4B)", va="center", ha="center", fontsize=6)
     pyplot.annotate("", xy=(1.50, 0.43), xytext=(1.50, 0.49),
                     arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.text(1.10, 0.40, "observe parameter changes",
@@ -375,7 +375,7 @@ def main_01():
                                     shrinkA=0, shrinkB=0, connectionstyle="arc3,rad=0.3"))
     pyplot.text(2.277, 0.585, r"${\rm \theta}$", va="center", ha="center", fontsize=7)
     pyplot.text(2.275, 0.46, "cart-pole balance task", va="top", ha="center", fontsize=7)
-    pyplot.text(2.275, 0.39, "(detailed in Figure 5a)", va="center", ha="center", fontsize=6)
+    pyplot.text(2.275, 0.39, "(detailed in Fig. 5A)", va="center", ha="center", fontsize=6)
     pyplot.vlines(2.500, 0.505, 0.545, color="k", lw=0.75)
     pyplot.hlines(0.525, 2.487, 2.513, color="k", lw=0.75)
     pyplot.fill_between([2.66, 2.69], 0.50, 0.52, ec="k", fc="w", lw=0.75)
@@ -591,11 +591,11 @@ def main_02():
                   ["%.1f" % v for v in linspace(0.60, 2.40, 9)], fontsize=7)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.386, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.698, 0.99, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.386, 0.75, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.698, 0.75, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.386, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.698, 0.99, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.386, 0.75, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.698, 0.75, "E", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main02.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -760,11 +760,11 @@ def main_03():
     pyplot.ylim(-0.03, 1.03)
 
     figure.align_labels()
-    figure.text(0.020, 0.98, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.63, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.275, 0.63, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.517, 0.63, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.757, 0.63, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.98, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.63, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.275, 0.63, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.517, 0.63, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.757, 0.63, "E", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main03.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -1036,10 +1036,10 @@ def main_04():
     pyplot.ylim(0, 1)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.67, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.67, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.67, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.67, "D", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -1154,12 +1154,12 @@ def main_05():
         pyplot.ylim(0, 5)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.49, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.266, 0.49, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.49, "e", va="center", ha="center", fontsize=12)
-    figure.text(0.759, 0.49, "f", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.49, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.266, 0.49, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.49, "E", va="center", ha="center", fontsize=12)
+    figure.text(0.759, 0.49, "F", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main05.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -1238,12 +1238,12 @@ def main_06():
                    textprops={"fontsize": 7, "color": "k"}, wedgeprops={"lw": 0.75, "ec": "k"})
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.743, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.47, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.268, 0.47, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.515, 0.47, "e", va="center", ha="center", fontsize=12)
-    figure.text(0.743, 0.47, "f", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.743, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.47, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.268, 0.47, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.515, 0.47, "E", va="center", ha="center", fontsize=12)
+    figure.text(0.743, 0.47, "F", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main06.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
