@@ -365,7 +365,7 @@ def main_01():
                 va="center", ha="center", color="#C0504D", fontsize=7)
     pyplot.annotate("", xy=(2.50, 0.63), xytext=(2.50, 0.69),
                     arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
-    pyplot.hlines(0.50, 2.15, 2.40, lw=2.0, color="silver", zorder=2)  # TODO
+    pyplot.hlines(0.50, 2.15, 2.40, lw=2.0, color="silver", zorder=2)
     pyplot.plot([2.30, 2.23], [0.50, 0.60], lw=3.0, color="#CC9966", zorder=3)
     pyplot.fill_between([2.27, 2.33], 0.48, 0.52, fc="gray", lw=0, zorder=4)
     pyplot.scatter([2.30], [0.50], fc="silver", s=20, lw=0, zorder=4)
