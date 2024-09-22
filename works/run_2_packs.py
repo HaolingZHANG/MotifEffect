@@ -340,51 +340,11 @@ def supp_02():
         save_data(save_path=sort_path + "supp02.pkl", information=task_data)
 
 
-def supp_03():
-    """
-    Collect plot data from Figure S3 in supplementary file.
-    """
-    if not path.exists(sort_path + "supp03.pkl"):
-        task_data = {}
-        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
-            feature, records = motif_types[0] + "." + str(motif_index), []
-            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
-            for index, (motifs, losses) in enumerate(escape_data):
-                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
-                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
-                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
-                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
-                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
-                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
-            task_data[panel_label] = array(records)
-        save_data(save_path=sort_path + "supp03.pkl", information=task_data)
-
-
 def supp_04():
     """
     Collect plot data from Figure S4 in supplementary file.
     """
     if not path.exists(sort_path + "supp04.pkl"):
-        task_data = {}
-        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
-            feature, records = motif_types[1] + "." + str(motif_index), []
-            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
-            for index, (motifs, losses) in enumerate(escape_data):
-                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
-                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
-                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
-                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
-                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
-                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
-            task_data[panel_label] = array(records)
-        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
-
-
-def supp_06():
-    """
-    Collect plot data from Figure S6 in supplementary file.
-    """
-    if not path.exists(sort_path + "supp07.pkl"):
         task_data = {}
 
         origin_data = load_data(load_path=raw_path + "particular/coherent-loop.1.initialization.pkl")
@@ -422,14 +382,14 @@ def supp_06():
             calculate_landscape(value_range, points, case_e_2[89][0]),
             calculate_landscape(value_range, points, case_e_2[99][0]),
         ]
-        save_data(save_path=sort_path + "supp06.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp04.pkl", information=task_data)
 
 
-def supp_07():
+def supp_05():
     """
-    Collect plot data from Figure S7 in supplementary file.
+    Collect plot data from Figure S5 in supplementary file.
     """
-    if not path.exists(sort_path + "supp07.pkl"):
+    if not path.exists(sort_path + "supp05.pkl"):
         task_data = {}
         for motif_index, panel_index in zip(motif_indices, ["a", "b", "c", "d"]):
             feature, records = motif_types[1] + "." + str(motif_index), []
@@ -449,14 +409,34 @@ def supp_07():
                 y /= sum(y)
                 records.append(y.tolist())
             task_data[panel_index] = array(records)
-        save_data(save_path=sort_path + "supp07.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp05.pkl", information=task_data)
 
 
-def supp_08():
+def supp_06():
     """
-    Collect plot data from Figure S8 in supplementary file.
+    Collect plot data from Figure S6 in supplementary file.
     """
-    if not path.exists(sort_path + "supp08.pkl"):
+    if not path.exists(sort_path + "supp06.pkl"):
+        task_data = {}
+        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
+            feature, records = motif_types[0] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
+                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
+                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
+                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
+            task_data[panel_label] = array(records)
+        save_data(save_path=sort_path + "supp06.pkl", information=task_data)
+
+
+def supp_07():
+    """
+    Collect plot data from Figure S7 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp07.pkl"):
         task_data, flag = {"b": []}, True
         for motif_index in motif_indices:
             feature = motif_types[0] + "." + str(motif_index)
@@ -486,6 +466,26 @@ def supp_08():
         # noinspection PyUnresolvedReferences
         task_data["b"] = array(task_data["b"])
 
+        save_data(save_path=sort_path + "supp07.pkl", information=task_data)
+
+
+def supp_08():
+    """
+    Collect plot data from Figure S8 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp08.pkl"):
+        task_data = {}
+        for panel_label, motif_index in zip(["a", "b", "c", "d"], motif_indices):
+            feature, records = motif_types[1] + "." + str(motif_index), []
+            escape_data = load_data(load_path=raw_path + "particular/" + feature + ".escape-process.pkl")
+            for index, (motifs, losses) in enumerate(escape_data):
+                source, target = motifs[argmin(losses)][0], motifs[argmax(losses)][0]
+                source_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, source), 0.01)
+                target_concavity = detect_curvature_feature(calculate_landscape(value_range, 101, target), 0.01)
+                counter_1, counter_2 = Counter(source_concavity.reshape(-1)), Counter(target_concavity.reshape(-1))
+                used_value_1, used_value_2 = max([counter_1[1], counter_1[-1]]), max([counter_2[1], counter_2[-1]])
+                records.append([used_value_1 / (101 ** 2), used_value_2 / (101 ** 2)])
+            task_data[panel_label] = array(records)
         save_data(save_path=sort_path + "supp08.pkl", information=task_data)
 
 
@@ -558,8 +558,8 @@ if __name__ == "__main__":
     main_06()
     supp_01()
     supp_02()
-    supp_03()
     supp_04()
+    supp_05()
     supp_06()
     supp_07()
     supp_08()

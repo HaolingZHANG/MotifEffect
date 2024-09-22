@@ -4,11 +4,9 @@
 """
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams
-from numpy import array, arange, linspace, meshgrid, abs, sum, min, median, max, mean, argmax, where
+from numpy import array, arange, linspace, meshgrid, sum, min, median, max, mean, argmax, where
 from scipy.stats import gaussian_kde
 from warnings import filterwarnings
-
-from effect import NeuralMotif, calculate_landscape
 
 from works import load_data, draw_info
 
@@ -128,80 +126,6 @@ def supp_03():
     """
     Create Figure S3 in the supplementary file.
     """
-    task_data = load_data(sort_path + "supp03.pkl")
-
-    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
-    for index, (panel_index, values) in enumerate(task_data.items()):
-        pyplot.subplot(2, 2, index + 1)
-        count = sum((values[:, 1] - values[:, 0]) > 0)
-        pyplot.title("samples in incoherent-loop " + str(index + 1), fontsize=8)
-        pyplot.fill_between([0, 1], [0, 1], [1, 1], lw=0, fc="#FEB2B4", alpha=0.5, zorder=0,
-                            label="increase (" + str(count) + " samples)")
-        pyplot.fill_between([0, 1], [0, 0], [0, 1], lw=0, fc="#A5B6C5", alpha=0.5, zorder=0,
-                            label="decrease (" + str(100 - count) + " samples)")
-        for location in linspace(0.1, 0.9, 9):
-            pyplot.hlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
-            pyplot.vlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
-        pyplot.legend(loc="lower right", fontsize=7, title="proportion change", title_fontsize=7, framealpha=1)
-        pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
-        pyplot.xlabel("predominant curvature proportion of landscape before escaping", fontsize=8)
-        pyplot.ylabel("predominant curvature proportion of landscape after escaping", fontsize=8)
-        pyplot.xticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
-        pyplot.yticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
-        pyplot.xlim(0.0, 1.0)
-        pyplot.ylim(0.0, 1.0)
-
-    figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
-
-    pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_04():
-    """
-    Create Figure S4 in the supplementary file.
-    """
-    task_data = load_data(sort_path + "supp04.pkl")
-
-    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
-    for index, (panel_index, values) in enumerate(task_data.items()):
-        pyplot.subplot(2, 2, index + 1)
-        count = sum((values[:, 1] - values[:, 0]) > 0)
-        pyplot.title("samples in coherent-loop " + str(index + 1), fontsize=8)
-        pyplot.fill_between([0, 1], [0, 1], [1, 1], lw=0, fc="#FEB2B4", alpha=0.5, zorder=0,
-                            label="increase (" + str(count) + " samples)")
-        pyplot.fill_between([0, 1], [0, 0], [0, 1], lw=0, fc="#A5B6C5", alpha=0.5, zorder=0,
-                            label="decrease (" + str(100 - count) + " samples)")
-        for location in linspace(0.1, 0.9, 9):
-            pyplot.hlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
-            pyplot.vlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
-        pyplot.legend(loc="lower right", fontsize=7, title="proportion change", title_fontsize=7, framealpha=1)
-        pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
-        pyplot.xlabel("predominant curvature proportion of landscape before escaping", fontsize=8)
-        pyplot.ylabel("predominant curvature proportion of landscape after escaping", fontsize=8)
-        pyplot.xticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
-        pyplot.yticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
-        pyplot.xlim(0.0, 1.0)
-        pyplot.ylim(0.0, 1.0)
-
-    figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
-
-    pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
-    pyplot.close()
-
-
-def supp_05():
-    """
-    Create Figure S5 in the supplementary file.
-    """
     pyplot.figure(figsize=(10, 2), tight_layout=True)
     pyplot.subplot(1, 2, 1)
     pyplot.scatter([0.2, 0.5, 0.8, 1.8, 2.1, 2.4], [0.2, 0.8, 0.2, 0.2, 0.8, 0.2],
@@ -236,15 +160,15 @@ def supp_05():
     pyplot.ylim(0.00, 1.00)
     pyplot.axis("off")
 
-    pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp03.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_06():
+def supp_04():
     """
-    Create Figure S6 in the supplementary file.
+    Create Figure S4 in the supplementary file.
     """
-    task_data = load_data(sort_path + "supp06.pkl")
+    task_data = load_data(sort_path + "supp04.pkl")
 
     x, y = linspace(0.0, 0.6, 41), linspace(0.0, 0.6, 41)
 
@@ -346,15 +270,15 @@ def supp_06():
     figure.align_labels()
     figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
     figure.text(0.02, 0.49, "B", va="center", ha="center", fontsize=12)
-    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_07():
+def supp_05():
     """
-    Create Figure S7 in the supplementary file.
+    Create Figure S5 in the supplementary file.
     """
-    task_data = load_data(sort_path + "supp07.pkl")
+    task_data = load_data(sort_path + "supp05.pkl")
 
     figure, mesh, all_ax = pyplot.figure(figsize=(10, 10)), None, []
     grid = pyplot.GridSpec(2, 2)
@@ -401,15 +325,52 @@ def supp_07():
 
     # noinspection PyTypeChecker
     pyplot.tight_layout(rect=[0.00, 0.07, 1.00, 1.00])
-    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.savefig(save_path + "supp05.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
 
-def supp_08():
+def supp_06():
     """
-    Create Figure S8 in the supplementary file.
+    Create Figure S6 in the supplementary file.
     """
-    task_data = load_data(sort_path + "supp08.pkl")
+    task_data = load_data(sort_path + "supp06.pkl")
+
+    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
+    for index, (panel_index, values) in enumerate(task_data.items()):
+        pyplot.subplot(2, 2, index + 1)
+        count = sum((values[:, 1] - values[:, 0]) > 0)
+        pyplot.title("samples in incoherent-loop " + str(index + 1), fontsize=8)
+        pyplot.fill_between([0, 1], [0, 1], [1, 1], lw=0, fc="#FEB2B4", alpha=0.5, zorder=0,
+                            label="increase (" + str(count) + " samples)")
+        pyplot.fill_between([0, 1], [0, 0], [0, 1], lw=0, fc="#A5B6C5", alpha=0.5, zorder=0,
+                            label="decrease (" + str(100 - count) + " samples)")
+        for location in linspace(0.1, 0.9, 9):
+            pyplot.hlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
+            pyplot.vlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
+        pyplot.legend(loc="lower right", fontsize=7, title="proportion change", title_fontsize=7, framealpha=1)
+        pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
+        pyplot.xlabel("predominant curvature proportion of landscape before escaping", fontsize=8)
+        pyplot.ylabel("predominant curvature proportion of landscape after escaping", fontsize=8)
+        pyplot.xticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+        pyplot.yticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+        pyplot.xlim(0.0, 1.0)
+        pyplot.ylim(0.0, 1.0)
+
+    figure.align_labels()
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_07():
+    """
+    Create Figure S7 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp07.pkl")
 
     figure = pyplot.figure(figsize=(10, 8), tight_layout=True)
     grid = pyplot.GridSpec(3, 1)
@@ -545,6 +506,43 @@ def supp_08():
 
     figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
     figure.text(0.02, 0.35, "B", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_08():
+    """
+    Create Figure S8 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp08.pkl")
+
+    figure = pyplot.figure(figsize=(10, 9.5), tight_layout=True)
+    for index, (panel_index, values) in enumerate(task_data.items()):
+        pyplot.subplot(2, 2, index + 1)
+        count = sum((values[:, 1] - values[:, 0]) > 0)
+        pyplot.title("samples in coherent-loop " + str(index + 1), fontsize=8)
+        pyplot.fill_between([0, 1], [0, 1], [1, 1], lw=0, fc="#FEB2B4", alpha=0.5, zorder=0,
+                            label="increase (" + str(count) + " samples)")
+        pyplot.fill_between([0, 1], [0, 0], [0, 1], lw=0, fc="#A5B6C5", alpha=0.5, zorder=0,
+                            label="decrease (" + str(100 - count) + " samples)")
+        for location in linspace(0.1, 0.9, 9):
+            pyplot.hlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
+            pyplot.vlines(location, 0, 1, lw=0.75, ls="--", color="k", zorder=1)
+        pyplot.legend(loc="lower right", fontsize=7, title="proportion change", title_fontsize=7, framealpha=1)
+        pyplot.scatter(values[:, 0], values[:, 1], ec="k", fc="w", lw=0.75, zorder=2)
+        pyplot.xlabel("predominant curvature proportion of landscape before escaping", fontsize=8)
+        pyplot.ylabel("predominant curvature proportion of landscape after escaping", fontsize=8)
+        pyplot.xticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+        pyplot.yticks(linspace(0.0, 1.0, 11), [("%d" % v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+        pyplot.xlim(0.0, 1.0)
+        pyplot.ylim(0.0, 1.0)
+
+    figure.align_labels()
+    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
