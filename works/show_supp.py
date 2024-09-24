@@ -58,16 +58,16 @@ def supp_01():
         pyplot.ylim(0, 0.04)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.80, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.60, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.40, "D", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.20, "E", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "F", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.80, "G", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.60, "H", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.40, "I", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.20, "J", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.80, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.60, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.40, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.20, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "f", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.80, "g", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.60, "h", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.40, "i", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.20, "j", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp01.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -107,16 +107,16 @@ def supp_02():
         pyplot.ylim(0, 0.06)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.80, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.60, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.40, "D", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.20, "E", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "F", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.80, "G", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.60, "H", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.40, "I", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.20, "J", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.80, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.60, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.40, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.20, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "f", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.80, "g", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.60, "h", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.40, "i", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.20, "j", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp02.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -268,8 +268,8 @@ def supp_04():
     pyplot.axis("off")
 
     figure.align_labels()
-    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.49, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.49, "b", va="center", ha="center", fontsize=12)
     pyplot.savefig(save_path + "supp04.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
 
@@ -318,10 +318,10 @@ def supp_05():
     cbar.ax.xaxis.set_tick_params(labelsize=7)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.53, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.53, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.53, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.53, "d", va="center", ha="center", fontsize=12)
 
     # noinspection PyTypeChecker
     pyplot.tight_layout(rect=[0.00, 0.07, 1.00, 1.00])
@@ -357,10 +357,10 @@ def supp_06():
         pyplot.ylim(0.0, 1.0)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp06.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -504,8 +504,8 @@ def supp_07():
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_visible(False)
 
-    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.35, "B", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.35, "b", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp07.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -539,10 +539,10 @@ def supp_08():
         pyplot.ylim(0.0, 1.0)
 
     figure.align_labels()
-    figure.text(0.020, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.99, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.50, "C", va="center", ha="center", fontsize=12)
-    figure.text(0.512, 0.50, "D", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.50, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.512, 0.50, "d", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp08.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
@@ -631,9 +631,9 @@ def supp_10():
             location += 1
 
     figure.align_labels()
-    figure.text(0.02, 0.99, "A", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.43, "B", va="center", ha="center", fontsize=12)
-    figure.text(0.02, 0.15, "C", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.43, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.15, "c", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "supp10.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
