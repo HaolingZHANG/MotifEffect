@@ -1,4 +1,7 @@
 # Configuration of NEAT algorithm and its variations
+
+## Basic Setting
+
 The [template](https://github.com/CodeReclaimers/neat-python/blob/master/examples/single-pole-balancing/config-feedforward) 
 of the configuration comes from 
 [NEAT-Python framework](https://github.com/CodeReclaimers/neat-python/).
@@ -25,3 +28,10 @@ The "enabled" parameter may change from "False" to "True", making the prohibitio
 On the contrary, for the agent created by best genome after training, 
 "enabled" parameter in ConnectionGene is considered in the creation of the adjacency matrix. 
 Because the connection to which False "enabled" belongs is not actually used.
+
+## Reinforcement Learning Cases (main folder)
+
+
+
+## Other Case studies (supp folder)
+

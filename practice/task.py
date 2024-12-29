@@ -1,6 +1,6 @@
 """
 @Author      : Haoling Zhang
-@Description : Definition of OpenAI Gym task.
+@Description : Definition of task.
 """
 from copy import deepcopy
 from gym import make, Env
@@ -9,9 +9,10 @@ from itertools import product
 from gym.envs.classic_control import CartPoleEnv
 from matplotlib import pyplot
 from matplotlib.animation import FuncAnimation
-from numpy import ndarray, array, linspace, argmax, abs, max, sum, mean
+from numpy import ndarray, array, linspace, argmax, abs, max, sum, mean, where
 # noinspection PyPackageRequirements
 from neat.config import Config
+from sklearn.metrics import classification_report
 from typing import Union, Tuple
 from warnings import simplefilter
 
@@ -23,7 +24,37 @@ simplefilter("ignore", UserWarning)
 simplefilter("ignore", DeprecationWarning)
 
 
-class GymTask(object):
+class BasicTask(object):
+
+    def __init__(self,
+                 description: str):
+        """
+        Initialize the Basic task.
+
+        :param description: description of the task.
+        :type description: str
+        """
+        self.description, self.noise_generator, self.experiences = description, None, []
+
+    def set_noise(self,
+                  noise_generator: NormNoiseGenerator):
+        """
+        Set the noise generator.
+
+        :param noise_generator: generator of noise.
+        :type noise_generator: practice.noise.NormNoiseGenerator
+        """
+        self.noise_generator = noise_generator
+
+    def get_experiences(self) \
+            -> list:
+        return self.experiences
+
+    def reset_experiences(self):
+        self.experiences = []
+
+
+class GymTask(BasicTask):
 
     def __init__(self,
                  environment: Env,
@@ -50,19 +81,10 @@ class GymTask(object):
         :param total_steps: running total steps (for fitness) per iteration.
         :type total_steps: int
         """
-        self.environment, self.description, self.noise_generator = environment, description, None
+        super(GymTask, self).__init__(description)
+        self.environment, self.need_frames = environment, need_frames
         self.iterations, self.total_steps, self.maximum_generation = iterations, total_steps, maximum_generation
-        self.action_handle, self.need_frames, self.experiences, self.record_handle = None, need_frames, [], None
-
-    def set_noise(self,
-                  noise_generator: NormNoiseGenerator):
-        """
-        Set the noise generator.
-
-        :param noise_generator: generator of noise.
-        :type noise_generator: practice.noise.NormNoiseGenerator
-        """
-        self.noise_generator = noise_generator
+        self.action_handle, self.record_handle = None, None
 
     def set_action_handle(self, action_handle):
         """
@@ -126,7 +148,6 @@ class GymTask(object):
         :return: result set.
         :rtype: dict
         """
-
         states, actions, rewards, noises, frames = [], [], [], [], []
         state, _ = self.environment.reset(seed=random_seed)
 
@@ -188,13 +209,6 @@ class GymTask(object):
 
         return {"state": array(current_state), "action": array(action_values), "reward": reward,
                 "noise": array(actual_state - state), "done": done}
-
-    def get_experiences(self) \
-            -> list:
-        return self.experiences
-
-    def reset_experiences(self):
-        self.experiences = []
 
     def sampling_states(self,
                         sampling: int) \
@@ -351,3 +365,133 @@ class NEATCartPoleTask(GymTask):
                         maximum_palstance = max(maximum_velocity, abs(final_state[3]))
 
         return maximum_velocity, maximum_palstance
+
+
+class SupervisionTask(BasicTask):
+
+    def __init__(self,
+                 trained_inputs: ndarray,
+                 trained_outputs: ndarray,
+                 tested_inputs: ndarray,
+                 tested_outputs: ndarray,
+                 description: str,
+                 label_number: int,
+                 data_types: list,
+                 data_ranges: list,
+                 maximum_generation: int):
+        """
+        Initialize the supervision classification task.
+
+        :param trained_inputs: trained output data (or features).
+        :type trained_inputs: numpy.ndarray
+
+        :param trained_outputs: trained output data (or labels).
+        :type trained_outputs: numpy.ndarray
+
+        :param tested_inputs: trained output data (or features).
+        :type tested_inputs: numpy.ndarray
+
+        :param tested_outputs: trained output data (or labels).
+        :type tested_outputs: numpy.ndarray
+
+        :param description: description of the task.
+        :type description: str
+
+        :param label_number: number of labels in output data.
+        :type label_number: int
+
+        :param data_types: type of input data in each column ("binary", "categorical", or "continuous").
+        :type data_types: list
+
+        :param data_ranges: range of input data in each column.
+        :type data_ranges: numpy.ndarray
+        """
+        super(SupervisionTask, self).__init__(description)
+        if len(trained_inputs) != len(trained_outputs):
+            raise ValueError("The trained inputs and trained outputs must have the same length.")
+        if len(tested_inputs) != len(tested_outputs):
+            raise ValueError("The trained inputs and trained outputs must have the same length.")
+
+        self.trained_inputs, self.trained_outputs = trained_inputs, trained_outputs
+        self.tested_inputs, self.tested_outputs = tested_inputs, tested_outputs
+        self.data_types, self.data_ranges, self.label_number = data_types, data_ranges, label_number
+        self.action_handle, self.record_handle, self.maximum_generation = argmax, None, maximum_generation
+
+    def run(self,
+            agent: DefaultAgent,
+            train_flag: bool = False):
+        if self.noise_generator is not None:
+            available = where(array([data_type.lower() == "continuous" for data_type in self.data_types]) == True)[0]
+            actual_inputs = []
+
+            # In order to match the actual situation, we only intervene in continuous data types.
+            if train_flag:
+                actual_outputs = self.trained_outputs.copy()
+                for values in self.trained_inputs:
+                    new_values = values.copy()
+                    # noinspection PyTypeChecker
+                    changed_values = self.noise_generator.get_samples(sample=new_values[available], count=1,
+                                                                      minimum_bounds=self.data_ranges[available, 0],
+                                                                      maximum_bounds=self.data_ranges[available, 1])
+                    new_values[available] = changed_values
+                    actual_inputs.append(new_values.tolist())
+            else:
+                actual_outputs = self.tested_outputs.copy()
+                for values in self.tested_inputs:
+                    new_values = values.copy()
+                    # noinspection PyTypeChecker
+                    changed_values = self.noise_generator.get_samples(sample=new_values[available], count=1,
+                                                                      minimum_bounds=self.data_ranges[available, 0],
+                                                                      maximum_bounds=self.data_ranges[available, 1])
+                    new_values[available] = changed_values
+                    actual_inputs.append(new_values.tolist())
+
+            actual_inputs = array(actual_inputs)
+        else:
+            if train_flag:
+                actual_inputs, actual_outputs = self.trained_inputs.copy(), self.trained_outputs.copy()
+            else:
+                actual_inputs, actual_outputs = self.tested_inputs.copy(), self.tested_outputs.copy()
+
+        raw_results = []
+        for actual_input, expected_output in zip(actual_inputs, actual_outputs):
+            obtained_output, _ = agent.work(actual_input)
+            raw_results.append([expected_output, obtained_output])
+        raw_results = array(raw_results).T
+
+        report = classification_report(y_true=raw_results[0], y_pred=raw_results[1],
+                                       digits=self.label_number, output_dict=True)
+        # noinspection PyTypeChecker
+        return {"fitness": report["weighted avg"]["f1-score"], "report": report, "raw": raw_results}
+
+    def genomes_fitness(self,
+                        genomes: dict,
+                        neat_config: Config):
+        """
+        Calculate the fitness of the investigated genomes.
+
+        :param genomes: NEAT genomes.
+        :type genomes: dict
+
+        :param neat_config: configure of NEAT algorithm.
+        :type neat_config: neat.config.Config
+        """
+        best_genome, best_agent, situation = None, None, []
+        for genome_id, model_genome in genomes:
+            agent = NEATAgent(model_genome, neat_config, "temp", action_handle=self.action_handle)
+
+            # noinspection PyCompatibility
+            collector = self.run(agent, train_flag=True)
+            model_genome.fitness = collector["fitness"]
+            situation.append(model_genome.fitness)
+
+            if best_genome is None or model_genome.fitness > best_genome.fitness:
+                best_genome = model_genome
+                if self.record_handle is not None:
+                    best_agent = self.record_handle(agent)
+                else:
+                    best_agent = deepcopy(agent)
+
+            del agent, collector
+
+        self.experiences.append((best_agent, situation))

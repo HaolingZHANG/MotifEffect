@@ -44,7 +44,7 @@ def load_data(load_path: str):
     :param load_path: path to load data.
     :type load_path: str
 
-    :return:
+    :return: information.
     """
     if ".pkl" in load_path:
         with open(load_path, "rb") as file:

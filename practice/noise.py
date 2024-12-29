@@ -67,7 +67,7 @@ class NormNoiseGenerator(object):
         else:
             raise ValueError("No such norm type!")
 
-        actual_noises = normalized_noises * self.noise_scale
+        actual_noises = normalized_noises * self.noise_scale * (maximum_bounds - minimum_bounds)
 
         if self.noise_level < 1.0:
             if (1.0 - self.noise_level) * count > 1:

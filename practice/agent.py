@@ -61,7 +61,7 @@ class NEATAgent(DefaultAgent):
             trained_model = nn.FeedForwardNetwork.create(model_genome, neat_config)
         else:
             trained_model = nn.RecurrentNetwork.create(model_genome, neat_config)
-        super().__init__(trained_model, description)
+        super(NEATAgent, self).__init__(trained_model, description)
         self.model_genome, self.neat_config = model_genome, neat_config
         self.action_handle = action_handle
 
@@ -213,13 +213,14 @@ def train_and_evaluate(task,
                        agent_config: config.Config,
                        repeats: int,
                        train_noise_generator: NormNoiseGenerator,
-                       test_noise_generators: dict) \
+                       test_noise_generators: dict,
+                       evaluation_type: str) \
         -> list:
     """
     Train and evaluate the agents in a given NEAT task.
 
     :param task: task to train agents.
-    :type task: practice.noise.NEATCartPoleTask
+    :type task: practice.task.NEATCartPoleTask or practice.task.SupervisionTask
 
     :param agent_name: name of trained agent.
     :type agent_name: str
@@ -236,6 +237,9 @@ def train_and_evaluate(task,
     :param test_noise_generators: noise generators for evaluating process.
     :type test_noise_generators: dict
 
+    :param evaluation_type: type of evaluation (i.e., "reinforcement" or "supervision").
+    :type evaluation_type: str
+
     :return: records.
     :rtype: list
     """
@@ -243,7 +247,7 @@ def train_and_evaluate(task,
 
     for _ in range(repeats):
         best_agent, experience = train(task, agent_name, agent_config, train_noise_generator)
-        test_record = evaluate(task, test_noise_generators, best_agent)
+        test_record = evaluate(task, test_noise_generators, best_agent, evaluation_type)
 
         records.append((best_agent, experience, test_record))
 
@@ -259,7 +263,7 @@ def train(task,
     Train an agent in a given NEAT task.
 
     :param task: task to train agents.
-    :type task: practice.task.NEATCartPoleTask
+    :type task: practice.task.NEATCartPoleTask or practice.task.SupervisionTask
 
     :param agent_name: name of trained agent.
     :type agent_name: str
@@ -276,7 +280,7 @@ def train(task,
     task.reset_experiences()
     task.set_noise(train_noise_generator)
 
-    best_genome = obtain_best(task, agent_config, need_stdout=False)
+    best_genome = obtain_best(task, agent_config)
     best_agent = NEATAgent(best_genome, agent_config, agent_name, task.action_handle)
 
     experience = task.get_experiences()
@@ -286,19 +290,23 @@ def train(task,
 
 def evaluate(task,
              test_noise_generators: dict,
-             agent: NEATAgent) \
+             agent: NEATAgent,
+             evaluation_type: str) \
         -> dict:
     """
     Evaluate an agent in a given NEAT task.
 
     :param task: task to train agents.
-    :type task: practice.task.NEATCartPoleTask
+    :type task: practice.task.NEATCartPoleTask or practice.task.SupervisionTask
 
     :param test_noise_generators: noise generators for evaluating process.
     :type test_noise_generators: dict
 
     :param agent: trained agent.
     :type agent: practice.agent.NEATAgent
+
+    :param evaluation_type: type of evaluation (i.e., "reinforcement" or "supervision").
+    :type evaluation_type: str
 
     :return: test record.
     :rtype: dict
@@ -307,7 +315,12 @@ def evaluate(task,
 
     for label, test_noise_generator in test_noise_generators.items():
         task.set_noise(test_noise_generator)
-        rewards = task.run(agent)["rewards"]
-        test_record[label] = task.calculate_fitness(rewards)
+        if evaluation_type == "reinforcement":
+            rewards = task.run(agent)["rewards"]
+            test_record[label] = task.calculate_fitness(rewards)
+        elif evaluation_type == "supervision":
+            test_record[label] = task.run(agent)["fitness"]
+        else:
+            raise ValueError("Evaluation type must be either 'reinforcement' or 'supervision'!")
 
     return test_record

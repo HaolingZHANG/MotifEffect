@@ -4,13 +4,14 @@
 """
 from hashlib import md5
 from itertools import product
-from numpy import array, linspace, arange, zeros, min, argsort, ceil, where
+from numpy import array, linspace, arange, zeros, ones, random, min, max, ceil, argsort, hstack, where
 from os import path, mkdir, listdir
+from ucimlrepo import fetch_ucirepo
 
 from effect import NeuralMotif, generate_outputs, estimate_lipschitz, estimate_lipschitz_by_motif
 from effect import calculate_differences, execute_catch_processes, execute_escape_processes
 
-from practice import acyclic_motifs, NEATCartPoleTask, NormNoiseGenerator
+from practice import acyclic_motifs, NEATCartPoleTask, SupervisionTask, NormNoiseGenerator
 from practice import create_agent_config, train_and_evaluate
 
 from works import load_data, save_data
@@ -209,19 +210,19 @@ def task_2():
 
 def task_3():
     """
-    Use classical neuroevolution method (NEAT) and its variations to learn CartPole environment,
+    Use classical neuroevolution method (NEAT) and its variations to
+    learn reinforcement learning task (CartPole environment) and other supervision learning tasks in real world,
     for verifying the influence of the robustness of motif usages on entire neural networks.
     """
     if not path.exists(raw_path + "real-world/"):
         mkdir(raw_path + "real-world/")
-
-    agent_configs = [create_agent_config(config_path + config_name) for config_name in config_names]
 
     noise_generators = {}
     for radio in radios:
         noise_generators[radio] = NormNoiseGenerator(norm_type=norm_type, noise_scale=radio)
 
     if not path.exists(path=raw_path + "real-world/adjustments.1.pkl"):
+        agent_configs = [create_agent_config(config_path + "main/" + config_name) for config_name in config_names]
         record, maximum_generation = {}, 20
         for agent_name, agent_config in zip(agent_names, agent_configs):
             record[agent_name] = {}
@@ -229,11 +230,13 @@ def task_3():
                 result = train_and_evaluate(task=NEATCartPoleTask(maximum_generation=maximum_generation),
                                             agent_name=agent_name, agent_config=agent_config, repeats=sample_number,
                                             train_noise_generator=noise_generators[train_radio],
-                                            test_noise_generators=noise_generators)
+                                            test_noise_generators=noise_generators,
+                                            evaluation_type="reinforcement")
                 record[agent_name][train_radio] = result
         save_data(save_path=raw_path + "real-world/adjustments.1.pkl", information=record)
 
     if not path.exists(path=raw_path + "real-world/iterations.pkl"):
+        agent_configs = [create_agent_config(config_path + "main/" + config_name) for config_name in config_names]
         record, train_radio, generations = {}, 0.3, arange(30, 151, 10)
         for agent_name, agent_config in zip(agent_names, agent_configs):
             record[agent_name] = []
@@ -241,7 +244,8 @@ def task_3():
                 result = train_and_evaluate(task=NEATCartPoleTask(maximum_generation=generation),
                                             agent_name=agent_name, agent_config=agent_config, repeats=sample_number,
                                             train_noise_generator=noise_generators[train_radio],
-                                            test_noise_generators=noise_generators)
+                                            test_noise_generators=noise_generators,
+                                            evaluation_type="reinforcement")
                 values = []
                 for _, _, test_record in result:
                     values.append(list(test_record.values()))
@@ -254,14 +258,77 @@ def task_3():
         save_data(save_path=raw_path + "real-world/iterations.pkl", information=record)
 
     if not path.exists(path=raw_path + "real-world/adjustments.2.pkl"):
+        agent_configs = [create_agent_config(config_path + "main/" + config_name) for config_name in config_names]
         record, maximum_generation, train_radio = {}, 100, 0.3
         for agent_name, agent_config in zip(agent_names, agent_configs):
             result = train_and_evaluate(task=NEATCartPoleTask(maximum_generation=maximum_generation),
                                         agent_name=agent_name, agent_config=agent_config, repeats=sample_number,
                                         train_noise_generator=noise_generators[train_radio],
-                                        test_noise_generators=noise_generators)
+                                        test_noise_generators=noise_generators,
+                                        evaluation_type="reinforcement")
             record[agent_name] = result
         save_data(save_path=raw_path + "real-world/adjustments.2.pkl", information=record)
+
+    if not path.exists(path=raw_path + "real-world/uci.datasets.pkl"):
+        # (1) biology https://archive.ics.uci.edu/dataset/39/ecoli
+        # (2) physics and chemistry https://archive.ics.uci.edu/dataset/42/glass+identification
+        # (3) health and medicine https://archive.ics.uci.edu/dataset/212/vertebral+column
+        records = {}
+        for uci_index, area in zip([39, 42, 212], ["biology", "physics and chemistry", "health and medicine"]):
+            dataset = fetch_ucirepo(id=uci_index)
+            inputs, outputs, output_collector = dataset.data.features.to_numpy(), dataset.data.targets.to_numpy(), {}
+            for index, output in enumerate(outputs):
+                if output[0] in output_collector:
+                    output_collector[output[0]].append(index)
+                else:
+                    output_collector[output[0]] = [index]
+            trained_inputs, trained_outputs, tested_inputs, tested_outputs = [], [], [], []
+            for index, (key, values) in enumerate(output_collector.items()):
+                trained_number = int(len(values) / 2.0 + 0.5)
+                tested_number = len(values) - trained_number
+                flags = hstack((ones(shape=(trained_number,), dtype=bool), zeros(shape=(tested_number,), dtype=bool)))
+                random.shuffle(flags)
+                for flag, value in zip(flags, values):
+                    if flag:
+                        trained_inputs.append(inputs[value])
+                        trained_outputs.append(index)
+                    else:
+                        tested_inputs.append(inputs[value])
+                        tested_outputs.append(index)
+            trained_inputs, trained_outputs = array(trained_inputs), array(trained_outputs)
+            tested_inputs, tested_outputs = array(tested_inputs), array(tested_outputs)
+            data_ranges = array([[min([min(trained_inputs[:, index]), min(tested_inputs[:, index])]),
+                                  max([max(trained_inputs[:, index]), max(tested_inputs[:, index])])]
+                                 for index in range(len(trained_inputs[0]))])
+            data_types = [data_type.lower() for data_type in list(dataset.variables.to_numpy()[:, 2])[1:-1]]
+            data_names = list(dataset.variables.to_numpy()[:, 0])[1:-1]
+            label_number = len(output_collector)
+            records["case study in " + area] = (trained_inputs, trained_outputs, tested_inputs, tested_outputs,
+                                                label_number, data_names, data_types, data_ranges)
+        save_data(save_path=raw_path + "real-world/uci.datasets.pkl", information=records)
+
+    if not path.exists(path=raw_path + "real-world/practice.results.pkl"):
+        records, maximum_generation = {}, 100
+        for area, (trained_inputs, trained_outputs, tested_inputs, tested_outputs, label_number,
+                   data_names, data_types, data_ranges) in load_data(raw_path + "real-world/uci.datasets.pkl").items():
+            label, agent_configs, record = area[len("case study in "):].replace(" and ", "-"), [], {}
+            for config_name in config_names:
+                agent_configs.append(create_agent_config(config_path + "supp/" + label + "." + config_name))
+            task = SupervisionTask(trained_inputs=trained_inputs, trained_outputs=trained_outputs,
+                                   tested_inputs=tested_inputs, tested_outputs=tested_outputs,
+                                   description=area, label_number=label_number, data_types=data_types,
+                                   data_ranges=data_ranges, maximum_generation=maximum_generation)
+            for agent_name, agent_config in zip(agent_names, agent_configs):
+                record[agent_name] = []
+                for train_radio in radios:
+                    result = train_and_evaluate(task=task, agent_name=agent_name, agent_config=agent_config,
+                                                repeats=sample_number,
+                                                train_noise_generator=noise_generators[train_radio],
+                                                test_noise_generators=noise_generators,
+                                                evaluation_type="supervision")
+                    record[agent_name][train_radio] = result
+            records[label] = record
+        save_data(save_path=raw_path + "real-world/practice.results.pkl", information=records)
 
 
 if __name__ == "__main__":
