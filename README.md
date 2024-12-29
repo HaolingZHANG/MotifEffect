@@ -124,8 +124,10 @@ you may need several months.
 │    ├── noise.py                                  // Noise modules.
 │    │    ├── NormNoiseGenerator                   // Noise generator based on the norm.
 │    ├── task.py                                   // Task modules.
+│    │    ├── BasicTask                            // Abstraction task.
 │    │    ├── GymTask                              // OpenAI gym task.
 │    │    ├── NEATCartPoleTask                     // CartPole task for NEAT method and its variants.
+│    │    ├── SupervisionTask                      // Supervision task for NEAT method and its variants.
 ├── works                                          // Experiment module of this work.
 │    ├── confs                                     // Configuration folder of neuroevolution tasks.
 │    ├── data                                      // Painting data folder of all the experiments.
@@ -160,7 +162,7 @@ you may need several months.
 
 [//]: # (  journal={TODO},)
 
-[//]: # (  year={2023})
+[//]: # (  year={2025})
 
 [//]: # (})
 

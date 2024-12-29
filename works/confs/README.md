@@ -29,9 +29,23 @@ On the contrary, for the agent created by best genome after training,
 "enabled" parameter in ConnectionGene is considered in the creation of the adjacency matrix. 
 Because the connection to which False "enabled" belongs is not actually used.
 
-## Reinforcement Learning Cases (main folder)
+## A Reinforcement Learning Case (main folder)
 
-
+Since we trained the CartPole-v0 environment under varying noise conditions using NEAT and its variants, 
+apart from the aforementioned adjustments, 
+its configuration file adheres to the settings of the 
+[original setting](https://github.com/CodeReclaimers/neat-python/tree/master/examples/single-pole-balancing).
 
 ## Other Case studies (supp folder)
 
+We selected three representative real-world datasets to validate the scalability of our conclusions.
+These datasets, sourced from the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/), 
+correspond to the domains of 
+(1) [biology](https://archive.ics.uci.edu/dataset/39/ecoli), 
+(2) [physics and chemistry](https://archive.ics.uci.edu/dataset/42/glass+identification), 
+and (3) [medicine and health](https://archive.ics.uci.edu/dataset/212/vertebral+column), 
+respectively.
+
+Since these tasks belong to supervised learning, 
+the setting of population size follows the setting of 
+[NEAT XOR task](https://github.com/CodeReclaimers/neat-python/blob/master/examples/xor/config-feedforward).
