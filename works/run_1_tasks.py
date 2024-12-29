@@ -274,7 +274,7 @@ def task_3():
         # (2) physics and chemistry https://archive.ics.uci.edu/dataset/42/glass+identification
         # (3) health and medicine https://archive.ics.uci.edu/dataset/212/vertebral+column
         records = {}
-        for uci_index, area in zip([39, 42, 212], ["biology", "physics and chemistry", "health and medicine"]):
+        for uci_index, domain in zip([39, 42, 212], ["biology", "physics and chemistry", "health and medicine"]):
             dataset = fetch_ucirepo(id=uci_index)
             inputs, outputs, output_collector = dataset.data.features.to_numpy(), dataset.data.targets.to_numpy(), {}
             for index, output in enumerate(outputs):
@@ -303,20 +303,20 @@ def task_3():
             data_types = [data_type.lower() for data_type in list(dataset.variables.to_numpy()[:, 2])[1:-1]]
             data_names = list(dataset.variables.to_numpy()[:, 0])[1:-1]
             label_number = len(output_collector)
-            records["case study in " + area] = (trained_inputs, trained_outputs, tested_inputs, tested_outputs,
-                                                label_number, data_names, data_types, data_ranges)
+            records["case study in " + domain] = (trained_inputs, trained_outputs, tested_inputs, tested_outputs,
+                                                  label_number, data_names, data_types, data_ranges)
         save_data(save_path=raw_path + "real-world/uci.datasets.pkl", information=records)
 
     if not path.exists(path=raw_path + "real-world/practice.results.pkl"):
         records, maximum_generation = {}, 100
-        for area, (trained_inputs, trained_outputs, tested_inputs, tested_outputs, label_number,
-                   data_names, data_types, data_ranges) in load_data(raw_path + "real-world/uci.datasets.pkl").items():
-            label, agent_configs, record = area[len("case study in "):].replace(" and ", "-"), [], {}
+        for domain, (trained_inputs, trained_outputs, tested_inputs, tested_outputs, label_number, data_names,
+                     data_types, data_ranges) in load_data(raw_path + "real-world/uci.datasets.pkl").items():
+            label, agent_configs, record = domain[len("case study in "):].replace(" and ", "-"), [], {}
             for config_name in config_names:
                 agent_configs.append(create_agent_config(config_path + "supp/" + label + "." + config_name))
             task = SupervisionTask(trained_inputs=trained_inputs, trained_outputs=trained_outputs,
                                    tested_inputs=tested_inputs, tested_outputs=tested_outputs,
-                                   description=area, label_number=label_number, data_types=data_types,
+                                   description=domain, label_number=label_number, data_types=data_types,
                                    data_ranges=data_ranges, maximum_generation=maximum_generation)
             for agent_name, agent_config in zip(agent_names, agent_configs):
                 record[agent_name] = []
