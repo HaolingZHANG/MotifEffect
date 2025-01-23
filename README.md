@@ -28,15 +28,17 @@ git clone https://github.com/HaolingZHANG/MotifEffect.git
 
 It requires a python version at least 3.7, and some well-established libraries listed in 
 [requirements file](https://github.com/HaolingZHANG/MotifEffect/blob/main/requirements.txt).
-When all supporting libraries are correctly installed, installing this library does not take time.
+Once all the prerequisite libraries are properly installed, setting up this repository is virtually instantaneous.
 In addition, this library does not have non-standard hardware requirements.
 
 ### Experiments
-In this work, three experiments are executed.
+In this work, four experiments are executed.
 Among them, we
 1. analyze trade-off tendencies between representational capacity and numerical stability of two types of loops, using colliders as a benchmark, based on gradient descent strategy and motif-associated Lipschitz constant.
 2. analyze the origin of these trade-off tendencies using maximum-minimum loss search.
 3. analyze training efficiency and robustness of neural networks produced by the classical neuroevolution method (i.e. NEAT) and its three variants based on different motif generation tendency.
+4. analyze failure situation of neural networks produced by NEAT and its three variants in three real-world applications.
+
 
 In this code repository, all experimental designs and parameter settings are clear (see 
 [run_1_tasks.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_tasks.py)
@@ -59,11 +61,9 @@ Notably, if you want to repeat the entire experiment, you can run the script in 
 4. [show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py);
 5. [show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py).
 
-The raw data amounts to approximately 46.6 GB, 
+The raw data amounts to approximately 49.8 GB, 
 will be made available after the publication of the corresponding article (currently accessible only to reviewers).
-To repeat all the experiments, 
-using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30GHz, 
-you may need several months.
+To repeat all the experiments, using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30GHz, you may need several months.
 
 
 ### Repository Structure
