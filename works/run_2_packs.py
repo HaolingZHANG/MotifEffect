@@ -544,6 +544,169 @@ def supp_10():
         save_data(save_path=sort_path + "supp10.pkl", information=task_data)
 
 
+def supp_11():
+    """
+    Collect plot data from Figure S11 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp11.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "real-world/uci.datasets.pkl")
+        for label, (info, (_, trained_labels, _, tested_labels, _, _, _, _)) in zip(["a", "b", "c"], record.items()):
+            task_data[label] = (info[len("case study in "):].replace(" and ", "-"),
+                                Counter(trained_labels), Counter(tested_labels))
+        save_data(save_path=sort_path + "supp11.pkl", information=task_data)
+
+
+def supp_12():
+    """
+    Collect plot data from Figure S12 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp12.pkl"):
+        task_data = {}
+        record = load_data(raw_path + "real-world/uci.datasets.pkl")
+        for label, (info, (trained_data, _, tested_data, _, _, _, _, _)) in zip(["a", "b", "c"], record.items()):
+            task_data[label] = (info[len("case study in "):].replace(" and ", "-"), trained_data, tested_data)
+        save_data(save_path=sort_path + "supp12.pkl", information=task_data)
+
+
+def supp_13():
+    """
+    Collect plot data from Figure S13 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp13.pkl"):
+        task_data = {}
+
+        records_1, matrix_1 = load_data(raw_path + "real-world/biology.pkl"), zeros(shape=(4, 5))
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index in range(5):
+                values = []
+                for best_agent, _, _ in records_1[agent_name][radio_index]:
+                    values.append(best_agent.get_fitness())
+                matrix_1[agent_index, radio_index] = mean(values)
+        task_data["a"] = matrix_1
+
+        records_2, matrix_2 = load_data(raw_path + "real-world/physics-chemistry.pkl"), zeros(shape=(4, 5))
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index in range(5):
+                values = []
+                for best_agent, _, _ in records_2[agent_name][radio_index]:
+                    values.append(best_agent.get_fitness())
+                matrix_2[agent_index, radio_index] = mean(values)
+        task_data["b"] = matrix_2
+
+        records_3, matrix_3 = load_data(raw_path + "real-world/health-medicine.pkl"), zeros(shape=(4, 5))
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index in range(5):
+                values = []
+                for best_agent, _, _ in records_3[agent_name][radio_index]:
+                    values.append(best_agent.get_fitness())
+                matrix_3[agent_index, radio_index] = mean(values)
+        task_data["c"] = matrix_3
+
+        save_data(save_path=sort_path + "supp13.pkl", information=task_data)
+
+
+def supp_14():
+    """
+    Collect plot data from Figure S14 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp14.pkl"):
+        task_data = {}
+
+        records_1, matrix_1 = load_data(raw_path + "real-world/biology.pkl"), zeros(shape=(4, 5, 5))
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index_1 in range(5):
+                values = [[] for _ in range(5)]
+                for _, _, test_record in records_1[agent_name][radio_index_1]:
+                    for radio_value, value in test_record.items():
+                        radio_index_2 = int(radio_value * 10)
+                        values[radio_index_2].append(value)
+                values = array(values)
+                matrix_1[agent_index, radio_index_1] = mean(values, axis=1)
+        task_data["a"] = matrix_1[0]
+        task_data["b"] = matrix_1[1]
+        task_data["c"] = matrix_1[2]
+        task_data["d"] = matrix_1[3]
+
+        records_2, matrix_2 = load_data(raw_path + "real-world/physics-chemistry.pkl"), zeros(shape=(4, 5, 5))
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index_1 in range(5):
+                values = [[] for _ in range(5)]
+                for _, _, test_record in records_2[agent_name][radio_index_1]:
+                    for radio_value, value in test_record.items():
+                        radio_index_2 = int(radio_value * 10)
+                        values[radio_index_2].append(value)
+                values = array(values)
+                matrix_2[agent_index, radio_index_1] = mean(values, axis=1)
+        task_data["e"] = matrix_2[0]
+        task_data["f"] = matrix_2[1]
+        task_data["g"] = matrix_2[2]
+        task_data["h"] = matrix_2[3]
+
+        records_3, matrix_3 = load_data(raw_path + "real-world/health-medicine.pkl"), zeros(shape=(4, 5, 5))
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index_1 in range(5):
+                values = [[] for _ in range(5)]
+                for _, _, test_record in records_3[agent_name][radio_index_1]:
+                    for radio_value, value in test_record.items():
+                        radio_index_2 = int(radio_value * 10)
+                        values[radio_index_2].append(value)
+                values = array(values)
+                matrix_3[agent_index, radio_index_1] = mean(values, axis=1)
+        task_data["i"] = matrix_3[0]
+        task_data["j"] = matrix_3[1]
+        task_data["k"] = matrix_3[2]
+        task_data["l"] = matrix_3[3]
+
+        save_data(save_path=sort_path + "supp14.pkl", information=task_data)
+
+
+def supp_15():
+    """
+    Collect plot data from Figure S15 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp15.pkl"):
+        task_data = {}
+
+        records_1, counts_1 = load_data(raw_path + "real-world/biology.pkl"), zeros(shape=(4, 5), dtype=int)
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index_1 in range(5):
+                for sample_index, (_, _, test_record) in enumerate(records_1[agent_name][radio_index_1]):
+                    values = [0 for _ in range(5)]
+                    for radio_value, value in test_record.items():
+                        radio_index_2 = int(radio_value * 10)
+                        values[radio_index_2] = value
+                    if max(values) == values[radio_index_1]:
+                        counts_1[agent_index, radio_index_1] += 1
+        task_data["a"] = counts_1
+
+        records_2, counts_2 = load_data(raw_path + "real-world/physics-chemistry.pkl"), zeros(shape=(4, 5), dtype=int)
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index_1 in range(5):
+                for sample_index, (_, _, test_record) in enumerate(records_2[agent_name][radio_index_1]):
+                    values = [0 for _ in range(5)]
+                    for radio_value, value in test_record.items():
+                        radio_index_2 = int(radio_value * 10)
+                        values[radio_index_2] = value
+                    if max(values) == values[radio_index_1]:
+                        counts_2[agent_index, radio_index_1] += 1
+        task_data["b"] = counts_2
+
+        records_3, counts_3 = load_data(raw_path + "real-world/health-medicine.pkl"), zeros(shape=(4, 5), dtype=int)
+        for agent_index, agent_name in enumerate(agent_names):
+            for radio_index_1 in range(5):
+                for sample_index, (_, _, test_record) in enumerate(records_3[agent_name][radio_index_1]):
+                    values = [0 for _ in range(5)]
+                    for radio_value, value in test_record.items():
+                        radio_index_2 = int(radio_value * 10)
+                        values[radio_index_2] = value
+                    if max(values) == values[radio_index_1]:
+                        counts_3[agent_index, radio_index_1] += 1
+        task_data["c"] = counts_3
+
+        save_data(save_path=sort_path + "supp15.pkl", information=task_data)
+
+
 if __name__ == "__main__":
     if not path.exists(sort_path):
         mkdir(sort_path)
@@ -565,3 +728,8 @@ if __name__ == "__main__":
     supp_08()
     supp_09()
     supp_10()
+    supp_11()
+    supp_12()
+    supp_13()
+    supp_14()
+    supp_15()

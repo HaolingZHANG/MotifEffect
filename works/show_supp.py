@@ -4,7 +4,7 @@
 """
 from logging import getLogger, CRITICAL
 from matplotlib import pyplot, rcParams
-from numpy import array, arange, linspace, meshgrid, sum, min, median, max, mean, argmax, where
+from numpy import array, arange, linspace, random, meshgrid, sum, min, median, max, mean, argmax, where
 from scipy.stats import gaussian_kde
 from warnings import filterwarnings
 
@@ -639,6 +639,396 @@ def supp_10():
     pyplot.close()
 
 
+def supp_11():
+    """
+    Create Figure S11 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp11.pkl")
+
+    figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
+
+    for index, (_, (description, values_1, values_2)) in enumerate(task_data.items()):
+        ax = pyplot.subplot(3, 1, index + 1)
+        pyplot.title(description.replace("-", " and "), fontsize=10)
+
+        x, y_1, y_2 = arange(len(values_1), dtype=int), [], []
+        for x_value in x:
+            y_1.append(values_1[x_value])
+            y_2.append(values_2[x_value])
+
+        pyplot.bar(x - 0.2, y_1, ec="k", fc="#F5A889", width=0.4, lw=0.75, label="training set")
+        pyplot.bar(x + 0.2, y_2, ec="k", fc="#ACD6EC", width=0.4, lw=0.75, label="testing set")
+        for location, y_value in enumerate(y_1):
+            pyplot.text(location - 0.2, y_value + 1, str(y_value), va="bottom", ha="center", fontsize=7)
+        for location, y_value in enumerate(y_2):
+            pyplot.text(location + 0.2, y_value + 1, str(y_value), va="bottom", ha="center", fontsize=7)
+
+        pyplot.legend(loc="upper left", fontsize=7)
+        pyplot.xlabel("label index", fontsize=8)
+        pyplot.ylabel("number of instances", fontsize=8)
+        pyplot.xticks(x, x, fontsize=7)
+        pyplot.yticks(arange(0, 201, 20), arange(0, 201, 20), fontsize=7)
+        pyplot.xlim(-0.6, len(values_1) - 0.4)
+        pyplot.ylim(0, 200)
+
+        # noinspection PyUnresolvedReferences
+        ax.spines["top"].set_visible(False)
+        # noinspection PyUnresolvedReferences
+        ax.spines["right"].set_visible(False)
+
+    figure.align_labels()
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.66, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.33, "c", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp11.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_12():
+    """
+    Create Figure S12 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp12.pkl")
+
+    figure = pyplot.figure(figsize=(10, 10), tight_layout=True)
+
+    pyplot.subplot(3, 1, 1)
+    description, values_1, values_2 = task_data["a"]
+    pyplot.title(description.replace("-", " and "), fontsize=10)
+    random.seed(2023)
+    for index in range(7):
+        if index == 0:
+            values = values_1[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index - 0.2, values, ec="k", fc="#F5A889", lw=0.75, label="training set", alpha=0.5)
+            values = values_2[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index + 0.2, values, ec="k", fc="#ACD6EC", lw=0.75, label="testing set", alpha=0.5)
+        else:
+            values = values_1[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index - 0.2, values, ec="k", fc="#F5A889", lw=0.75, alpha=0.5)
+            values = values_2[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index + 0.2, values, ec="k", fc="#ACD6EC", lw=0.75, alpha=0.5)
+    pyplot.vlines(arange(6) + 0.5, -0.1, 1.1, color="k", lw=0.75, ls="--")
+    pyplot.legend(loc="upper left", fontsize=7)
+    pyplot.xlabel("feature index", fontsize=8)
+    pyplot.ylabel("values of instances", fontsize=8)
+    pyplot.xticks(arange(7), arange(7), fontsize=7)
+    pyplot.yticks(linspace(0, 1, 6), ["%.1f" % v for v in linspace(0, 1, 6)], fontsize=7)
+    pyplot.xlim(-0.5, 6.5)
+    pyplot.ylim(-0.1, 1.1)
+
+    pyplot.subplot(3, 1, 2)
+    description, values_1, values_2 = task_data["b"]
+    pyplot.title(description.replace("-", " and "), fontsize=10)
+    random.seed(2023)
+    for index in range(9):
+        if index == 0:
+            values = values_1[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index - 0.2, values, ec="k", fc="#F5A889", lw=0.75, label="training set", alpha=0.5)
+            values = values_2[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index + 0.2, values, ec="k", fc="#ACD6EC", lw=0.75, label="testing set", alpha=0.5)
+        else:
+            values = values_1[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index - 0.2, values, ec="k", fc="#F5A889", lw=0.75, alpha=0.5)
+            values = values_2[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index + 0.2, values, ec="k", fc="#ACD6EC", lw=0.75, alpha=0.5)
+    pyplot.vlines(arange(8) + 0.5, -8, 88, color="k", lw=0.75, ls="--")
+    pyplot.legend(loc="upper left", fontsize=7)
+    pyplot.xlabel("feature index", fontsize=8)
+    pyplot.ylabel("values of instances", fontsize=8)
+    pyplot.xticks(arange(9), arange(9), fontsize=7)
+    pyplot.yticks(arange(0, 81, 10), arange(0, 81, 10), fontsize=7)
+    pyplot.xlim(-0.5, 8.5)
+    pyplot.ylim(-8, 88)
+
+    pyplot.subplot(3, 1, 3)
+    description, values_1, values_2 = task_data["c"]
+    pyplot.title(description.replace("-", " and "), fontsize=10)
+    random.seed(2023)
+    for index in range(6):
+        if index == 0:
+            values = values_1[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index - 0.2, values, ec="k", fc="#F5A889", lw=0.75, label="training set", alpha=0.5)
+            values = values_2[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index + 0.2, values, ec="k", fc="#ACD6EC", lw=0.75, label="testing set", alpha=0.5)
+        else:
+            values = values_1[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index - 0.2, values, ec="k", fc="#F5A889", lw=0.75, alpha=0.5)
+            values = values_2[:, index]
+            bias = (random.random(size=(len(values))) - 0.50) * 0.30
+            pyplot.scatter(bias + index + 0.2, values, ec="k", fc="#ACD6EC", lw=0.75, alpha=0.5)
+    pyplot.vlines(arange(5) + 0.5, -50, 450, color="k", lw=0.75, ls="--")
+    pyplot.legend(loc="upper left", fontsize=7)
+    pyplot.xlabel("feature index", fontsize=8)
+    pyplot.ylabel("values of instances", fontsize=8)
+    pyplot.xticks(arange(6), arange(6), fontsize=7)
+    pyplot.yticks(arange(-20, 421, 40), arange(-20, 421, 40), fontsize=7)
+    pyplot.xlim(-0.5, 5.5)
+    pyplot.ylim(-50, 450)
+
+    figure.align_labels()
+    figure.text(0.02, 0.99, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.66, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.02, 0.33, "c", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp12.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_13():
+    """
+    Create Figure S13 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp13.pkl")
+
+    labels = ["baseline method",
+              r"[ $\mathcal{L}_c + \mathcal{C}$ ] - method",
+              r"[ $\mathcal{L}_i + \mathcal{C}$ ] - method",
+              r"$\mathcal{C}$ - method"]
+
+    figure = pyplot.figure(figsize=(10, 3), tight_layout=True)
+
+    ax = pyplot.subplot(1, 3, 1)
+
+    pyplot.title("biology", fontsize=8)
+
+    for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
+        locations = arange(5) - 0.3 + 0.2 * index
+        pyplot.bar(locations, task_data["a"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
+
+    pyplot.legend(loc="lower left", framealpha=1, fontsize=7)
+    pyplot.xlabel("training noise level", fontsize=8)
+    pyplot.ylabel("average training performance (F1 score)", fontsize=8)
+    pyplot.xticks(arange(5), ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+    pyplot.yticks(linspace(0, 1.0, 6), ["%.1f" % v for v in linspace(0, 1.0, 6)], fontsize=7)
+    pyplot.xlim(-0.5, 4.5)
+    pyplot.ylim(0.0, 1.0)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    ax = pyplot.subplot(1, 3, 2)
+    pyplot.title("physics and chemistry", fontsize=8)
+
+    for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
+        locations = arange(5) - 0.3 + 0.2 * index
+        pyplot.bar(locations, task_data["b"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
+
+    pyplot.legend(loc="lower left", framealpha=1, fontsize=7)
+    pyplot.xlabel("training noise level", fontsize=8)
+    pyplot.ylabel("average training performance (F1 score)", fontsize=8)
+    pyplot.xticks(arange(5), ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+    pyplot.yticks(linspace(0, 1.0, 6), ["%.1f" % v for v in linspace(0, 1.0, 6)], fontsize=7)
+    pyplot.xlim(-0.5, 4.5)
+    pyplot.ylim(0.0, 1.0)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    ax = pyplot.subplot(1, 3, 3)
+    pyplot.title("health and medicine", fontsize=8)
+    for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
+        locations = arange(5) - 0.3 + 0.2 * index
+        pyplot.bar(locations, task_data["c"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
+
+    pyplot.legend(loc="lower left", framealpha=1, fontsize=7)
+    pyplot.xlabel("training noise level", fontsize=8)
+    pyplot.ylabel("average training performance (F1 score)", fontsize=8)
+    pyplot.xticks(arange(5), ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+    pyplot.yticks(linspace(0, 1.0, 6), ["%.1f" % v for v in linspace(0, 1.0, 6)], fontsize=7)
+    pyplot.xlim(-0.5, 4.5)
+    pyplot.ylim(0.0, 1.0)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    figure.align_labels()
+    figure.text(0.020, 0.990, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.348, 0.990, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.676, 0.990, "c", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp13.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_14():
+    """
+    Create Figure S14 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp14.pkl")
+
+    labels = ["baseline method",
+              r"[ $\mathcal{L}_c + \mathcal{C}$ ] - method",
+              r"[ $\mathcal{L}_i + \mathcal{C}$ ] - method",
+              r"$\mathcal{C}$ - method"]
+
+    figure = pyplot.figure(figsize=(10, 7.5), tight_layout=True)
+
+    for index, label in enumerate(labels):
+        pyplot.subplot(3, 4, index + 1)
+        pyplot.pcolormesh(arange(6), arange(6), task_data[chr(ord("a") + index)].T,
+                          vmin=0, vmax=1, cmap="inferno")
+        pyplot.plot([0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0],
+                    [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0], lw=0.75, color="k")
+        for location_x in range(5):
+            for location_y in range(5):
+                value = task_data[chr(ord("a") + index)][location_x, location_y]
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.3f" % value, color="w",
+                            va="center", ha="center", fontsize=7)
+        pyplot.title(label + " (biology)", fontsize=8)
+        pyplot.xlabel("training noise level", fontsize=8)
+        pyplot.ylabel("evaluating noise level", fontsize=8)
+        pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+        pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+        pyplot.xlim(0, 5)
+        pyplot.ylim(0, 5)
+
+    for index, label in enumerate(labels):
+        pyplot.subplot(3, 4, index + 5)
+        pyplot.pcolormesh(arange(6), arange(6), task_data[chr(ord("a") + index + 4)].T,
+                          vmin=0, vmax=1, cmap="inferno")
+        pyplot.plot([0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0],
+                    [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0], lw=0.75, color="k")
+        for location_x in range(5):
+            for location_y in range(5):
+                value = task_data[chr(ord("a") + index + 4)][location_x, location_y]
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.3f" % value, color="w",
+                            va="center", ha="center", fontsize=7)
+        pyplot.title(label + " (physics & chemistry)", fontsize=8)
+        pyplot.xlabel("training noise level", fontsize=8)
+        pyplot.ylabel("evaluating noise level", fontsize=8)
+        pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+        pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+        pyplot.xlim(0, 5)
+        pyplot.ylim(0, 5)
+
+    for index, label in enumerate(labels):
+        pyplot.subplot(3, 4, index + 9)
+        pyplot.pcolormesh(arange(6), arange(6), task_data[chr(ord("a") + index + 8)].T,
+                          vmin=0, vmax=1, cmap="inferno")
+        pyplot.plot([0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0],
+                    [1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0, 5.0], lw=0.75, color="k")
+        for location_x in range(5):
+            for location_y in range(5):
+                value = task_data[chr(ord("a") + index + 8)][location_x, location_y]
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01, "%.3f" % value, color="w",
+                            va="center", ha="center", fontsize=7)
+        pyplot.title(label + " (health & medicine)", fontsize=8)
+        pyplot.xlabel("training noise level", fontsize=8)
+        pyplot.ylabel("evaluating noise level", fontsize=8)
+        pyplot.xticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+        pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+        pyplot.xlim(0, 5)
+        pyplot.ylim(0, 5)
+
+    figure.align_labels()
+    figure.text(0.020, 0.990, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.267, 0.990, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.990, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.759, 0.990, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.660, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.267, 0.660, "f", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.660, "g", va="center", ha="center", fontsize=12)
+    figure.text(0.759, 0.660, "h", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.330, "i", va="center", ha="center", fontsize=12)
+    figure.text(0.267, 0.330, "j", va="center", ha="center", fontsize=12)
+    figure.text(0.513, 0.330, "k", va="center", ha="center", fontsize=12)
+    figure.text(0.759, 0.330, "l", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp14.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
+def supp_15():
+    """
+    Create Figure S15 in the supplementary file.
+    """
+    task_data = load_data(sort_path + "supp15.pkl")
+
+    labels = ["baseline",
+              r"[ $\mathcal{L}_c + \mathcal{C}$ ]",
+              r"[ $\mathcal{L}_i + \mathcal{C}$ ]",
+              r"$\mathcal{C}$"]
+
+    figure = pyplot.figure(figsize=(10, 3.5), tight_layout=True)
+
+    pyplot.subplot(1, 3, 1)
+    pyplot.pcolormesh(arange(5), arange(6), task_data["a"].T, vmin=0, vmax=100, cmap="viridis")
+    for location_x in range(4):
+        for location_y in range(5):
+            if task_data["a"][location_x, location_y] < 100:
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01,
+                            ("%d" % task_data["a"][location_x, location_y]) + "%",
+                            color="w", va="center", ha="center", fontsize=7)
+            else:
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01,
+                            ("%d" % task_data["a"][location_x, location_y]) + "%",
+                            color="k", va="center", ha="center", fontsize=7)
+    pyplot.title("biology", fontsize=8)
+    pyplot.xlabel("neuroevolution method", fontsize=8)
+    pyplot.ylabel("training noise level", fontsize=8)
+    pyplot.xticks(arange(4) + 0.5, labels, fontsize=7)
+    pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+    pyplot.xlim(0, 4)
+    pyplot.ylim(0, 5)
+
+    pyplot.subplot(1, 3, 2)
+    pyplot.pcolormesh(arange(5), arange(6), task_data["b"].T, vmin=0, vmax=100, cmap="viridis")
+    for location_x in range(4):
+        for location_y in range(5):
+            if task_data["b"][location_x, location_y] < 100:
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01,
+                            ("%d" % task_data["b"][location_x, location_y]) + "%",
+                            color="w", va="center", ha="center", fontsize=7)
+            else:
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01,
+                            ("%d" % task_data["b"][location_x, location_y]) + "%",
+                            color="k", va="center", ha="center", fontsize=7)
+    pyplot.title("physics & chemistry", fontsize=8)
+    pyplot.xlabel("neuroevolution method", fontsize=8)
+    pyplot.ylabel("training noise level", fontsize=8)
+    pyplot.xticks(arange(4) + 0.5, labels, fontsize=7)
+    pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+    pyplot.xlim(0, 4)
+    pyplot.ylim(0, 5)
+
+    pyplot.subplot(1, 3, 3)
+    pyplot.pcolormesh(arange(5), arange(6), task_data["c"].T, vmin=0, vmax=100, cmap="viridis")
+    for location_x in range(4):
+        for location_y in range(5):
+            if task_data["c"][location_x, location_y] < 100:
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01,
+                            ("%d" % task_data["c"][location_x, location_y]) + "%",
+                            color="w", va="center", ha="center", fontsize=7)
+            else:
+                pyplot.text(location_x + 0.5, location_y + 0.5 - 0.01,
+                            ("%d" % task_data["c"][location_x, location_y]) + "%",
+                            color="k", va="center", ha="center", fontsize=7)
+    pyplot.title("health & medicine", fontsize=8)
+    pyplot.xlabel("neuroevolution method", fontsize=8)
+    pyplot.ylabel("training noise level", fontsize=8)
+    pyplot.xticks(arange(4) + 0.5, labels, fontsize=7)
+    pyplot.yticks(arange(5) + 0.5, ["0%", "10%", "20%", "30%", "40%"], fontsize=7)
+    pyplot.xlim(0, 4)
+    pyplot.ylim(0, 5)
+
+    figure.align_labels()
+    figure.text(0.020, 0.990, "a", va="center", ha="center", fontsize=12)
+    figure.text(0.348, 0.990, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.676, 0.990, "c", va="center", ha="center", fontsize=12)
+
+    pyplot.savefig(save_path + "supp15.pdf", format="pdf", bbox_inches="tight", dpi=600)
+    pyplot.close()
+
+
 if __name__ == "__main__":
     supp_01()
     supp_02()
@@ -650,3 +1040,8 @@ if __name__ == "__main__":
     supp_08()
     supp_09()
     supp_10()
+    supp_11()
+    supp_12()
+    supp_13()
+    supp_14()
+    supp_15()

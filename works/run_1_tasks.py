@@ -307,8 +307,10 @@ def task_3():
                                                   label_number, data_names, data_types, data_ranges)
         save_data(save_path=raw_path + "real-world/uci.datasets.pkl", information=records)
 
-    if not path.exists(path=raw_path + "real-world/practice.results.pkl"):
-        records, maximum_generation = {}, 100
+    if (not path.exists(path=raw_path + "real-world/biology.pkl")) or \
+            (not path.exists(path=raw_path + "real-world/physics-chemistry.pkl")) or \
+            (not path.exists(path=raw_path + "real-world/health-medicine.pkl")):
+        maximum_generation = 100
         for domain, (trained_inputs, trained_outputs, tested_inputs, tested_outputs, label_number, data_names,
                      data_types, data_ranges) in load_data(raw_path + "real-world/uci.datasets.pkl").items():
             label, agent_configs, record = domain[len("case study in "):].replace(" and ", "-"), [], {}
@@ -327,8 +329,7 @@ def task_3():
                                                 test_noise_generators=noise_generators,
                                                 evaluation_type="supervision")
                     record[agent_name][train_radio] = result
-            records[label] = record
-        save_data(save_path=raw_path + "real-world/practice.results.pkl", information=records)
+            save_data(save_path=raw_path + "real-world/" + label + ".pkl", information=record)
 
 
 if __name__ == "__main__":
