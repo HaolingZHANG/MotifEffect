@@ -13,7 +13,7 @@ currently being supported with security updates.
 
 If you discover a vulnerability, please follow the steps below to report it:
 
-1. **Submission**: Send the details of the vulnerability to our dedicated security email: haoling.zhang@kaust.edu.sa. Alternatively, you can submit it via our [Vulnerability Report Form](https://example.com/vulnerability-report).
+1. **Submission**: Send the details of the vulnerability to our dedicated security email: haoling.zhang@kaust.edu.sa.
 2. **Response Time**: We will acknowledge receipt of your report within **72 hours** and provide a preliminary analysis within **7 business days**.
 3. **What to Expect**:
    - If the vulnerability is accepted: We will schedule a fix, release a security patch, and inform you of the resolution timeline.
