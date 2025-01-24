@@ -269,6 +269,12 @@ def task_3():
             record[agent_name] = result
         save_data(save_path=raw_path + "real-world/adjustments.2.pkl", information=record)
 
+
+def task_4():
+    noise_generators = {}
+    for radio in radios:
+        noise_generators[radio] = NormNoiseGenerator(norm_type=norm_type, noise_scale=radio)
+
     if not path.exists(path=raw_path + "real-world/uci.datasets.pkl"):
         # (1) biology https://archive.ics.uci.edu/dataset/39/ecoli
         # (2) physics and chemistry https://archive.ics.uci.edu/dataset/42/glass+identification
@@ -321,14 +327,14 @@ def task_3():
                                    description=domain, label_number=label_number, data_types=data_types,
                                    data_ranges=data_ranges, maximum_generation=maximum_generation)
             for agent_name, agent_config in zip(agent_names, agent_configs):
-                record[agent_name] = []
-                for train_radio in radios:
+                record[agent_name] = {}
+                for radio_index, train_radio in enumerate(radios):
                     result = train_and_evaluate(task=task, agent_name=agent_name, agent_config=agent_config,
                                                 repeats=sample_number,
                                                 train_noise_generator=noise_generators[train_radio],
                                                 test_noise_generators=noise_generators,
                                                 evaluation_type="supervision")
-                    record[agent_name][train_radio] = result
+                    record[agent_name][radio_index] = result
             save_data(save_path=raw_path + "real-world/" + label + ".pkl", information=record)
 
 
