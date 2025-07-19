@@ -4,8 +4,8 @@
 """
 from itertools import product
 from numpy import ndarray, array, zeros, ones, expand_dims, vstack, all
-from numpy import min, mean, max, abs, sum, sqrt, power, cumproduct, gradient, linalg
-from torch import Tensor, cat, linspace, meshgrid, unsqueeze, squeeze
+from numpy import min, mean, max, abs, sum, sqrt, power, cumprod, gradient, linalg
+from torch import Tensor, nn, autograd, func, cat, split, linspace, meshgrid, unsqueeze, squeeze
 from typing import Tuple, Union
 
 from effect import Monitor
@@ -235,6 +235,50 @@ def calculate_gradients(value_range: tuple,
     return gradients.reshape(points, points)
 
 
+def calculate_hessian_eigenvalues(network: nn.Module,
+                                  criterion: nn.Module,
+                                  input_data: Tensor,
+                                  expected_landscape: Tensor) \
+        -> ndarray:
+    """
+    Calculate the eigenvalues of the full Hessian matrix of loss with respect to network parameters.
+
+    :param network: neural network.
+    :type network: torch.nn.Module
+
+    :param criterion: loss function (e.g., nn.MSELoss()).
+    :type criterion: torch.nn.Module
+
+    :param input_data: input data.
+    :type input_data: torch.Tensor
+
+    :param expected_landscape: expected landscape.
+    :type expected_landscape: torch.Tensor
+
+    :return: Hessian eigenvalues.
+    :rtype: numpy.ndarray
+    """
+    named_parameters = list(network.named_parameters())
+    shapes = [parameter.shape for _, parameter in named_parameters]
+    sizes = [parameter.numel() for _, parameter in named_parameters]
+    flattened_parameters = cat([parameter.detach().flatten() for _, parameter in named_parameters]).requires_grad_()
+
+    def function(considered_parameters: Tensor) \
+            -> Tensor:
+        param_tensors = list(split(considered_parameters, sizes))
+        param_tensors = [tensor.view(shape) for tensor, shape in zip(param_tensors, shapes)]
+        param_dict = {name: tensor for (name, _), tensor in zip(named_parameters, param_tensors)}
+
+        output = func.functional_call(network, param_dict, (input_data,))
+        loss = criterion(output, expected_landscape)
+
+        return loss
+
+    hessian_matrix = autograd.functional.hessian(function, flattened_parameters).detach().numpy()
+
+    return linalg.eigvals(hessian_matrix).real
+
+
 def detect_curvature_feature(landscape: ndarray,
                              interval: float) \
         -> ndarray:
@@ -317,7 +361,7 @@ def generate_motifs(motif_type: str,
     :rtype: list, numpy.ndarray
     """
     signal_groups, saved_motifs, monitor = None, [], Monitor()
-    count, total = 0, int(cumproduct([len(v) for v in weight_groups] + [len(v) for v in bias_groups])[-1])
+    count, total = 0, int(cumprod([len(v) for v in weight_groups] + [len(v) for v in bias_groups])[-1])
     for weights in product(*weight_groups):
         for biases in product(*bias_groups):
             count += 1
@@ -386,7 +430,7 @@ def generate_outputs(motif_type: str,
     :rtype: numpy.ndarray, numpy.ndarray
     """
     monitor, parameters, landscapes = Monitor(), [], []
-    count, total = 0, int(cumproduct([len(v) for v in weight_groups] + [len(v) for v in bias_groups])[-1])
+    count, total = 0, int(cumprod([len(v) for v in weight_groups] + [len(v) for v in bias_groups])[-1])
     for weights in product(*weight_groups):
         for biases in product(*bias_groups):
             count += 1
