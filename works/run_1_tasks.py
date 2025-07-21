@@ -3,12 +3,13 @@
 @Description : Run all experiments for this work.
 """
 from hashlib import md5
-from itertools import product
-from numpy import array, linspace, arange, zeros, ones, random, min, max, ceil, argsort, hstack, where
+from itertools import product, combinations_with_replacement
+from numpy import array, linspace, arange, zeros, ones, random, concatenate, hstack, argsort, min, max, ceil, where
 from os import path, mkdir, listdir
 from ucimlrepo import fetch_ucirepo
 
-from effect import NeuralMotif, generate_outputs, estimate_lipschitz, estimate_lipschitz_by_motif
+from effect import NeuralMotif, ColliderNetwork, LoopNetwork, RestrictedLoopNetwork
+from effect import generate_outputs, estimate_lipschitz, estimate_lipschitz_by_motif, fit
 from effect import calculate_differences, execute_catch_processes, execute_escape_processes
 
 from practice import acyclic_motifs, NEATCartPoleTask, SupervisionTask, NormNoiseGenerator
@@ -24,9 +25,12 @@ value_range, points, sample_number = (-1, +1), 41, 100
 norm_type = "L-2"
 
 learn_rate, iteration_thresholds = 1e-3, (100, 100)
+patience, fitted_threshold = 1000, 1e-3
 
 agent_names, radios = ["b", "i", "c", "a"], [0.0, 0.1, 0.2, 0.3, 0.4]
 config_names = ["baseline.config", "adjusted[i].config", "adjusted[c].config", "adjusted[a].config"]
+
+landscape_names = ["Quadratic Saddle", "Monkey Saddle", "Branin", "three-hump Camel", "six-hump Camel"]
 
 raw_path, config_path = "./raw/", "./confs/"
 
@@ -210,8 +214,7 @@ def task_2():
 
 def task_3():
     """
-    Use classical neuroevolution method (NEAT) and its variations to
-    learn reinforcement learning task (CartPole environment) and other supervision learning tasks in real world,
+    Use classical neuroevolution method (NEAT) and its variations to learn reinforcement learning task (CartPole),
     for verifying the influence of the robustness of motif usages on entire neural networks.
     """
     if not path.exists(raw_path + "real-world/"):
@@ -271,6 +274,10 @@ def task_3():
 
 
 def task_4():
+    """
+    Use classical neuroevolution method (NEAT) and its variations to learn 3 supervision learning tasks in real world,
+    for verifying the influence of the robustness of motif usages on entire neural networks.
+    """
     noise_generators = {}
     for radio in radios:
         noise_generators[radio] = NormNoiseGenerator(norm_type=norm_type, noise_scale=radio)
@@ -285,6 +292,7 @@ def task_4():
             inputs, outputs, output_collector = dataset.data.features.to_numpy(), dataset.data.targets.to_numpy(), {}
             for index, output in enumerate(outputs):
                 if output[0] in output_collector:
+                    # noinspection PyUnresolvedReferences
                     output_collector[output[0]].append(index)
                 else:
                     output_collector[output[0]] = [index]
@@ -338,6 +346,70 @@ def task_4():
             save_data(save_path=raw_path + "real-world/" + label + ".pkl", information=record)
 
 
+def task_5():
+    """
+    Analyze the differences in representational capacity between collider and loop motifs at the network level,
+    and further examine the multi-parameter distinctions between coherent and incoherent loops.
+    """
+    if not path.exists(raw_path + "network-scale/"):
+        mkdir(raw_path + "network-scale/")
+
+    for landscape_name in landscape_names:
+        if not path.exists(path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl"):
+            records = {}
+            for motif_number in range(1, 11):
+                sub_records = []
+                for _ in range(sample_number):
+                    network = ColliderNetwork(motif_number=motif_number)
+                    record = fit(network=network, name=landscape_name,
+                                 patience=patience, learn_rate=learn_rate, threshold=fitted_threshold)
+                    sub_records.append(record["training loss"])
+                records[("collider", motif_number)] = sub_records
+
+                for _ in range(sample_number):
+                    network = LoopNetwork(motif_number=motif_number)
+                    record = fit(network=network, name=landscape_name,
+                                 patience=patience, learn_rate=learn_rate, threshold=fitted_threshold)
+                    sub_records.append(record["training loss"])
+                records[("loop", motif_number)] = sub_records
+
+            save_data(save_path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl",
+                      information=records)
+
+    motif_number, small_sampling_number = 10, 10
+    for landscape_name in landscape_names:
+        if not path.exists(path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl"):
+            previous_records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+            counts = []
+            for losses in previous_records[("loop", motif_number)]:
+                counts.append(len(losses))
+            maximum_iteration = max(counts)
+
+            records = {}
+            for coherent_number in range(0, 11):
+                flags_1 = concatenate((zeros(shape=(coherent_number,), dtype=int),
+                                       ones(shape=(motif_number - coherent_number,), dtype=int)))
+                for flags_2_1 in combinations_with_replacement([1, 2, 3, 4], coherent_number):
+                    for flags_2_2 in combinations_with_replacement([1, 2, 3, 4], motif_number - coherent_number):
+                        flags_2 = concatenate([flags_2_1, flags_2_2]).astype(int)
+                        network_info = str(flags_1)[1:-1].replace(" ", "") + "-" + str(flags_2)[1:-1].replace(" ", "")
+                        motif_combination, sub_records = (tuple(flags_1), tuple(flags_2)), []
+                        for _ in range(small_sampling_number):
+                            network = RestrictedLoopNetwork(flags_1=flags_1, flags_2=flags_2, motif_number=motif_number)
+                            record = fit(network=network, name=landscape_name, patience=1000, learn_rate=1e-3,
+                                         threshold=1e-3, maximum_iteration=maximum_iteration)
+                            sub_records.append(record)
+                            if record["training loss"][-1] <= 1e-3:
+                                sub_records.append(record)
+                            else:
+                                sub_records = []
+                                break
+                        records[network_info] = sub_records
+
+            save_data(save_path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl",
+                      information=records)
+
+
 if __name__ == "__main__":
     if not path.exists(raw_path):
         mkdir(raw_path)
@@ -348,10 +420,12 @@ if __name__ == "__main__":
     task_1()
     task_2()
     task_3()
+    task_4()
+    task_5()
 
     print("| parent path in the /raw/ folder | file name | MD5 | file size (KB) |")
     print("| --- | --- | --- | --- |")
-    for fold_name in ["difference", "landscapes", "parameters", "particular",
+    for fold_name in ["difference", "landscapes", "parameters", "particular", "network-scale",
                       "real-world", "robustness", "trade-offs", "videos"]:
         for child_path in listdir(raw_path + fold_name + "/"):
             md5_hash = md5()
