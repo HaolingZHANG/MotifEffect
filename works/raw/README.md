@@ -1,5 +1,5 @@
 # Raw data of this work
-Here, we have 188 ".npy", 19 ".pkl", and 8 ".avi" files, occupying approximately 46.6 GB of space.
+Here, we have 188 ".npy", 33 ".pkl", and 8 ".avi" files, occupying approximately 91.4 GB of space.
 These files are created by three experiments 
 (see [run_1_tasks.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/run_1_tasks.py) for detailed).
 
@@ -195,16 +195,16 @@ do not hesitate to get in touch with us.
 | particular                      | incoherent-loop.3.initialization.pkl        | 85205644BA558AD00C585CCD3E80CC4F | 229            |
 | particular                      | incoherent-loop.4.escape-process.pkl        | 103589BB4D69D3B38A9A284FD078E324 | 36518          |
 | particular                      | incoherent-loop.4.initialization.pkl        | 6BCCBD369286BA9F4CB426BA32295944 | 229            |
-| network-scale                   | incoherent.vs.coherent.Branin.pkl           | 180D928F61765FBDFCCC57E7223D2E44 | 5878255        |
-| network-scale                   | incoherent.vs.coherent.Monkey Saddle.pkl    | 81B10C38B868D4BD0DC4A346358C66A1 | 3915247        |
-| network-scale                   | incoherent.vs.coherent.Quadratic Saddle.pkl | 0F959C533F8EE90D3A1897C160A4585B | 5098728        |
-| network-scale                   | incoherent.vs.coherent.six-hump Camel.pkl   | D2FEC5F6EFF2B96B530A93BFC2BC6996 | 98120          |
-| network-scale                   | incoherent.vs.coherent.three-hump Camel.pkl | 8B8F43D0AE6F68CA1D93AC7684132363 | 7149529        |
-| network-scale                   | loop.vs.collider.Branin.pkl                 | 9AE9A4DB5C78B26AD5226851079C2FAB | 117573         |
-| network-scale                   | loop.vs.collider.Monkey Saddle.pkl          | A8C9EF12E0E306A799C07CAACEB9F068 | 76367          |
-| network-scale                   | loop.vs.collider.Quadratic Saddle.pkl       | 74A2958D04A46D3688808A45DF9BE138 | 63622          |
-| network-scale                   | loop.vs.collider.six-hump Camel.pkl         | A740115AF8DFE5BD2087B471A03F8C4B | 101719         |
-| network-scale                   | loop.vs.collider.three-hump Camel.pkl       | 99FDAF360F7651CBDE6FD56D5453FE5A | 98478          |
+| network-scale                   | incoherent.vs.coherent.Branin.pkl           | 8455D41E2A2CCBB569A1CF539A9788C6 | 9582510        |
+| network-scale                   | incoherent.vs.coherent.Monkey Saddle.pkl    | 37ADF935E0F780CAC30DA1E8EB5447A7 | 6370131        |
+| network-scale                   | incoherent.vs.coherent.Quadratic Saddle.pkl | 8B5ED23BF2B90B71E8E5D89364E96582 | 14971896       |
+| network-scale                   | incoherent.vs.coherent.six-hump Camel.pkl   | 34A7D2FC4FE64579CB7D5311AF5667EA | 109102         |
+| network-scale                   | incoherent.vs.coherent.three-hump Camel.pkl | 2F67E747F3D0E5DBC94C6E01A51B22A9 | 11523878       |
+| network-scale                   | loop.vs.collider.Branin.pkl                 | B760FAC7E90D795D2C0989EA8B09758D | 230653         |
+| network-scale                   | loop.vs.collider.Monkey Saddle.pkl          | EE112CC053E93EDDEB54C4D731B6F498 | 165740         |
+| network-scale                   | loop.vs.collider.Quadratic Saddle.pkl       | E8A387BCE6E43B72C575083AAF1B41CD | 157539         |
+| network-scale                   | loop.vs.collider.six-hump Camel.pkl         | 3DC0D044C9C8164FEA1118654391FBF5 | 272849         |
+| network-scale                   | loop.vs.collider.three-hump Camel.pkl       | E6E40E8D28C09FF6F6213FB8A8684624 | 206154         |
 | real-world                      | adjustments.1.pkl                           | 3935EF713E277675706D17F2A431C9B7 | 179273         |
 | real-world                      | adjustments.2.pkl                           | 72CF931A6514F7886CB2720A10756920 | 126277         |
 | real-world                      | biology.pkl                                 | E548B5F57C809ADE570059D5E56B6844 | 928577         |
@@ -240,4 +240,3 @@ do not hesitate to get in touch with us.
 | videos                          | incoherent-loop.2.avi                       | EA1B01AA6C23D4D1C6EB2F7C3EAD8F5A | 175249         |
 | videos                          | incoherent-loop.3.avi                       | 1F5E546DBBE336FD54DC0E0F3A78A30B | 175451         |
 | videos                          | incoherent-loop.4.avi                       | 4451A62E873221EC1848AF82A77CE717 | 176341         |
-
