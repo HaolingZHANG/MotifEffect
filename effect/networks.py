@@ -1062,9 +1062,6 @@ class MotifNetwork(nn.Module):
 
         return {"collider": value_1, "coherent-loop": value_2, "incoherent-loop": value_3, "entire network": value_4}
 
-    def get_hessian_eigenvalues(self):
-        pass
-
     def get_motif_number(self) \
             -> int:
         """
@@ -1131,6 +1128,21 @@ class RestrictedLoopNetwork(MotifNetwork):
                  flags_2: ndarray,
                  motif_number: int = 1,
                  epsilon: float = 1e-6):
+        """
+        Initialize a restricted loop motif perceptron network.
+
+        :param flags_1: loop type list.
+        :type flags_1: numpy.ndarray
+
+        :param flags_2: sub-loop type list.
+        :type flags_2: numpy.ndarray
+
+        :param motif_number: number of motif in the network.
+        :type motif_number: int
+
+        :param epsilon: minimum absolute value of weight.
+        :type epsilon: float
+        """
         if len(flags_1) != motif_number or len(flags_2) != motif_number:
             raise ValueError("The length of coherent flags and index flags must be %d." % motif_number)
 

@@ -275,6 +275,69 @@ def task_3():
 
 def task_4():
     """
+    Analyze the differences in representational capacity between collider and loop motifs at the network level,
+    and further examine the multi-parameter distinctions between coherent and incoherent loops.
+    """
+    if not path.exists(raw_path + "network-scale/"):
+        mkdir(raw_path + "network-scale/")
+
+    motif_number = 10
+    for landscape_name in landscape_names:
+        save_path = raw_path + "network-scale/loop.vs.collider." + landscape_name + ".pkl"
+        if not path.exists(path=save_path):
+            records = {}
+            for motif_number in range(1, motif_number + 1):
+                sub_records = []
+                for _ in range(sample_number):
+                    network = ColliderNetwork(motif_number=motif_number)
+                    record = fit(network=network, name=landscape_name,
+                                 patience=patience, learn_rate=learn_rate, threshold=fitted_threshold)
+                    sub_records.append(record["training loss"])
+                records[("collider", motif_number)] = sub_records
+
+                for _ in range(sample_number):
+                    network = LoopNetwork(motif_number=motif_number)
+                    record = fit(network=network, name=landscape_name,
+                                 patience=patience, learn_rate=learn_rate, threshold=fitted_threshold)
+                    sub_records.append(record["training loss"])
+                records[("loop", motif_number)] = sub_records
+
+            save_data(save_path=save_path, information=records)
+
+    for landscape_name in landscape_names:
+        load_path = raw_path + "network-scale/loop.vs.collider." + landscape_name + ".pkl"
+        save_path = raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl"
+        if not path.exists(path=save_path):
+            previous_records = load_data(load_path)
+            counts = []
+            for losses in previous_records[("loop", motif_number)]:
+                counts.append(len(losses))
+            maximum_iteration = max(counts)
+
+            records = {}
+            for incoherent_number in range(0, motif_number + 1):
+                flags_1 = concatenate((zeros(shape=(incoherent_number,), dtype=int),
+                                       ones(shape=(motif_number - incoherent_number,), dtype=int)))
+                for flags_2_1 in combinations_with_replacement([1, 2, 3, 4], incoherent_number):
+                    for flags_2_2 in combinations_with_replacement([1, 2, 3, 4], motif_number - incoherent_number):
+                        flags_2 = concatenate([flags_2_1, flags_2_2]).astype(int)
+                        network_info = str(flags_1)[1:-1].replace(" ", "") + "-" + str(flags_2)[1:-1].replace(" ", "")
+                        motif_combination, sub_records = (tuple(flags_1), tuple(flags_2)), []
+                        network = RestrictedLoopNetwork(flags_1=flags_1, flags_2=flags_2, motif_number=motif_number)
+                        record = fit(network=network, name=landscape_name, patience=1000, learn_rate=1e-3,
+                                     threshold=1e-3, maximum_iteration=maximum_iteration, various_metrics="all")
+                        sub_records.append(record)
+                        if record["training loss"][-1] <= 1e-3 or landscape_name == "Quadratic Saddle":
+                            records[network_info] = record
+                        else:
+                            # The storage requirements are too high and do not require sufficient analysis!
+                            records[network_info] = None
+
+            save_data(save_path=save_path, information=records)
+
+
+def task_5():
+    """
     Use classical neuroevolution method (NEAT) and its variations to learn 3 supervision learning tasks in real world,
     for verifying the influence of the robustness of motif usages on entire neural networks.
     """
@@ -344,70 +407,6 @@ def task_4():
                                                 evaluation_type="supervision")
                     record[agent_name][radio_index] = result
             save_data(save_path=raw_path + "real-world/" + label + ".pkl", information=record)
-
-
-def task_5():
-    """
-    Analyze the differences in representational capacity between collider and loop motifs at the network level,
-    and further examine the multi-parameter distinctions between coherent and incoherent loops.
-    """
-    if not path.exists(raw_path + "network-scale/"):
-        mkdir(raw_path + "network-scale/")
-
-    for landscape_name in landscape_names:
-        if not path.exists(path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl"):
-            records = {}
-            for motif_number in range(1, 11):
-                sub_records = []
-                for _ in range(sample_number):
-                    network = ColliderNetwork(motif_number=motif_number)
-                    record = fit(network=network, name=landscape_name,
-                                 patience=patience, learn_rate=learn_rate, threshold=fitted_threshold)
-                    sub_records.append(record["training loss"])
-                records[("collider", motif_number)] = sub_records
-
-                for _ in range(sample_number):
-                    network = LoopNetwork(motif_number=motif_number)
-                    record = fit(network=network, name=landscape_name,
-                                 patience=patience, learn_rate=learn_rate, threshold=fitted_threshold)
-                    sub_records.append(record["training loss"])
-                records[("loop", motif_number)] = sub_records
-
-            save_data(save_path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl",
-                      information=records)
-
-    motif_number, small_sampling_number = 10, 10
-    for landscape_name in landscape_names:
-        if not path.exists(path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl"):
-            previous_records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
-            counts = []
-            for losses in previous_records[("loop", motif_number)]:
-                counts.append(len(losses))
-            maximum_iteration = max(counts)
-
-            records = {}
-            for coherent_number in range(0, 11):
-                flags_1 = concatenate((zeros(shape=(coherent_number,), dtype=int),
-                                       ones(shape=(motif_number - coherent_number,), dtype=int)))
-                for flags_2_1 in combinations_with_replacement([1, 2, 3, 4], coherent_number):
-                    for flags_2_2 in combinations_with_replacement([1, 2, 3, 4], motif_number - coherent_number):
-                        flags_2 = concatenate([flags_2_1, flags_2_2]).astype(int)
-                        network_info = str(flags_1)[1:-1].replace(" ", "") + "-" + str(flags_2)[1:-1].replace(" ", "")
-                        motif_combination, sub_records = (tuple(flags_1), tuple(flags_2)), []
-                        for _ in range(small_sampling_number):
-                            network = RestrictedLoopNetwork(flags_1=flags_1, flags_2=flags_2, motif_number=motif_number)
-                            record = fit(network=network, name=landscape_name, patience=1000, learn_rate=1e-3,
-                                         threshold=1e-3, maximum_iteration=maximum_iteration)
-                            sub_records.append(record)
-                            if record["training loss"][-1] <= 1e-3:
-                                sub_records.append(record)
-                            else:
-                                sub_records = []
-                                break
-                        records[network_info] = sub_records
-
-            save_data(save_path=raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl",
-                      information=records)
 
 
 if __name__ == "__main__":

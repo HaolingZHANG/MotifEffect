@@ -4,8 +4,9 @@
 """
 from collections import Counter
 from copy import deepcopy
-from itertools import product
-from numpy import array, zeros, linspace, expand_dims, abs, mean, min, max, sum, power, argmax, argmin, all, where
+from itertools import product, combinations_with_replacement
+from numpy import array, zeros, arange, linspace, expand_dims, vstack, mgrid, all, sort, where
+from numpy import abs, mean, min, max, sum, power, argmax, argmin, log10, isnan
 from os import path, mkdir, environ
 environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from scipy.stats import gaussian_kde, spearmanr  # noqa
@@ -13,6 +14,7 @@ from umap import UMAP  # noqa
 from warnings import filterwarnings # noqa
 
 from effect import NeuralMotif, calculate_landscape, calculate_gradients, detect_curvature_feature, minimum_loss_search  # noqa
+from effect import get_landscape  # noqa
 from practice import acyclic_motifs  # noqa
 from works import load_data, save_data  # noqa
 
@@ -24,6 +26,8 @@ weight_values, bias_values = linspace(+0.1, +1.0, 10), linspace(-1.0, +1.0, 21)
 value_range, points, sample_number = (-1, +1), 41, 100
 norm_type = "L-2"
 learn_rate, iteration_thresholds = 1e-3, (100, 100)
+
+landscape_names = ["Quadratic Saddle", "Monkey Saddle", "Branin", "three-hump Camel", "six-hump Camel"]
 
 agent_names, radios = ["b", "i", "c", "a"], [0.0, 0.1, 0.2, 0.3, 0.4]
 
@@ -461,6 +465,7 @@ def supp_07():
                         task_data["a"] = (source_landscape, target_landscape, source_concavity, target_concavity,
                                           source_region, target_region)
                         flag = False
+                    # noinspection PyUnresolvedReferences
                     task_data["b"].append([sum(source_region.reshape(-1)) / (101 ** 2),
                                            sum(target_region.reshape(-1)) / (101 ** 2)])
         # noinspection PyUnresolvedReferences
@@ -495,6 +500,512 @@ def supp_09():
     """
     if not path.exists(sort_path + "supp09.pkl"):
         task_data = {}
+
+        for panel_index, landscape_name in enumerate(landscape_names):
+            landscape = get_landscape(name=landscape_name).detach().numpy()
+            task_data[chr(ord("b") + panel_index)] = (landscape_name, landscape)
+
+        save_data(save_path=sort_path + "supp09.pkl", information=task_data)
+
+
+def supp_10():
+    """
+    Collect plot data from Figure S10 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp10.pkl"):
+        task_data = {}
+
+        records = load_data(raw_path + "network-scale/loop.vs.collider.Quadratic Saddle.pkl")
+
+        panel_a, panel_b, panel_c = [], [], []
+        for motif_number in arange(1, 11):
+            panel_c.append(["", "", "", ""])
+            values = array([[sample[-1], len(sample)] for sample in records[("collider", motif_number)]])
+            panel_a.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][0], panel_c[-1][1] = temp_a, temp_b
+
+            values = array([[sample[-1], len(sample)] for sample in records[("loop", motif_number)]])
+            panel_b.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][2], panel_c[-1][3] = temp_a, temp_b
+
+        task_data["a"], task_data["b"], task_data["c"] = array(panel_a), array(panel_b), panel_c
+
+        save_data(save_path=sort_path + "supp10.pkl", information=task_data)
+
+
+def supp_11():
+    """
+    Collect plot data from Figure S11 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp11.pkl"):
+        task_data = {}
+
+        records = load_data(raw_path + "network-scale/loop.vs.collider.Monkey Saddle.pkl")
+
+        panel_a, panel_b, panel_c = [], [], []
+        for motif_number in arange(1, 11):
+            panel_c.append(["", "", "", ""])
+            values = array([[sample[-1], len(sample)] for sample in records[("collider", motif_number)]])
+            panel_a.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][0], panel_c[-1][1] = temp_a, temp_b
+
+            values = array([[sample[-1], len(sample)] for sample in records[("loop", motif_number)]])
+            panel_b.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][2], panel_c[-1][3] = temp_a, temp_b
+
+        task_data["a"], task_data["b"], task_data["c"] = array(panel_a), array(panel_b), panel_c
+
+        save_data(save_path=sort_path + "supp11.pkl", information=task_data)
+
+
+def supp_12():
+    """
+    Collect plot data from Figure S12 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp12.pkl"):
+        task_data = {}
+
+        records = load_data(raw_path + "network-scale/loop.vs.collider.Branin.pkl")
+
+        panel_a, panel_b, panel_c = [], [], []
+        for motif_number in arange(1, 11):
+            panel_c.append(["", "", "", ""])
+            values = array([[sample[-1], len(sample)] for sample in records[("collider", motif_number)]])
+            panel_a.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][0], panel_c[-1][1] = temp_a, temp_b
+
+            values = array([[sample[-1], len(sample)] for sample in records[("loop", motif_number)]])
+            panel_b.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][2], panel_c[-1][3] = temp_a, temp_b
+
+        task_data["a"], task_data["b"], task_data["c"] = array(panel_a), array(panel_b), panel_c
+
+        save_data(save_path=sort_path + "supp12.pkl", information=task_data)
+
+
+def supp_13():
+    """
+    Collect plot data from Figure S13 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp13.pkl"):
+        task_data = {}
+
+        records = load_data(raw_path + "network-scale/loop.vs.collider.three-hump Camel.pkl")
+
+        panel_a, panel_b, panel_c = [], [], []
+        for motif_number in arange(1, 11):
+            panel_c.append(["", "", "", ""])
+            values = array([[sample[-1], len(sample)] for sample in records[("collider", motif_number)]])
+            panel_a.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][0], panel_c[-1][1] = temp_a, temp_b
+
+            values = array([[sample[-1], len(sample)] for sample in records[("loop", motif_number)]])
+            panel_b.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][2], panel_c[-1][3] = temp_a, temp_b
+
+        task_data["a"], task_data["b"], task_data["c"] = array(panel_a), array(panel_b), panel_c
+
+        save_data(save_path=sort_path + "supp13.pkl", information=task_data)
+
+
+def supp_14():
+    """
+    Collect plot data from Figure S14 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp14.pkl"):
+        task_data = {}
+
+        records = load_data(raw_path + "network-scale/loop.vs.collider.six-hump Camel.pkl")
+
+        panel_a, panel_b, panel_c = [], [], []
+        for motif_number in arange(1, 11):
+            panel_c.append(["", "", "", ""])
+            values = array([[sample[-1], len(sample)] for sample in records[("collider", motif_number)]])
+            panel_a.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][0], panel_c[-1][1] = temp_a, temp_b
+
+            values = array([[sample[-1], len(sample)] for sample in records[("loop", motif_number)]])
+            panel_b.append([mean(values[:, 0]), mean(values[:, 1])])
+            temp_a = ("%.2E" % mean(values[:, 0])).replace("-0", "-")
+            temp_b = ("%.2E" % mean(values[:, 1])).replace("+0", "+")
+            panel_c[-1][2], panel_c[-1][3] = temp_a, temp_b
+
+        task_data["a"], task_data["b"], task_data["c"] = array(panel_a), array(panel_b), panel_c
+
+        save_data(save_path=sort_path + "supp14.pkl", information=task_data)
+
+
+def supp_15():
+    """
+    Collect plot data from Figure S15 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp15.pkl"):
+        task_data = {}
+
+        motif_number, totals = 10, zeros(shape=(11,), dtype=int)
+        for coherent_number in range(0, 11):
+            for _ in combinations_with_replacement([1, 2, 3, 4], coherent_number):
+                for _ in combinations_with_replacement([1, 2, 3, 4], motif_number - coherent_number):
+                    totals[coherent_number] += 1
+
+        for panel_index, landscape_name in enumerate(["Quadratic Saddle", "Monkey Saddle", "Branin",
+                                                      "three-hump Camel", "six-hump Camel"]):
+            records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+            counts = zeros(shape=(11,), dtype=int)
+            for key, record in records.items():
+                incoherent_number = key.split("-")[0].count("0")
+                if record is not None and record["training loss"][-1] <= 1e-3:
+                    counts[incoherent_number] += 1
+            task_data[chr(ord("a") + panel_index)] = (landscape_name, counts, totals)
+
+        save_data(save_path=sort_path + "supp15.pkl", information=task_data)
+
+
+def supp_16():
+    """
+    Collect plot data from Figure S16 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp16.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+        milestones = [1e+0, 5e-1, 2e-1, 1e-1, 5e-2, 2e-2, 1e-2, 5e-3, 2e-3, 1e-3]
+        labels = ["1E+1", "5E-1", "2E-1", "1E-1", "5E-2", "2E-2", "1E-2", "5E-3", "2E-3", "1E-3"]
+
+        records_1 = load_data(raw_path + "network-scale/loop.vs.collider." + landscape_name + ".pkl")
+
+        panel_a = {label: [] for label in labels}
+        for index, sample in enumerate(records_1[("loop", 10)]):
+            for milestone, label in zip(milestones, labels):
+                iterations = where(sample <= milestone)[0]
+                if len(iterations) > 0:
+                    panel_a[label].append(iterations[0])
+                else:
+                    panel_a[label].append(0)
+        task_data["a"] = panel_a
+
+        thresholds = {}
+        for label in labels:
+            thresholds[label] = max(panel_a[label])
+
+        records_2 = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        matrix = zeros(shape=(2, 11, 10))
+        for key, record in records_2.items():
+            incoherent_number, losses = key.split("-")[0].count("0"), record["training loss"]
+            for index, (label, milestone) in enumerate(zip(labels, milestones)):
+                if losses[0] < milestone:
+                    continue
+                elif losses[-1] > milestone:
+                    matrix[0, incoherent_number, index] += 1
+                else:
+                    iterations = where(losses <= milestone)[0]
+                    if len(iterations) > 0 and iterations[0] > thresholds[label]:
+                        matrix[0, incoherent_number, index] += 1
+                matrix[1, incoherent_number, index] += 1
+
+        matrix = matrix[0] / matrix[1]
+        task_data["b"] = matrix
+
+        save_data(save_path=sort_path + "supp16.pkl", information=task_data)
+
+
+def supp_17():
+    """
+    Collect plot data from Figure S17 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp17.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+        counts, loss_data = zeros(shape=(2, 11)), [[] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number, final_loss = key.split("-")[0].count("0"), record["training loss"][-1]
+            if final_loss > 1e-3:
+                loss_data[incoherent_number].append(final_loss)
+                counts[0, incoherent_number] += 1
+            counts[1, incoherent_number] += 1
+
+        task_data["a"] = counts[0] / counts[1]
+
+        task_data["b"] = []
+        for index in range(11):
+            task_data["b"].append(sort(loss_data[index]))
+
+        save_data(save_path=sort_path + "supp17.pkl", information=task_data)
+
+
+def supp_18():
+    """
+    Collect plot data from Figure S18 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp18.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        divided_data = [[[], [], []] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            losses, utilization_rates = record["training loss"], record["sparsity"]
+            divided_data[incoherent_number][0].append(losses[-1])
+            if incoherent_number < 10:
+                divided_data[incoherent_number][1].append(utilization_rates[-1, 1])
+            else:
+                divided_data[incoherent_number][1].append(0)
+            if incoherent_number > 0:
+                divided_data[incoherent_number][2].append(utilization_rates[-1, 2])
+            else:
+                divided_data[incoherent_number][2].append(0)
+
+        for incoherent_number, sub_divided_data in enumerate(divided_data):
+            sub_divided_data = array(sub_divided_data)
+            plot_indices = where(sub_divided_data[0] > 1e-3)[0]
+            if incoherent_number < 10:
+                values_1 = (log10(sub_divided_data[0, plot_indices]), sub_divided_data[1, plot_indices])
+                correlation_1, _ = spearmanr(sub_divided_data[0], sub_divided_data[1])
+            else:
+                values_1, correlation_1 = None, None
+            task_data[chr(ord("a") + incoherent_number * 2 + 0)] = (values_1, correlation_1)
+
+            if incoherent_number > 0:
+                values_2 = (log10(sub_divided_data[0, plot_indices]), sub_divided_data[2, plot_indices])
+                correlation_2, _ = spearmanr(sub_divided_data[0], sub_divided_data[2])
+            else:
+                values_2, correlation_2 = None, None
+            task_data[chr(ord("a") + incoherent_number * 2 + 1)] = (values_2, correlation_2)
+
+        save_data(save_path=sort_path + "supp18.pkl", information=task_data)
+
+
+def supp_19():
+    """
+    Collect plot data from Figure S19 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp19.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        divided_data = [[[], []] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            values_1, values_2 = record["training loss"], record["sparsity"]
+            delta_losses = values_1[:-1] - values_1[1:]
+            if values_2[-1, 3] < 1.0:
+                end = max(where(values_2[:, -1] == 1)[0]) - 1
+                used_delta_losses = delta_losses[:end].tolist()
+            else:
+                used_delta_losses = delta_losses.tolist()
+            divided_data[incoherent_number][0] += used_delta_losses
+            divided_data[incoherent_number][1] += arange(len(used_delta_losses)).tolist()
+        panel_data = []
+        for incoherent_number, sub_divided_data in enumerate(divided_data):
+            loss_data, iteration_data = sub_divided_data[0], sub_divided_data[1]
+            correlation, _ = spearmanr(loss_data, iteration_data)
+            panel_data.append(correlation)
+        task_data["a"] = array(panel_data)
+
+        divided_data = [[[], []] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            values_1, values_2, values_3 = record["training loss"], record["lipschitz constant"], record["sparsity"]
+            deltas_1, deltas_2 = values_1[:-1] - values_1[1:], values_2[:-1] - values_2[1:]
+            if values_3[-1, 3] < 1.0:
+                end = max(where(values_3[:, -1] == 1.0)[0]) - 1
+                if end > 0:
+                    divided_data[incoherent_number][0] += deltas_1[:end].tolist()
+                    divided_data[incoherent_number][1] += deltas_2[:end].tolist()
+            else:
+                divided_data[incoherent_number][0] += deltas_1.tolist()
+                divided_data[incoherent_number][1] += deltas_2.tolist()
+        for incoherent_number in range(11):
+            pairs_0, pairs_1 = divided_data[incoherent_number]
+            x_values, y_values = linspace(0, 6e-2, 100), linspace(-4e-3, +8e-3, 100)
+            x_indices, y_indices = mgrid[x_values[0]:x_values[-1]:100j, y_values[0]:y_values[-1]:100j]
+            positions = vstack([x_indices.ravel(), y_indices.ravel()])
+            z_values = gaussian_kde(vstack([pairs_0, pairs_1]))(positions)
+            z_values = z_values.reshape(len(x_values), len(y_values))
+            correlation, _ = spearmanr(pairs_0, pairs_1)
+            task_data[chr(ord("a") + 1 + incoherent_number)] = (x_values, y_values, z_values, correlation)
+
+        save_data(save_path=sort_path + "supp19.pkl", information=task_data)
+
+
+def supp_20():
+    """
+    Collect plot data from Figure S20 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp20.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        divided_data = [[[], []] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            values_1, values_2 = record["spectral norm"], record["sparsity"]
+            if values_2[-1, 3] < 1.0:
+                end = max(where(values_2[:, -1] == 1.0)[0]) - 1
+                if end > 0:
+                    divided_data[incoherent_number][0].append(values_1[:end, 1])
+                    divided_data[incoherent_number][1].append(values_1[:end, 2])
+            else:
+                divided_data[incoherent_number][0].append(values_1[:, 1])
+                divided_data[incoherent_number][1].append(values_1[:, 2])
+
+        for incoherent_number in range(11):
+            pairs_0, pairs_1 = divided_data[incoherent_number]
+            task_data[chr(ord("a") + incoherent_number * 2 + 0)] = pairs_0 if incoherent_number < 10 else None
+            task_data[chr(ord("a") + incoherent_number * 2 + 1)] = pairs_1 if incoherent_number > 0 else None
+
+        save_data(save_path=sort_path + "supp20.pkl", information=task_data)
+
+
+def supp_21():
+    """
+    Collect plot data from Figure S21 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp21.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        divided_data = [[[], []] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            values_1, values_2 = record["spectral norm"], record["sparsity"]
+            if incoherent_number < 10:  # have coherent loops
+                collection = [[values_1[0, 1], values_2[0, 1]]]
+                for value_1, value_2 in zip(values_1[1:], values_2[1:]):
+                    if collection[-1][1] - value_2[1] > 1e-4:
+                        collection.append([value_1[1], value_2[1]])
+                curve = array(collection).T
+                correlation, _ = spearmanr(curve[0], curve[1])
+                if not isnan(correlation):
+                    divided_data[incoherent_number][0].append(correlation)
+            if incoherent_number > 0:  # have incoherent loops
+                collection = [[values_1[0, 2], values_2[0, 2]]]
+                for value_1, value_2 in zip(values_1[1:], values_2[1:]):
+                    if collection[-1][1] - value_2[2] > 1e-4:
+                        collection.append([value_1[2], value_2[2]])
+                curve = array(collection).T
+                correlation, _ = spearmanr(curve[0], curve[1])
+                if not isnan(correlation):
+                    divided_data[incoherent_number][1].append(correlation)
+
+        for incoherent_number in range(11):
+            pairs_0, pairs_1 = divided_data[incoherent_number]
+            if len(pairs_0) > 0:
+                x_values_0 = linspace(min(pairs_0), max(pairs_0), 100)
+                y_values_0 = gaussian_kde(pairs_0)(x_values_0)
+                y_values_0 /= sum(y_values_0)
+            else:
+                x_values_0, y_values_0 = None, None
+            if len(pairs_1) > 0:
+                x_values_1 = linspace(min(pairs_1), max(pairs_1), 100)
+                y_values_1 = gaussian_kde(pairs_1)(x_values_1)
+                y_values_1 /= sum(y_values_1)
+            else:
+                x_values_1, y_values_1 = None, None
+            task_data[chr(ord("a") + incoherent_number)] = (x_values_0, y_values_0, x_values_1, y_values_1)
+
+        save_data(save_path=sort_path + "supp21.pkl", information=task_data)
+
+
+def supp_22():
+    """
+    Collect plot data from Figure S22 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp22.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        divided_data = [[[], []] for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            values_1, values_2, values_3 = record["gradient variance"], record["lipschitz constant"], record["sparsity"]
+            values_1, values_2 = values_1[1:, 3] - values_1[:-1, 3], values_2[1:] - values_2[:-1]
+            if values_3[-1, 3] < 1.0:
+                end = max(where(values_3[:, -1] == 1)[0]) - 1
+                divided_data[incoherent_number][0] += values_1[:end].tolist()
+                divided_data[incoherent_number][1] += values_2[:end].tolist()
+            else:
+                divided_data[incoherent_number][0] += values_1.tolist()
+                divided_data[incoherent_number][1] += values_2.tolist()
+
+        x_values, y_values = linspace(-0.012, +0.002, 40), linspace(-0.008, +0.006, 40)
+        x_indices, y_indices = mgrid[x_values[0]:x_values[-1]:40j, y_values[0]:y_values[-1]:40j]
+        positions = vstack([x_indices.ravel(), y_indices.ravel()])
+        for incoherent_number in range(11):
+            pairs_0, pairs_1 = divided_data[incoherent_number]
+            z_values = gaussian_kde(vstack([pairs_0, pairs_1]))(positions).reshape(40, 40)
+            z_values /= max(z_values)
+            correlation, _ = spearmanr(pairs_0, pairs_1)
+            task_data[chr(ord("a") + incoherent_number)] = (z_values, correlation)
+
+        save_data(save_path=sort_path + "supp22.pkl", information=task_data)
+
+
+def supp_23():
+    """
+    Collect plot data from Figure S23 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp23.pkl"):
+        task_data, landscape_name = {}, "Quadratic Saddle"
+
+        records = load_data(raw_path + "network-scale/incoherent.vs.coherent." + landscape_name + ".pkl")
+
+        divided_data = [zeros(shape=(3, 3)) for _ in range(11)]
+        for key, record in records.items():
+            incoherent_number = key.split("-")[0].count("0")
+            values_1, values_2 = record["hessian eigenvalue"], record["lipschitz constant"]
+            values_1, values_2 = values_1[1:] - values_1[:-1], values_2[1:] - values_2[:-1]
+            for value_1, value_2 in zip(values_1[:, 1], values_2):
+                if value_1 > 0:
+                    index_1 = 2
+                elif value_1 < 0:
+                    index_1 = 0
+                else:
+                    index_1 = 1
+
+                if value_2 > 0:
+                    index_2 = 2
+                elif value_2 < 0:
+                    index_2 = 0
+                else:
+                    index_2 = 1
+                divided_data[incoherent_number][index_1, index_2] += 1
+
+        for incoherent_number in range(11):
+            task_data[chr(ord("a") + incoherent_number)] = divided_data[incoherent_number]
+
+        save_data(save_path=sort_path + "supp23.pkl", information=task_data)
+
+
+def supp_24():
+    """
+    Collect plot data from Figure S24 in supplementary file.
+    """
+    if not path.exists(sort_path + "supp24.pkl"):
+        task_data = {}
         record = load_data(raw_path + "real-world/adjustments.2.pkl")
         for strategy_index, (panel_index, strategy) in enumerate(zip(["b", "i", "c", "a"], agent_names)):
             count, cases = 0, [[], [], []]
@@ -522,14 +1033,14 @@ def supp_09():
 
             task_data[panel_index] = [a, b, c]
 
-        save_data(save_path=sort_path + "supp09.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp24.pkl", information=task_data)
 
 
-def supp_10():
+def supp_25():
     """
-    Collect plot data from Figure S10 in supplementary file.
+    Collect plot data from Figure S25 in supplementary file.
     """
-    if not path.exists(sort_path + "supp10.pkl"):
+    if not path.exists(sort_path + "supp25.pkl"):
         task_data = {}
         record = load_data(raw_path + "real-world/adjustments.2.pkl")
         for strategy_index, strategy in enumerate(agent_names):
@@ -541,39 +1052,39 @@ def supp_10():
                 elif all(evaluation < 195):
                     cases.append(evaluation)
             task_data[chr(ord("a") + strategy_index)] = cases
-        save_data(save_path=sort_path + "supp10.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp25.pkl", information=task_data)
 
 
-def supp_11():
+def supp_26():
     """
-    Collect plot data from Figure S11 in supplementary file.
+    Collect plot data from Figure S26 in supplementary file.
     """
-    if not path.exists(sort_path + "supp11.pkl"):
+    if not path.exists(sort_path + "supp26.pkl"):
         task_data = {}
         record = load_data(raw_path + "real-world/uci.datasets.pkl")
         for label, (info, (_, trained_labels, _, tested_labels, _, _, _, _)) in zip(["a", "b", "c"], record.items()):
             task_data[label] = (info[len("case study in "):].replace(" and ", "-"),
                                 Counter(trained_labels), Counter(tested_labels))
-        save_data(save_path=sort_path + "supp11.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp26.pkl", information=task_data)
 
 
-def supp_12():
+def supp_27():
     """
-    Collect plot data from Figure S12 in supplementary file.
+    Collect plot data from Figure S27 in supplementary file.
     """
-    if not path.exists(sort_path + "supp12.pkl"):
+    if not path.exists(sort_path + "supp27.pkl"):
         task_data = {}
         record = load_data(raw_path + "real-world/uci.datasets.pkl")
         for label, (info, (trained_data, _, tested_data, _, _, _, _, _)) in zip(["a", "b", "c"], record.items()):
             task_data[label] = (info[len("case study in "):].replace(" and ", "-"), trained_data, tested_data)
-        save_data(save_path=sort_path + "supp12.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp27.pkl", information=task_data)
 
 
-def supp_13():
+def supp_28():
     """
-    Collect plot data from Figure S13 in supplementary file.
+    Collect plot data from Figure S28 in supplementary file.
     """
-    if not path.exists(sort_path + "supp13.pkl"):
+    if not path.exists(sort_path + "supp28.pkl"):
         task_data = {}
 
         records_1, matrix_1 = load_data(raw_path + "real-world/biology.pkl"), zeros(shape=(4, 5))
@@ -603,14 +1114,14 @@ def supp_13():
                 matrix_3[agent_index, radio_index] = mean(values)
         task_data["c"] = matrix_3
 
-        save_data(save_path=sort_path + "supp13.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp28.pkl", information=task_data)
 
 
-def supp_14():
+def supp_29():
     """
-    Collect plot data from Figure S14 in supplementary file.
+    Collect plot data from Figure S29 in supplementary file.
     """
-    if not path.exists(sort_path + "supp14.pkl"):
+    if not path.exists(sort_path + "supp29.pkl"):
         task_data = {}
 
         records_1, matrix_1 = load_data(raw_path + "real-world/biology.pkl"), zeros(shape=(4, 5, 5))
@@ -658,14 +1169,14 @@ def supp_14():
         task_data["k"] = matrix_3[2]
         task_data["l"] = matrix_3[3]
 
-        save_data(save_path=sort_path + "supp14.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp29.pkl", information=task_data)
 
 
-def supp_15():
+def supp_30():
     """
-    Collect plot data from Figure S15 in supplementary file.
+    Collect plot data from Figure S30 in supplementary file.
     """
-    if not path.exists(sort_path + "supp15.pkl"):
+    if not path.exists(sort_path + "supp30.pkl"):
         task_data = {}
 
         records_1, counts_1 = load_data(raw_path + "real-world/biology.pkl"), zeros(shape=(4, 5), dtype=int)
@@ -704,7 +1215,7 @@ def supp_15():
                         counts_3[agent_index, radio_index_1] += 1
         task_data["c"] = counts_3
 
-        save_data(save_path=sort_path + "supp15.pkl", information=task_data)
+        save_data(save_path=sort_path + "supp30.pkl", information=task_data)
 
 
 if __name__ == "__main__":
@@ -733,3 +1244,18 @@ if __name__ == "__main__":
     supp_13()
     supp_14()
     supp_15()
+    supp_16()
+    supp_17()
+    supp_18()
+    supp_19()
+    supp_20()
+    supp_21()
+    supp_22()
+    supp_23()
+    supp_24()
+    supp_25()
+    supp_26()
+    supp_27()
+    supp_28()
+    supp_29()
+    supp_30()

@@ -538,6 +538,15 @@ def main_02():
 
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 4:7])
+
+    pyplot.text(0.0025, 2.3000, "worse", va="center", ha="center", fontsize=7)
+    pyplot.text(0.0025, 2.1000, "better", va="center", ha="center", fontsize=7)
+    pyplot.text(0.0095, 2.3000, "better", va="center", ha="center", fontsize=7)
+    pyplot.annotate("", xy=(0.0025, 2.2800), xytext=(0.0025, 2.1200),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=4, shrinkB=4, lw=0.75))
+    pyplot.annotate("", xy=(0.0040, 2.3000), xytext=(0.0080, 2.3000),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=4, shrinkB=4, lw=0.75))
+
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
                       task_data["d"].T, vmin=0.02, vmax=1, cmap="Purples", shading="gouraud")
     x_values, y_values = linspace(0.00, 0.03, 100), []
@@ -546,7 +555,7 @@ def main_02():
             break
         y_values.append(linspace(0.50, 2.50, 100)[argmax(values)])
     pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=0.75, ls=":")
-    pyplot.text(0.0278, 1.06, "density", va="center", ha="center", fontsize=7)
+    pyplot.text(0.0278, 1.07, "density", va="center", ha="center", fontsize=7)
     colors, locations = pyplot.get_cmap("Purples")(linspace(0.02, 1, 41)), linspace(0.6, 1.0, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
         pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
@@ -565,6 +574,15 @@ def main_02():
 
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 7:])
+
+    pyplot.text(0.0025, 2.3000, "worse", va="center", ha="center", fontsize=7)
+    pyplot.text(0.0025, 2.1000, "better", va="center", ha="center", fontsize=7)
+    pyplot.text(0.0095, 2.3000, "better", va="center", ha="center", fontsize=7)
+    pyplot.annotate("", xy=(0.0025, 2.2800), xytext=(0.0025, 2.1200),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=4, shrinkB=4, lw=0.75))
+    pyplot.annotate("", xy=(0.0040, 2.3000), xytext=(0.0080, 2.3000),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=4, shrinkB=4, lw=0.75))
+
     pyplot.pcolormesh(linspace(0.00, 0.03, 100), linspace(0.50, 2.50, 100),
                       task_data["e"].T, vmin=0.02, vmax=1, cmap="Purples", shading="gouraud")
     x_values, y_values = linspace(0.00, 0.03, 100), []
@@ -573,7 +591,7 @@ def main_02():
             break
         y_values.append(linspace(0.50, 2.50, 100)[argmax(values)])
     pyplot.plot(x_values[:len(y_values)], y_values, color="k", lw=0.75, ls=":")
-    pyplot.text(0.0278, 1.06, "density", va="center", ha="center", fontsize=7)
+    pyplot.text(0.0278, 1.07, "density", va="center", ha="center", fontsize=7)
     colors, locations = pyplot.get_cmap("Purples")(linspace(0.02, 1, 41)), linspace(0.6, 1.0, 41)
     for color, former, latter in zip(colors, locations[:-1], locations[1:]):
         pyplot.fill_between([0.0275, 0.0285], former, latter, fc=color, lw=0, zorder=1)
