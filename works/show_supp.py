@@ -1625,45 +1625,16 @@ def supp_21():
     """
     task_data = load_data(sort_path + "supp21.pkl")
 
-    figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
-    grid = pyplot.GridSpec(3, 5)
-    orders = [grid[0, 0], grid[0, 1], grid[0, 2], grid[0, 3],
-              grid[1, 1], grid[1, 2], grid[1, 3],
-              grid[2, 1], grid[2, 2], grid[2, 3], grid[2, 4]]
-    for panel_index, grid_order in enumerate(orders):
-        ax = pyplot.subplot(grid_order)
-        pyplot.title(("incoherent fraction = %d" % (panel_index * 10)) + "%", fontsize=7)
-        x_0, y_0, x_1, y_1 = task_data[chr(ord("a") + panel_index)]
+    pyplot.figure(figsize=(10, 5), tight_layout=True)
 
-        if x_0 is not None:
-            pyplot.plot(x_0, y_0, color="#FCE0AB", zorder=1, label="coherent")
-
-        if x_1 is not None:
-            pyplot.plot(x_1, y_1, color="#FCB1AB", zorder=1, label="incoherent")
-
-        pyplot.legend(loc="upper right", fontsize=7)
-        pyplot.xlabel("correlation coefficient", fontsize=7)
-        pyplot.ylabel("proportion", fontsize=7)
-        pyplot.xticks(linspace(-1, 1, 5), linspace(-1, 1, 5), fontsize=7)
-        pyplot.yticks(linspace(0, 0.06, 4), [str(v) + "%" for v in arange(0, 7, 2)], fontsize=7)
-        pyplot.xlim(-1.1, 1.1)
-        pyplot.ylim(-0.005, 0.065)
-
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    figure.align_labels()
-    figure.text(0.020, 0.990, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.216, 0.990, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.413, 0.990, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.610, 0.990, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.216, 0.660, "e", va="center", ha="center", fontsize=12)
-    figure.text(0.413, 0.660, "f", va="center", ha="center", fontsize=12)
-    figure.text(0.610, 0.660, "g", va="center", ha="center", fontsize=12)
-    figure.text(0.216, 0.330, "h", va="center", ha="center", fontsize=12)
-    figure.text(0.413, 0.330, "i", va="center", ha="center", fontsize=12)
-    figure.text(0.610, 0.330, "j", va="center", ha="center", fontsize=12)
-    figure.text(0.807, 0.330, "k", va="center", ha="center", fontsize=12)
+    for index, (x, y) in enumerate(task_data["a"]):
+        pyplot.fill_betweenx(x, index - y * 0.4, index + y * 0.4, ec="k", fc="silver", lw=0.75)
+    pyplot.xlabel("fraction of incoherent loops", fontsize=7)
+    pyplot.ylabel("correlation coefficient\n(delta lipschitz constant v.s. delta spectral norm)", fontsize=7)
+    pyplot.xticks(arange(11), [str(v) + "%" for v in arange(0, 101, 10)], fontsize=7)
+    pyplot.yticks(linspace(-1, 1, 9), ["%.2f" % v for v in linspace(-1, 1, 9)], fontsize=7)
+    pyplot.xlim(-0.6, 10.6)
+    pyplot.ylim(-1.1, 1.1)
 
     pyplot.savefig(save_path + "supp21.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()

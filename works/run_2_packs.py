@@ -6,7 +6,7 @@ from collections import Counter
 from copy import deepcopy
 from itertools import product, combinations_with_replacement
 from numpy import array, zeros, arange, linspace, expand_dims, vstack, mgrid, all, sort, where
-from numpy import abs, mean, min, max, sum, power, argmax, argmin, log10, isnan
+from numpy import abs, mean, min, max, sum, power, argmax, argmin, log10
 from os import path, mkdir, environ
 environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from scipy.stats import gaussian_kde, spearmanr  # noqa
@@ -890,41 +890,28 @@ def supp_21():
         divided_data = [[[], []] for _ in range(11)]
         for key, record in records.items():
             incoherent_number = key.split("-")[0].count("0")
-            values_1, values_2 = record["spectral norm"], record["sparsity"]
-            if incoherent_number < 10:  # have coherent loops
-                collection = [[values_1[0, 1], values_2[0, 1]]]
-                for value_1, value_2 in zip(values_1[1:], values_2[1:]):
-                    if collection[-1][1] - value_2[1] > 1e-4:
-                        collection.append([value_1[1], value_2[1]])
-                curve = array(collection).T
-                correlation, _ = spearmanr(curve[0], curve[1])
-                if not isnan(correlation):
-                    divided_data[incoherent_number][0].append(correlation)
-            if incoherent_number > 0:  # have incoherent loops
-                collection = [[values_1[0, 2], values_2[0, 2]]]
-                for value_1, value_2 in zip(values_1[1:], values_2[1:]):
-                    if collection[-1][1] - value_2[2] > 1e-4:
-                        collection.append([value_1[2], value_2[2]])
-                curve = array(collection).T
-                correlation, _ = spearmanr(curve[0], curve[1])
-                if not isnan(correlation):
-                    divided_data[incoherent_number][1].append(correlation)
+            values_1, values_2, values_3 = record["spectral norm"], record["lipschitz constant"], record["sparsity"]
+            deltas_1, deltas_2 = values_1[:-1, 3] - values_1[1:, 3], values_2[:-1] - values_2[1:]
+            if values_3[-1, 3] < 1.0:
+                end = max(where(values_3[:, -1] == 1.0)[0]) - 1
+                if end > 3:
+                    divided_data[incoherent_number][0].append(deltas_1[:end])
+                    divided_data[incoherent_number][1].append(deltas_2[:end])
+            else:
+                divided_data[incoherent_number][0].append(deltas_1)
+                divided_data[incoherent_number][1].append(deltas_2)
 
+        task_data["a"] = []
         for incoherent_number in range(11):
             pairs_0, pairs_1 = divided_data[incoherent_number]
-            if len(pairs_0) > 0:
-                x_values_0 = linspace(min(pairs_0), max(pairs_0), 100)
-                y_values_0 = gaussian_kde(pairs_0)(x_values_0)
-                y_values_0 /= sum(y_values_0)
-            else:
-                x_values_0, y_values_0 = None, None
-            if len(pairs_1) > 0:
-                x_values_1 = linspace(min(pairs_1), max(pairs_1), 100)
-                y_values_1 = gaussian_kde(pairs_1)(x_values_1)
-                y_values_1 /= sum(y_values_1)
-            else:
-                x_values_1, y_values_1 = None, None
-            task_data[chr(ord("a") + incoherent_number)] = (x_values_0, y_values_0, x_values_1, y_values_1)
+            values = []
+            for pair_0, pair_1 in zip(pairs_0, pairs_1):
+                value = spearmanr(pair_0, pair_1)[0]
+                values.append(value)
+            x = linspace(min(values), max(values), 100)
+            y = gaussian_kde(values)(x)
+            y /= max(y)
+            task_data["a"].append((x, y))
 
         save_data(save_path=sort_path + "supp21.pkl", information=task_data)
 
