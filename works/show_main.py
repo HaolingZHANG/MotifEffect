@@ -125,7 +125,7 @@ def main_01():
     pyplot.text(0.30, 0.78, "minimum L2-norm difference of " + r"$\mathcal{C}$",
                 va="center", ha="center", fontsize=7)
     pyplot.text(0.30, 0.73, "(detailed in Figure 2a)", va="center", ha="center", fontsize=6)
-    pyplot.text(0.70, 0.78, "best Lipschitz constant", va="center", ha="center", fontsize=7)
+    pyplot.text(0.70, 0.78, "Lipschitz constant", va="center", ha="center", fontsize=7)
     pyplot.annotate("", xy=(0.30, 0.63), xytext=(0.30, 0.69),
                     arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=0, shrinkB=0, lw=0.75))
     pyplot.text(0.30, 0.59, "representational capacity", va="center", ha="center", fontsize=7)
@@ -505,7 +505,7 @@ def main_02():
         y = results[motif_type][1] / sum(results[motif_type][1])
         pyplot.plot(x, y, color=draw_info[motif_type][0], lw=2, label=math_orders[location])
     pyplot.legend(loc="upper right", fontsize=7)
-    pyplot.xlabel("best Lipschitz constant", fontsize=8)
+    pyplot.xlabel("Lipschitz constant", fontsize=8)
     pyplot.ylabel("proportion", fontsize=8)
     pyplot.xticks(linspace(0.6, 2.4, 7),
                   ["%.1f" % v for v in linspace(0.6, 2.4, 7)], fontsize=7)
@@ -564,7 +564,7 @@ def main_02():
         pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=7)
     pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.00, 1.00, 0.65], lw=0.75, color="k", zorder=3)
     pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_i$", fontsize=8)
-    pyplot.ylabel("best Lipschitz constant", fontsize=8)
+    pyplot.ylabel("Lipschitz constant", fontsize=8)
     pyplot.xlim(0.00, 0.03)
     pyplot.ylim(0.60, 2.40)
     pyplot.xticks(linspace(0.00, 0.03, 7),
@@ -600,7 +600,7 @@ def main_02():
         pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=7)
     pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.00, 1.00, 0.65], lw=0.75, color="k", zorder=3)
     pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_c$", fontsize=8)
-    pyplot.ylabel("best Lipschitz constant", fontsize=8)
+    pyplot.ylabel("Lipschitz constant", fontsize=8)
     pyplot.xlim(0.00, 0.03)
     pyplot.ylim(0.60, 2.40)
     pyplot.xticks(linspace(0.00, 0.03, 7),
