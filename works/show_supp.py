@@ -48,7 +48,7 @@ def supp_01():
             pyplot.title("all samples in " + motif_type, fontsize=8)
         pyplot.plot(x, y / sum(y), draw_info[motif_type][0], lw=2, zorder=2)
 
-        pyplot.xlabel("best Lipschitz constant", fontsize=8)
+        pyplot.xlabel("Lipschitz constant", fontsize=8)
         pyplot.ylabel("proportion", fontsize=8)
         pyplot.xticks(linspace(0.6, 2.4, 10),
                       ["%.1f" % v for v in linspace(0.6, 2.4, 10)], fontsize=7)
@@ -97,7 +97,7 @@ def supp_02():
             pyplot.title("all samples in " + motif_type, fontsize=8)
         pyplot.plot(x, y / sum(y), draw_info[motif_type][0], lw=2, zorder=2)
 
-        pyplot.xlabel("best Lipschitz constant", fontsize=8)
+        pyplot.xlabel("representational distinctiveness", fontsize=8)
         pyplot.ylabel("proportion", fontsize=8)
         pyplot.xticks(linspace(0.6, 2.4, 10),
                       ["%.1f" % v for v in linspace(0.6, 2.4, 10)], fontsize=7)

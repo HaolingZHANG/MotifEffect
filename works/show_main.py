@@ -440,9 +440,9 @@ def main_02():
                 lw=0.75, color="k", zorder=1)
     pyplot.annotate("", xy=((locations[0, 0] + locations[101, 0]) / 2.0, (locations[0, 1] + locations[101, 1]) / 2.0),
                     xytext=(0.85, 0.92), arrowprops=dict(arrowstyle="-|>", color="k", shrinkA=3, shrinkB=3, lw=0.75))
-    pyplot.text(0.73, 0.88,
-                "minimum L2-norm difference\n" + "of " + r"$\mathcal{C}$" +
-                " for a fixed " + r"$\mathcal{L}_i$" + " sample",
+    pyplot.text(0.73, 0.85,
+                "representational distinctiveness\n(minimum L2-norm difference\n" + "of " + r"$\mathcal{C}$" +
+                " for a fixed " + r"$\mathcal{L}_i$" + " sample)",
                 va="center", ha="center", fontsize=7)
     pyplot.scatter([locations[1, 0]], [locations[1, 1]], ec="k", fc="#88CCF8", zorder=2)
     pyplot.text(locations[1, 0] - 0.06, locations[1, 1], "start", va="center", ha="center", fontsize=7)
@@ -492,8 +492,8 @@ def main_02():
     pyplot.text(0.60, 0.00, "bias " + r"$x,y \rightarrow z$" + " = " + r"$+0.337$",
                 va="center", ha="left", fontsize=7)
 
-    pyplot.xlim(-0.02, +1.02)
-    pyplot.ylim(-0.02, +1.02)
+    pyplot.xlim(-0.05, +1.05)
+    pyplot.ylim(-0.05, +1.05)
     pyplot.axis("off")
 
     results = task_data["b"]
@@ -525,7 +525,7 @@ def main_02():
         y = results[motif_type][1] / sum(results[motif_type][1])
         pyplot.plot(x, y, color=draw_info[motif_type][0], lw=2, label=math_orders[location])
     pyplot.legend(loc="upper right", fontsize=7)
-    pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$", fontsize=8)
+    pyplot.xlabel("representational distinctiveness", fontsize=8)
     pyplot.ylabel("proportion", fontsize=8)
     pyplot.xticks(linspace(0.00, 0.03, 7),
                   ["%.3f" % v for v in linspace(0.00, 0.03, 7)], fontsize=7)
@@ -563,8 +563,8 @@ def main_02():
         pyplot.hlines(location, 0.0270, 0.0275, lw=0.75, color="k", zorder=2)
         pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=7)
     pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.00, 1.00, 0.65], lw=0.75, color="k", zorder=3)
-    pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_i$", fontsize=8)
-    pyplot.ylabel("Lipschitz constant", fontsize=8)
+    pyplot.xlabel(r"representational distinctiveness of $\mathcal{L}_i$", fontsize=8)
+    pyplot.ylabel(r"Lipschitz constant of $\mathcal{L}_i$", fontsize=8)
     pyplot.xlim(0.00, 0.03)
     pyplot.ylim(0.60, 2.40)
     pyplot.xticks(linspace(0.00, 0.03, 7),
@@ -599,8 +599,8 @@ def main_02():
         pyplot.hlines(location, 0.0270, 0.0275, lw=0.75, color="k", zorder=2)
         pyplot.text(0.0268, location, ("%d" % (info * 100)) + "%", va="center", ha="right", fontsize=7)
     pyplot.plot([0.0275, 0.0285, 0.0285, 0.0275, 0.0275], [0.65, 0.65, 1.00, 1.00, 0.65], lw=0.75, color="k", zorder=3)
-    pyplot.xlabel(r"minimum L2-norm difference of $\mathcal{C}$ for $\mathcal{L}_c$", fontsize=8)
-    pyplot.ylabel("Lipschitz constant", fontsize=8)
+    pyplot.xlabel(r"representational distinctiveness of $\mathcal{L}_c$", fontsize=8)
+    pyplot.ylabel(r"Lipschitz constant of $\mathcal{L}_c$", fontsize=8)
     pyplot.xlim(0.00, 0.03)
     pyplot.ylim(0.60, 2.40)
     pyplot.xticks(linspace(0.00, 0.03, 7),
@@ -610,9 +610,9 @@ def main_02():
 
     figure.align_labels()
     figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.386, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.390, 0.99, "b", va="center", ha="center", fontsize=12)
     figure.text(0.698, 0.99, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.386, 0.75, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.390, 0.75, "d", va="center", ha="center", fontsize=12)
     figure.text(0.698, 0.75, "e", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main02.pdf", format="pdf", bbox_inches="tight", dpi=600)
