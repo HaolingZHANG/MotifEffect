@@ -122,8 +122,7 @@ def main_01():
     pyplot.plot([0.15, 0.15, 0.30], [0.87, 0.85, 0.85], lw=0.75, color="k")
     pyplot.plot([0.30, 0.30, 0.45, 0.45], [0.82, 0.85, 0.85, 0.87], lw=0.75, color="k")
     pyplot.plot([0.55, 0.55, 0.70, 0.70], [0.87, 0.85, 0.85, 0.82], lw=0.75, color="k")
-    pyplot.text(0.30, 0.78, "minimum L2-norm difference of " + r"$\mathcal{C}$",
-                va="center", ha="center", fontsize=7)
+    pyplot.text(0.30, 0.78, "representational distinctiveness", va="center", ha="center", fontsize=7)
     pyplot.text(0.30, 0.73, "(detailed in Figure 2a)", va="center", ha="center", fontsize=6)
     pyplot.text(0.70, 0.78, "Lipschitz constant", va="center", ha="center", fontsize=7)
     pyplot.annotate("", xy=(0.30, 0.63), xytext=(0.30, 0.69),
