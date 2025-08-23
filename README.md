@@ -1,20 +1,19 @@
 ## Leveraging network motifs to improve artificial neural networks
 
-As the scale of artificial neural networks continues to expand to tackle increasingly complex tasks or 
-improve the prediction accuracy of specific tasks, the challenges associated with computational demand, 
-hyper-parameter tuning, model interpretability, and deployment costs intensify. 
-Addressing these challenges requires a deeper understanding of how network structures, 
-such as learning accuracy and resilience, influence network performance. 
-Here, we report results from a large sample size of 882,000 motifs, 
-the functional role of incoherent and coherent 3-node motifs — in shaping overall network performance. 
-Analyzing the static and dynamic properties of these motifs, 
-we quantify these motifs' representational capacity, numerical stability, and flexibility. 
-Our findings reveal that incoherent loops exhibit superior representational capacity and numerical stability.
-Testing these predictions from the noise-resilience analysis, 
-we demonstrate that incoherent neural networks exhibit greater resilience 
-to noise during training and in environmental perturbations. 
-We show the importance of incoherent loops in the classical balance reinforcement learning task and 
-its generalization to biological, chemical, and medical applications.
+As the scale of artificial neural networks continues to expand to 
+tackle increasingly complex tasks or improve the prediction accuracy of specific tasks, the challenges associated with 
+computational demand, hyper-parameter tuning, model interpretability, and deployment costs intensify. 
+Addressing these challenges requires a deeper understanding of how network structures influence network performance. 
+Here, we analyse 882,000 motifs to reveal the functional roles of incoherent and coherent three-node motifs 
+in shaping overall network performance.
+Our findings reveal that incoherent loops exhibit superior representational capacity and numerical stability, 
+whereas coherent loops show a distinct preference for high-gradient regions within the output landscape. 
+By avoiding such gradient pursuit, incoherent loops sustain more stable adaptation and consequently greater robustness.
+This mechanism is evident in 97,240 fixed-network training experiments, where coherent-loop networks consistently 
+prioritized high-gradient regions during learning, and is further supported by noise-resilience analyses -- 
+from classical reinforcement learning tasks to biological, chemical, and medical applications -- 
+which demonstrate that incoherent-loop networks maintain stronger resistance 
+to training noise and environmental perturbations.
 This work shows the functional impact of structural motif differences on the performance of artificial neural networks, 
 offering foundational insights for designing more resilient and accurate networks.
 
