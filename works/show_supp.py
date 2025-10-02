@@ -604,6 +604,7 @@ def supp_09():
     pyplot.axis("off")
 
     for panel_index in range(1, 6):
+        # noinspection PyTypeChecker
         pyplot.subplot(grid[4:7, panel_index - 1])
         landscape_name, z_values = task_data[chr(ord("a") + panel_index)]
         pyplot.title(landscape_name, fontsize=8)
@@ -617,6 +618,7 @@ def supp_09():
         pyplot.xlim(-1, +1)
         pyplot.ylim(-1, +1)
 
+    # noinspection PyTypeChecker
     pyplot.subplot(grid[7, :])
 
     locations, colors = linspace(-1, 1, 101), pyplot.get_cmap("plasma")(linspace(0, 1, 100))
@@ -1312,6 +1314,7 @@ def supp_16():
 
     for index, (label, milestone) in enumerate(zip(labels, milestones)):
         parts = pyplot.violinplot([panel_data[label]], positions=[index], showextrema=False, vert=False)
+        # noinspection PyTypeChecker
         for body in parts["bodies"]:
             body.set_facecolor("silver")
             body.set_edgecolor("black")
@@ -1498,6 +1501,7 @@ def supp_19():
     grid = pyplot.GridSpec(9, 5)
 
     panel_data = task_data["a"]
+    # noinspection PyTypeChecker
     ax = pyplot.subplot(grid[:2, :])
 
     pyplot.hlines(0, -0.6, 10.6, color="k", lw=0.75, ls="--", zorder=2)
@@ -1539,6 +1543,7 @@ def supp_19():
         pyplot.xlim(0.00, 0.06)
         pyplot.ylim(-0.004, 0.008)
 
+    # noinspection PyTypeChecker
     pyplot.subplot(grid[8, :])
 
     locations, colors = linspace(-10, 1, 101), pyplot.get_cmap("binary")(linspace(0, 1, 100))
@@ -1671,6 +1676,7 @@ def supp_22():
         pyplot.xlim(-0.012, +0.002)
         pyplot.ylim(-0.008, +0.006)
 
+    # noinspection PyTypeChecker
     pyplot.subplot(grid[6, :])
 
     locations, colors = linspace(-10, 0, 101), pyplot.get_cmap("Blues")(linspace(0, 1, 100))
@@ -1742,6 +1748,7 @@ def supp_23():
         pyplot.xlim(0, 3)
         pyplot.ylim(0, 3)
 
+    # noinspection PyTypeChecker
     pyplot.subplot(grid[6, :])
 
     locations, colors = linspace(-4, 0, 101), pyplot.get_cmap("Blues")(linspace(0, 1, 100))

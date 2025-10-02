@@ -818,6 +818,7 @@ def supp_19():
         panel_data = []
         for incoherent_number, sub_divided_data in enumerate(divided_data):
             loss_data, iteration_data = sub_divided_data[0], sub_divided_data[1]
+            # noinspection PyTypeChecker
             correlation, _ = spearmanr(loss_data, iteration_data)
             panel_data.append(correlation)
         task_data["a"] = array(panel_data)
@@ -979,6 +980,7 @@ def supp_23():
                     index_2 = 0
                 else:
                     index_2 = 1
+                # noinspection PyTypeChecker
                 divided_data[incoherent_number][index_1, index_2] += 1
 
         for incoherent_number in range(11):

@@ -727,11 +727,15 @@ def main_03():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 0])
     pyplot.fill_between([-0.5, 1.5], -0.03, 1.03, lw=0, fc="#FCB1AB", alpha=0.3, zorder=0)
+    pyplot.annotate("", xy=(0.50, 0.53), xytext=(0.50, 0.58),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    pyplot.text(0.50, 0.50, "expected", va="center", ha="center", fontsize=7)
+    pyplot.vlines(0.50, 0.435, 0.47, lw=0.75, color="k", zorder=1)
     pyplot.boxplot([task_data["b"][0], task_data["b"][1]], positions=[0, 1],
                    showmeans=False, patch_artist=True, widths=0.3, notch=True, medianprops=dict(lw=1.5, color="k"),
                    flierprops=dict(mec="k", mfc="w", ms=3, lw=0.75), boxprops=dict(lw=0.75, ec="k", fc="w"))
     pyplot.xlabel("weight on " + r"$x \rightarrow y$" + " of " + r"$\mathcal{L}_i$", fontsize=8)
-    pyplot.ylabel("utilization", fontsize=8)
+    pyplot.ylabel("utilization ()", fontsize=8)
     pyplot.xticks([0, 1], ["before escaping", "after escaping"], fontsize=7)
     pyplot.yticks(linspace(0, 1, 11), ["%.1f" % v for v in linspace(0, 1, 11)], fontsize=7)
     pyplot.xlim(-0.5, 1.5)
@@ -740,6 +744,10 @@ def main_03():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 1])
     pyplot.fill_between([-0.5, 1.5], -0.03, 1.03, lw=0, fc="#FCB1AB", alpha=0.3, zorder=0)
+    pyplot.annotate("", xy=(0.50, 0.53), xytext=(0.50, 0.58),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    pyplot.text(0.50, 0.50, "expected", va="center", ha="center", fontsize=7)
+    pyplot.vlines(0.50, 0.435, 0.47, lw=0.75, color="k", zorder=1)
     pyplot.boxplot([task_data["c"][0], task_data["c"][1]], positions=[0, 1],
                    showmeans=False, patch_artist=True, widths=0.3, notch=True, medianprops=dict(lw=1.5, color="k"),
                    flierprops=dict(mec="k", mfc="w", ms=3, lw=0.75), boxprops=dict(lw=0.75, ec="k", fc="w"))
@@ -753,6 +761,10 @@ def main_03():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 2])
     pyplot.fill_between([-0.5, 1.5], -0.03, 1.03, lw=0, fc="#FCE0AB", alpha=0.3, zorder=0)
+    pyplot.annotate("", xy=(0.50, 0.53), xytext=(0.50, 0.58),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    pyplot.text(0.50, 0.50, "expected", va="center", ha="center", fontsize=7)
+    pyplot.vlines(0.50, 0.435, 0.47, lw=0.75, color="k", zorder=1)
     pyplot.boxplot([task_data["d"][0], task_data["d"][1]], positions=[0, 1],
                    showmeans=False, patch_artist=True, widths=0.3, notch=True, medianprops=dict(lw=1.5, color="k"),
                    flierprops=dict(mec="k", mfc="w", ms=3, lw=0.75), boxprops=dict(lw=0.75, ec="k", fc="w"))
@@ -766,6 +778,10 @@ def main_03():
     # noinspection PyTypeChecker
     pyplot.subplot(grid[2:, 3])
     pyplot.fill_between([-0.5, 1.5], -0.03, 1.03, lw=0, fc="#FCE0AB", alpha=0.3, zorder=0)
+    pyplot.annotate("", xy=(0.50, 0.53), xytext=(0.50, 0.58),
+                    arrowprops=dict(arrowstyle="<|-", color="k", shrinkA=0, shrinkB=0, lw=0.75))
+    pyplot.text(0.50, 0.50, "expected", va="center", ha="center", fontsize=7)
+    pyplot.vlines(0.50, 0.435, 0.47, lw=0.75, color="k", zorder=1)
     pyplot.boxplot([task_data["e"][0], task_data["e"][1]], positions=[0, 1],
                    showmeans=False, patch_artist=True, widths=0.3, notch=True, medianprops=dict(lw=1.5, color="k"),
                    flierprops=dict(mec="k", mfc="w", ms=3, lw=0.75), boxprops=dict(lw=0.75, ec="k", fc="w"))
@@ -1068,11 +1084,11 @@ def main_05():
     """
     task_data = load_data(sort_path + "main05.pkl")
 
-    figure = pyplot.figure(figsize=(10, 5), tight_layout=True)
-    grid = pyplot.GridSpec(2, 4)
+    figure = pyplot.figure(figsize=(10, 5.8), tight_layout=True)
+    grid = pyplot.GridSpec(7, 4)
 
     # noinspection PyTypeChecker
-    pyplot.subplot(grid[0, :2])
+    pyplot.subplot(grid[0:3, :2])
     pyplot.plot([0.05, 0.95], [0.15, 0.15], color="silver", lw=10, zorder=0)
     pyplot.fill_between([0.60, 0.80], 0.03, 0.27, fc="gray", ec="k", lw=0, zorder=1)
     pyplot.text(0.70, -0.05, "cart", va="center", ha="center", fontsize=9)
@@ -1111,7 +1127,7 @@ def main_05():
               r"$\mathcal{C}$ - method"]
 
     # noinspection PyTypeChecker
-    ax = pyplot.subplot(grid[0, 2:])
+    ax = pyplot.subplot(grid[:3, 2:])
     for index, (label, color) in enumerate(zip(labels, pyplot.get_cmap("binary")(linspace(0.0, 0.8, 4)))):
         locations = arange(5) - 0.3 + 0.2 * index
         pyplot.bar(locations, task_data["b"][index], width=0.2, fc=color, ec="k", lw=0.75, label=label)
@@ -1132,7 +1148,7 @@ def main_05():
 
     for index, (panel_index, label) in enumerate(zip(["c", "d", "e", "f"], labels)):
         # noinspection PyTypeChecker
-        pyplot.subplot(grid[1, index])
+        pyplot.subplot(grid[3:6, index])
         pyplot.title(label, fontsize=8)
         values = task_data[panel_index].copy()
         values[values >= 195] = nan
@@ -1170,13 +1186,30 @@ def main_05():
         pyplot.xlim(0, 5)
         pyplot.ylim(0, 5)
 
+    # noinspection PyTypeChecker
+    pyplot.subplot(grid[6, :])
+    # pyplot.pcolormesh(arange(6), arange(6), values.T, vmin=100, vmax=195, cmap="inferno")
+    locations, color = arange(100, 196), None
+    for former, latter, color in zip(locations[:-1], locations[1:], pyplot.get_cmap("inferno")(linspace(0, 1, 95))):
+        pyplot.fill_between([former, latter], 0, 1, ec="none", fc=color, lw=0)
+    pyplot.fill_between([195, 200], 0, 1, ec="none", fc="w", lw=0)
+    pyplot.vlines(195, 0.85, 1.00, lw=0.75, color="k")
+    pyplot.vlines(195, 0.00, 0.15, lw=0.75, color="k")
+    pyplot.text(195, 0.5, "pass", va="center", ha="center", fontsize=7)
+
+    pyplot.xlabel("average evaluating performance", fontsize=8)
+    pyplot.xticks(arange(100, 201, 5), arange(100, 201, 5), fontsize=7)
+    pyplot.yticks([])
+    pyplot.xlim(100, 200)
+    pyplot.ylim(0, 1)
+
     figure.align_labels()
     figure.text(0.020, 0.99, "a", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.99, "b", va="center", ha="center", fontsize=12)
-    figure.text(0.020, 0.49, "c", va="center", ha="center", fontsize=12)
-    figure.text(0.266, 0.49, "d", va="center", ha="center", fontsize=12)
-    figure.text(0.513, 0.49, "e", va="center", ha="center", fontsize=12)
-    figure.text(0.759, 0.49, "f", va="center", ha="center", fontsize=12)
+    figure.text(0.509, 0.99, "b", va="center", ha="center", fontsize=12)
+    figure.text(0.020, 0.56, "c", va="center", ha="center", fontsize=12)
+    figure.text(0.264, 0.56, "d", va="center", ha="center", fontsize=12)
+    figure.text(0.509, 0.56, "e", va="center", ha="center", fontsize=12)
+    figure.text(0.752, 0.56, "f", va="center", ha="center", fontsize=12)
 
     pyplot.savefig(save_path + "main05.pdf", format="pdf", bbox_inches="tight", dpi=600)
     pyplot.close()
