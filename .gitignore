@@ -152,7 +152,7 @@ works/raw/trade-offs/*.npy
 works/raw/network-scale/*.pkl
 works/raw/network-scale/*.npy
 works/raw/videos/*.avi
-works/data/*.pkl
-works/data/*.npy
+#works/data/*.pkl
+#works/data/*.npy
 works/show/*.pdf
 works/temp/*.png
