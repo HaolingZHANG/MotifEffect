@@ -61,8 +61,10 @@ Notably, if you want to repeat the entire experiment, you can run the script in 
 4. [show_supp.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_supp.py);
 5. [show_video.py](https://github.com/HaolingZHANG/MotifEffect/blob/main/works/show_video.py).
 
-The raw data amounts to approximately 91.4 GB, 
-will be made available after the publication of the corresponding article (currently accessible only to reviewers).
+The raw data amounts to 91.4 gigabytes and can be accessed through
+[Figshare](https://figshare.com/articles/dataset/Raw_data_of_Leveraging_network_motifs_to_improve_artificial_neural_networks_/30405208) 
+and
+[KAUST Research Repository](https://repository.kaust.edu.sa/items/f05d59cc-e4e8-4157-b5e5-e48834ec8765/full).
 To repeat all the experiments, using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30GHz, you may need several months.
 
 
