@@ -735,7 +735,7 @@ def main_03():
                    showmeans=False, patch_artist=True, widths=0.3, notch=True, medianprops=dict(lw=1.5, color="k"),
                    flierprops=dict(mec="k", mfc="w", ms=3, lw=0.75), boxprops=dict(lw=0.75, ec="k", fc="w"))
     pyplot.xlabel("weight on " + r"$x \rightarrow y$" + " of " + r"$\mathcal{L}_i$", fontsize=8)
-    pyplot.ylabel("utilization ()", fontsize=8)
+    pyplot.ylabel("utilization", fontsize=8)
     pyplot.xticks([0, 1], ["before escaping", "after escaping"], fontsize=7)
     pyplot.yticks(linspace(0, 1, 11), ["%.1f" % v for v in linspace(0, 1, 11)], fontsize=7)
     pyplot.xlim(-0.5, 1.5)

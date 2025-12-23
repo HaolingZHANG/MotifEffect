@@ -147,25 +147,26 @@ To repeat all the experiments, using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30
 ├── requirements.txt                               // Basic library requirements of this library.
 ```
 
-[//]: # (## Citation)
+## Citation
 
-[//]: # (If you think this repository helps or being used in your research, please consider refer this work.)
+If you think this repository helps or being used in your research, please consider refer 
+[this work](https://www.nature.com/articles/s41467-025-66533-x).
 
-[//]: # (Here is a Bibtex entry:)
+Here is a Bibtex entry:
 
-[//]: # ()
-[//]: # (````)
 
-[//]: # (@article{zhang2023leveraging,)
+````
 
-[//]: # (  title={Leveraging network motifs to improve artificial neural networks},)
+@article{zhang2025leveraging,
 
-[//]: # (  author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Kiani, Narsis A. and Tegner, Jesper},)
+  title={Leveraging network motifs to improve artificial neural networks},
 
-[//]: # (  journal={Nature Communications},)
+  author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Kiani, Narsis A. and Tegner, Jesper N.},
 
-[//]: # (  year={2025})
+  journal={Nature Communications},
 
-[//]: # (})
+  year={2025}
 
-[//]: # (````)
+}
+
+````
