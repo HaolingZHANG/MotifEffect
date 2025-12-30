@@ -71,12 +71,12 @@ To repeat all the experiments, using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30
 ### Repository Structure
 ```html
 ├── effect                                         // Source codes of 3-node motif effect experiments.
-│    ├── __init__.py                               // Exhibition of class and method calls and implementation of monitor class.
-│    ├── networks.py                               // Motif class based on PyTorch.
+│    ├── __init__.py                               // Exhibition of class and method calls, as well as the implementation of monitor class.
+│    ├── networks.py                               // Classes related to the structure and training/testing workflow of three-node network motifs.
 │    │    ├── RestrictedWeight                     // Restricted weight module.
 │    │    ├── RestrictedBias                       // Restricted bias module.
 │    │    ├── NeuralMotif                          // Neural Motif module.
-│    ├── operations.py                             // Basic operations.
+│    ├── operations.py                             // Motif database generation and output calculation.
 │    │    ├── prepare_data                         // Prepare database through the range of variable and sampling points for both x and y.
 │    │    ├── prepare_data_flexible                // Prepare database through the flexible range of variable and sampling points.
 │    │    ├── prepare_motifs                       // Prepare motif based on the selected parameters.
@@ -87,11 +87,11 @@ To repeat all the experiments, using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30
 │    │    ├── generate_motifs                      // Generate qualified motif with specific requirements.
 │    │    ├── generate_outputs                     // Generate all output landscapes and the corresponding parameters based on the given parameter domain.
 │    │    ├── calculate_differences                // Calculate norm differences between motif landscapes.
-│    ├── robustness.py                             // Robustness-related operations.
+│    ├── robustness.py                             // Statistical methods related to numerical stability.
 │    │    ├── evaluate_propagation                 // Evaluate the error propagation through the selected motif.
 │    │    ├── estimate_lipschitz                   // Estimate the Lipschitz constant of the output signals produced by selected motif.
 │    │    ├── estimate_lipschitz_by_motif          // Estimate the Lipschitz constant from a selected motif.
-│    ├── similarity.py                             // Similarity-related operations.
+│    ├── similarity.py                             // Statistical methods related to representational capacity.
 │    │    ├── execute_escape_processes             // Execute the escape process for multiple pairs of an escape motif and several catch motifs.
 │    │    ├── execute_catch_processes              // Execute the catching process for referenced motifs and several catch motifs.
 │    │    ├── maximum_minimum_loss_search          // Find the maximum-minimum L2-norm loss (as the representation capacity bound) between source motif and target motifs.
@@ -147,6 +147,11 @@ To repeat all the experiments, using 11th Gen Intel(R) Core(TM) i7-11370H @ 3.30
 ├── requirements.txt                               // Basic library requirements of this library.
 ```
 
+## Research Trajectory
+
+This project captures a 1,805-day research journey and the author's reflections along the journey. 
+You are warmly invited to read it ([link](https://go.nature.com/3WRr9Il)).
+
 ## Citation
 
 If you think this repository helps or being used in your research, please consider refer 
@@ -154,19 +159,14 @@ If you think this repository helps or being used in your research, please consid
 
 Here is a Bibtex entry:
 
-
 ````
-
 @article{zhang2025leveraging,
-
   title={Leveraging network motifs to improve artificial neural networks},
-
   author={Zhang, Haoling and Yang, Chao-Han Huck and Zenil, Hector and Chen, Pin-Yu and Shen, Yue and Kiani, Narsis A. and Tegner, Jesper N.},
-
   journal={Nature Communications},
-
-  year={2025}
-
+  volume={16}, 
+  pages={11495},
+  year={2025},
+  doi={10.1038/s41467-025-66533-x}
 }
-
 ````
